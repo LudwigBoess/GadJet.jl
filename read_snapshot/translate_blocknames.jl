@@ -1,3 +1,14 @@
+"""
+            !!! TO DO !!!
+            Translates 4-digit blocknames of snap-format 2 into more readable
+            name. Will be done at some point in the future.
+
+    Author: Ludwig Böss
+    Contact: lboess@usm.lmu.de
+    Created: 2018-12-12
+
+"""
+
 function translate_bl(blockname::String)
 
     blockname = strip(blockname)

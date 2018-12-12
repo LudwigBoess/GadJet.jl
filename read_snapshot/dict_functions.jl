@@ -1,7 +1,11 @@
-# ------------------------------------------------------------------------------
-# ---------------------- Dictionary functions ----------------------------------
-# ------------------------------------------------------------------------------
+"""
+            Functions to read a snapshot and store it in a dictionary.
 
+    Author: Ludwig Böss
+    Contact: lboess@usm.lmu.de
+    Created: 2018-12-12
+    
+"""
 function head_to_dict(filename::String, cosmic_rays::Bool=false,
                       n_spec_indices::Int64=0)
 
@@ -58,13 +62,6 @@ function head_to_dict(filename::String, cosmic_rays::Bool=false,
         header["flag_ic_info"] = read(f, Int32)
         header["lpt_scalingfactor"] = read(f, Float32)
 
-        # skipline = 0
-        # iterations = 1
-        # while skipline != Int32(256)
-        #    skipline = read(f, Int32)
-        #    iterations += 1
-        # end
-        # println(iterations)
         close(f)
 
         return header
@@ -148,7 +145,7 @@ function snap_2_d(filename::String, data::Dict{Any,Any})
 
     if Int(bit_size) == 4
         dtype = Float32
-        #println("Reading single precision snapshot")
+        println("Reading single precision snapshot")
     elseif Int(bit_size) == 8
         dtype = Float64
         println("Reading double precision snapshot")
@@ -348,70 +345,8 @@ function read_block(p::Int64, data::Dict{Any,Any}, dtype::DataType, blockname::S
 end
 
 
-
 function snap_1_d(filename::String, data::Dict{Any,Any})
 
-    println("wrong function call")
-    f = open(filename)
-
-    seek(f, 264)
-
-    N = sum(data["Header"]["npart"])
-    skipsize = read(f, Int32)
-    bit_size = Int64(skipsize/(3*N))
-
-    if Int(bit_size) == 4
-        dtype = Float32
-        println("Reading single precision snapshot")
-    elseif Int(bit_size) == 8
-        dtype = Float64
-        println("Reading double precision snapshot")
-    else
-        println("read error! neither 32 nor 64 bits data!")
-        return -1
-    end
-
-    seek(f, 288)
-
-    # set up dictionaries for particles
-    for i in 1:length(data["Header"]["PartTypes"])
-        if data["Header"]["npart"][i] != 0
-            data[data["Header"]["PartTypes"][i]] = Dict()
-        end
-    end
-
-    blockname = "POS"
-
-    while eof(f) != true
-
-        #println(blockname)
-        # skip identifiers
-        p = position(f)
-
-        p, data = read_block(p, data, dtype, blockname, f, bit_size)
-
-        seek(f,p+4)
-
-        if eof(f) == true
-            break
-        end
-
-        # read blockname
-        letters = read!(f, read!(f, Array{Int8,1}(undef,4)))
-        block = Char.(letters)
-        block = string.(block)
-
-        blockname = lowercase(strip(block[1] * block[2] * block[3] * block[4]))
-    end
-
-
-    close(f)
-
-end
-
-function snap_1_d_old(filename, data)
-
-    println("correct function call")
     f = open(filename)
 
     seek(f, 264)

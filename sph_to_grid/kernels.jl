@@ -1,16 +1,26 @@
-mutable struct Cubic
+"""
+            Kernels, Kernelvalues and -derivatives for sph mapping.
+
+
+    Author: Ludwig Böss
+    Contact: lboess@usm.lmu.de
+    Created: 2018-12-12
+
+"""
+
+struct Cubic
     ngb::Int64
 end
 
-mutable struct Quintic
+struct Quintic
     ngb::Int64
 end
 
-mutable struct WendlandC4
+struct WendlandC4
     ngb::Int64
 end
 
-mutable struct WendlandC6
+struct WendlandC6
     ngb::Int64
 end
 

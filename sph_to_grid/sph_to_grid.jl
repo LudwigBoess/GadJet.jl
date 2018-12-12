@@ -1,3 +1,21 @@
+"""
+            Functions for sph mapping to grid.
+
+            sphCenterMapping works like SPLASH.
+
+            sphAdaptiveMapping is adapted from SPHMapper by Dr. Alexander Arth
+            (private conversations). A similar implementation is used in Pygad.
+            Publication: https://arxiv.org/abs/1803.03652
+
+            !!!! Not done yet !!!!
+
+
+    Author: Ludwig Böss
+    Contact: lboess@usm.lmu.de
+    Created: 2018-12-12
+
+"""
+
 include(joinpath(dirname(@__FILE__), "kernels.jl"))
 include(joinpath(dirname(@__FILE__), "sph_types.jl"))
 
@@ -201,6 +219,11 @@ function sphAdaptiveMapping(Pos::Array{Float32,2}, HSML::Array{Float32,2},
                             broadening::Float64,
                             param::mappingParameters; kernel)
 
+        """ Integral conserving SPH mapping. https://arxiv.org/abs/1803.03652
+            !!! Diverges at the moment for large particle numbers due to lack
+            of kernel normalisation !!!
+        """
+
     #println("mapping ", length(total_range), " particles")
 
     N = length(M)
@@ -335,8 +358,8 @@ function sphAdaptiveMapping(Pos::Array{Float32,2}, HSML::Array{Float32,2},
         for j = 1:length(param.y)
 
 
-            #c[i,j] = sum(val[i,j,:])
-            c[j,i] = sum(val[i,j,:]) # transpose for imshow()
+            c[i,j] = sum(val[i,j,:])
+            #c[j,i] = sum(val[i,j,:]) # transpose for imshow()
 
             # x[cell_count] = param.x[i]
             # y[cell_count] = param.y[j]
@@ -349,6 +372,5 @@ function sphAdaptiveMapping(Pos::Array{Float32,2}, HSML::Array{Float32,2},
 
 
     return c
-#    return x, y, c
 
 end

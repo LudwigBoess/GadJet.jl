@@ -1,7 +1,15 @@
-# ------------------------------------------------------------------------------
-# --------------- Object functions ---------------------------------------------
-# ------------------------------------------------------------------------------
+"""
+            Functions to read a snapshot and store it in an object.
 
+            !!!! BROKEN AND NOT IN USE !!!!
+
+            only head_to_obj can be used!
+
+    Author: Ludwig Böss
+    Contact: lboess@usm.lmu.de
+    Created: 2018-12-12
+
+"""
 function head_to_obj(filename)
 
     h = Header()

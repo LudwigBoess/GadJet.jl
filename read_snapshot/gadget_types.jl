@@ -1,7 +1,11 @@
-# -------------------------------------------------------------------------
-# ------------------ Objects ----------------------------------------------
-# -------------------------------------------------------------------------
+"""
+            Types needed for gadget read routines.
 
+    Author: Ludwig Böss
+    Contact: lboess@usm.lmu.de
+    Created: 2018-12-12
+
+"""
 
 mutable struct Header
     npart::Vector{Int32}
@@ -70,7 +74,6 @@ mutable struct Header
               lpt_scalingfactor,
               fill)
   end
-
 end
 
 mutable struct Info_Line
@@ -97,7 +100,7 @@ mutable struct part_single
              new(ptype, pos, vel, id, m, U, rho, sml)
 
       end
-  end
+end
 
 mutable struct part_double
       ptype::Int64
@@ -116,4 +119,4 @@ mutable struct part_double
              new(ptype, pos, vel, id, m, U, rho, sml)
 
       end
-  end
+end

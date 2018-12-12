@@ -1,3 +1,13 @@
+"""
+            Functions to write snapshots.
+
+
+    Author: Ludwig Böss
+    Contact: lboess@usm.lmu.de
+    Created: 2018-12-12
+
+"""
+
 function write_format2_block_header(f::IOStream, blockname::String)
 
     # fill blockname to 4 characters

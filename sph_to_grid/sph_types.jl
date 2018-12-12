@@ -1,3 +1,13 @@
+"""
+            Objects for SPH mapping.
+
+
+    Author: Ludwig Böss
+    Contact: lboess@usm.lmu.de
+    Created: 2018-12-12
+
+"""
+
 # mutable struct mappingParameters
 #
 #     pixelsPerDimension::Int64
@@ -73,7 +83,7 @@ mutable struct mappingParameters
 
 
         new(x_lim, y_lim, z_lim,
-            x_max, y_max, z_max, 
+            x_max, y_max, z_max,
             pixelSideLength,
             normalize,
             broadening,
