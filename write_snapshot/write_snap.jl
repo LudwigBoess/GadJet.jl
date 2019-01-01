@@ -21,9 +21,9 @@ function write_format2_block_header(f::IOStream, blockname::String)
     # transform the name into an array of charcters.
     # Since Julia uses 2 byte chars and C uses 1 byte I have to take
     # a different approach and use Int8s.
-    write_name =  Int8.(collect(uppercase(blockname)))
+    write_name =  Int8.(collect(blockname))
 
-    println("Writing block: " * uppercase(blockname))
+    println("Writing block: " * blockname)
 
     # write blocksite (8 bytes)
     write(f, Int32(8))
@@ -105,6 +105,7 @@ function write_header(f::IOStream, h::Header, snap_format::Int64)
     write(f, Int32(256))
 
 end
+
 
 # Format 2 Blocknames
 # "POS "
