@@ -41,14 +41,14 @@ function write_block(f::IOStream, d,
 
 
     # turn array of arrays d into one large array
-    data = reduce(vcat, d)
+    #data = reduce(vcat, d)     # OLD! Keep for later, maybe
 
     # get total number of particles to write
-    N = length(data[:,1])
+    N = length(d[:,1])
 
     # write blocksize
-    dtype = typeof(data[1,1])
-    dims = length(data[1,:])
+    dtype = typeof(d[1,1])
+    dims = length(d[1,:])
     blocksize = Int32(N * sizeof(dtype) * dims)
 
     if snap_format == 2
@@ -74,7 +74,7 @@ function write_block(f::IOStream, d,
 
     # write the block. Since Julia stores the arrays differently in memory
     # they have to be transposed before the can be written.
-    write(f, copy(transpose(data)))
+    write(f, copy(transpose(d)))
 
     println("Writing block done.")
 
