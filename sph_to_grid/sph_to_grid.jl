@@ -214,7 +214,7 @@ end
 
 
 function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant, broadening,
-                            param::mappingParameters; kernel)
+                            ;param::mappingParameters, kernel)
 
         """ Integral conserving SPH mapping. https://arxiv.org/abs/1803.03652
             !!! Diverges at the moment for large particle numbers due to lack
