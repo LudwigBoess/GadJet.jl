@@ -213,10 +213,7 @@ end
 # end
 
 
-function sphAdaptiveMapping(Pos::Array{Float32,2}, HSML::Array{Float32,2},
-                            M::Array{Float32,1}, ρ::Array{Float32,2},
-                            Bin_Quant::Array{Float32,2},
-                            broadening::Float64,
+function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant, broadening,
                             param::mappingParameters; kernel)
 
         """ Integral conserving SPH mapping. https://arxiv.org/abs/1803.03652
