@@ -20,6 +20,8 @@ include(joinpath(dirname(@__FILE__), "kernels.jl"))
 include(joinpath(dirname(@__FILE__), "sph_types.jl"))
 
 using Statistics
+using ProgressMeter
+
 # function sphCenterMapping(part::Dict{Any,Any}, broadening::Float64,
 #                           param::mappingParameters, kernel)
 #
@@ -233,7 +235,7 @@ function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameter
 
     minCoords = [param.x[1], param.y[1], param.z[1]]
 
-    for p = 1:N
+    @showprogress 1 "Mapping..." for p = 1:N
 
         pos = Pos[p,:]
         hsml = HSML[p]
