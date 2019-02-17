@@ -10,6 +10,7 @@ module GadJet
     include(joinpath(dirname(@__FILE__), "sph_to_grid", "sph_to_grid.jl"))
     include(joinpath(dirname(@__FILE__), "sph_to_grid", "sph_types.jl"))
     include(joinpath(dirname(@__FILE__), "sph_to_grid", "kernels.jl"))
+    include(joinpath(dirname(@__FILE__), "unit_conversion", "unit_types.jl"))
 
 
     export Header, Info_Line,       # types
@@ -27,7 +28,8 @@ module GadJet
            Quintic,
            WendlandC4,
            WendlandC6,
-           mappingParameters
+           mappingParameters,
+           GadgetUnitFactors
 
 
 
