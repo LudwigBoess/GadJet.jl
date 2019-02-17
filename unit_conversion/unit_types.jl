@@ -23,7 +23,7 @@ mutable struct GadgetUnitFactors
     B_si::Float64
 
     rho_unit::Float64
-    rho_cgs::float64
+    rho_cgs::Float64
 
     T_cgs::Float64
 
@@ -56,11 +56,11 @@ mutable struct GadgetUnitFactors
         bk = 1.380658e-16
         prtn = 1.672623e-24
 
-        T_phy = (γ_th - 1.0) * v_unit^2 * prtn * mean_mol_weight / bk
+        T_cgs = (γ_th - 1.0) * v_unit^2 * prtn * mean_mol_weight / bk
 
-        P_th_cgs = (1 + z)^(3*γ_th) * e_unit / l_unit^3 * hpar^2
+        P_th_cgs = (1 + z)^(3*γ_th) * E_unit / l_unit^3 * hpar^2
         P_th_si = 0.1*P_th_cgs
-        P_CR_cgs = (1 + z)^(3*γ_CR) * e_unit / l_unit^3 * hpar^2
+        P_CR_cgs = (1 + z)^(3*γ_CR) * E_unit / l_unit^3 * hpar^2
         P_CR_si = 0.1*P_CR_cgs
 
 
