@@ -23,7 +23,7 @@ module GadJet
            write_header,
            write_block,
            sphAdaptiveMapping,
-          # sph_to_grid,
+           sphCenterMapping,
            Cubic,
            Quintic,
            WendlandC4,
