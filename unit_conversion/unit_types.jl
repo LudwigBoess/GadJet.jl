@@ -24,6 +24,7 @@ mutable struct GadgetUnitFactors
 
     rho_unit::Float64
     rho_cgs::Float64
+    rho_ncm3::Float64
 
     T_cgs::Float64
 
@@ -47,8 +48,12 @@ mutable struct GadgetUnitFactors
         B_cgs = 1.0    # gadget outputs in cgs
         B_si = 1.e-4
 
+
+        mp = 1.6726219e-24
+
         rho_unit = m_unit/l_unit^3  # 10 M_⊙/pc^3
-        rho_cgs = (1.0 + z)^3 * m_unit / l_unit^3 * hpar^2
+        rho_cgs = (1.0 + z)^3 * m_unit / l_unit^3 * hpar^2 # g/cm^3
+        rho_ncm3 = rho_cgs/mp
 
 
         yhelium = ( 1.0 - xH ) / ( 4.0 * xH )
@@ -68,7 +73,7 @@ mutable struct GadgetUnitFactors
             t_unit, t_Myr,
             E_unit, E_cgs, E_si, E_eV,
             B_unit, B_cgs, B_si,
-            rho_unit, rho_cgs,  # rho_si!
+            rho_unit, rho_cgs, rho_ncm3, # rho_si!
             T_cgs,
             P_th_cgs, P_th_si,
             P_CR_cgs, P_CR_si
