@@ -79,33 +79,37 @@ module GadJet
     function get_info(filename)
 
         f = open(filename)
+        seek(f,4)
 
-        seekend(f)
-        p = position(seekend(f))
+        while eof(f) != true
 
-        seek(f, p-4)
-        blocksize = read(f, Int32)
+            name = Char.(read!(f, Array{Int8,1}(undef,4)))
+            blockname = String(name)
 
-        # one info line is 40 bytes long
-        if blocksize%40 == 0
+            p = position(f)
+            seek(f,p+8)
 
-            seek(f, p-blocksize-4)
-            #blocksize = read(f,Int32)
-            n_blocks = Int(blocksize/40)
-            arr_info = Array{Info_Line,1}(undef,n_blocks)
+            skipsize = read(f, Int32)
 
-            for i = 1:n_blocks
-                arr_info[i] = get_info_line(f)
+            if blockname == "INFO"
+                n_blocks = Int(skipsize/40)
+                arr_info = Array{Info_Line,1}(undef,n_blocks)
+
+                for i = 1:n_blocks
+                    arr_info[i] = get_info_line(f)
+                end
+
+                return arr_info
+
+            else
+                p = position(f)
+                seek(f,p+skipsize+8)
             end
 
-            blocksize = read(f, Int32)
-            close(f)
-
-            return arr_info
-        else
-
-            return "No info block present!"
         end
+
+        return "No info block present!"
+
 
     end
 
