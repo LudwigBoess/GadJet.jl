@@ -81,6 +81,12 @@ mutable struct Info_Line
     data_type::DataType
     n_dim::Int32
     is_present::Vector{Int32}
+
+    function Info_Line(block_name="", data_type=Float32, n_dim=Int32(0),
+                        is_present=Int32.(zeros(6)))
+
+        new(block_name, data_type, n_dim, is_present)
+    end
 end
 
 mutable struct part_single
