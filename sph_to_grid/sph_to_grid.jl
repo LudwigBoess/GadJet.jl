@@ -136,7 +136,8 @@ function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameter
 
     minCoords = [param.x[1], param.y[1], param.z[1]]
 
-    @showprogress 1 "Mapping..." for p = 1:N
+    #@showprogress 1 "Mapping..." for p = 1:N
+    for p = 1:N
 
         pos = Pos[p,:]
         hsml = HSML[p]
