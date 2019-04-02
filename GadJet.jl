@@ -18,8 +18,9 @@ module GadJet
            snap_to_dict,
            head_to_obj,
            print_blocks,
-           get_info,
+           read_info,
            read_block_by_name,
+           readnew,                 # similar to readnew.pro by Klaus Dolag
            write_header,
            write_block,
            sphAdaptiveMapping,
@@ -76,7 +77,7 @@ module GadJet
 
     end
 
-    function get_info(filename)
+    function read_info(filename; verbose::Bool=false)
 
         f = open(filename)
         seek(f,4)
@@ -96,24 +97,34 @@ module GadJet
                 arr_info = Array{Info_Line,1}(undef,n_blocks)
 
                 for i = 1:n_blocks
-                    arr_info[i] = get_info_line(f)
-                end
+                    arr_info[i] = read_info_line(f)
+                end # for
+
+                close(f)
+
+                if verbose == true
+                    println("Found Info block.\nEntries are:\n\n")
+                    for i ∈ 1:length(arr_info)
+                        println(i, " - ", arr_info[i].block_name)
+                    end # for
+                end # verbose
 
                 return arr_info
 
             else
                 p = position(f)
                 seek(f,p+skipsize+8)
-            end
+            end # if blockname == "INFO"
 
-        end
+        end # while eof(f) != true
 
-        return "No info block present!"
+        println("No info block present!")
 
+        return 1
 
     end
 
-    function get_info_line(f)
+    function read_info_line(f)
 
         name = Char.(read!(f, Array{Int8,1}(undef,4)))
         blockname = String(name)
@@ -150,15 +161,40 @@ module GadJet
         return in_l
     end
 
-    function read_block_by_name(filename::String, blockname::String,
-                                info::Info_Line, npart::Vector{Int32})
 
-        parttypes = ["PartType0", "PartType1", "PartType2",
-                     "PartType3", "PartType4", "PartType5"]
+    function read_block_by_name(filename::String, blockname::String;
+                                info::Info_Line=Info_Line(),
+                                npart::Vector{Int32}=Int32.(zeros(6)),
+                                parttype::Int64=-1)
+
+        
+        if parttype == -1
+            parttypes = ["PartType0", "PartType1", "PartType2",
+                         "PartType3", "PartType4", "PartType5"]
+        end # if parttype
+
+        blockname = uppercase(strip(blockname))
+
+        if info.block_name == ""
+            info = read_info(filename)
+            if info == 1
+                println("Error! No Info block in snapshot! Supply Info_Line type!")
+                return 1
+            end
+            for i ∈ 1:length(info)
+                if info[i].block_name == blockname
+                    info = info[i]
+                    break
+                end
+            end
+        end
+
+        if npart == Int32.(zeros(6))
+            h = head_to_obj(filename)
+            npart = h.npart
+        end
 
         f = open(filename)
-
-        blockname = strip(blockname)
 
         first_block = read(f, Int32)
 
@@ -190,14 +226,26 @@ module GadJet
             d = Dict()
 
             for i ∈ 1:length(info.is_present)
+                p = position(f)
 
                 if info.is_present[i] == Int32(1)
-                    d[parttypes[i]] = Dict()
-                    d[parttypes[i]][blockname] = copy(transpose(
-                                                        read!(f, Array{info.data_type,2}(undef,(info.n_dim,npart[i])))))
-                end
+                    if parttype == -1
+                        d[parttypes[i]] = Dict()
+                        d[parttypes[i]][blockname] = copy(transpose(
+                                                            read!(f, Array{info.data_type,2}(undef,(info.n_dim,npart[i])))))
+                    else
+                        if i == (parttype+1)
 
-            end
+                            block = copy(transpose(
+                                            read!(f, Array{info.data_type,2}(undef,(info.n_dim,npart[i])))))
+                            close(f)
+                            return block
+                        else
+                            seek(f, p + ( sizeof(info.data_type)*info.n_dim*npart[i] ))
+                        end # if i == (parttype+1)
+                    end # parttype == -1
+                end # info.is_present[i] == Int32(1)
+            end # i ∈ 1:length(info.is_present)
 
 
             close(f)
@@ -206,6 +254,67 @@ module GadJet
         else
 
             return "Block not present!"
+        end # eof(f) != true
+
+    end
+
+
+    function readnew(filename::String, info::Info_Line, npart::Vector{Int32};
+                     parttype::Int64=0)
+
+        f = open(filename)
+
+        blockname = strip(info.block_name)
+
+        first_block = read(f, Int32)
+
+        if first_block != Int32(8)
+            println("Error! Only snapshots of format 2 can be read by name!")
+            return 1
+        end
+
+        while eof(f) != true
+
+            name = strip(String(Char.(read!(f, Array{Int8,1}(undef,4)))))
+
+            if name == blockname
+                break
+            end
+            p = position(f)
+            seek(f,p+8)
+            skipsize = read(f, Int32)
+            p = position(f)
+            seek(f,p+skipsize+8)
+        end
+
+        if eof(f) != true
+            p = position(f)
+            seek(f,p+8)
+
+            blocksize = read(f,Int32)
+
+            d = Dict()
+
+            for i ∈ 1:length(info.is_present)
+                p = position(f)
+                if (info.is_present[i] == Int32(1)) && (i == Int(parttype + 1))
+                    d = copy(transpose(
+                            read!(f, Array{info.data_type,2}(undef,(info.n_dim,npart[i])))))
+                    close(f)
+                    return d
+                else
+                    seek(f, p + ( sizeof(info.data_type)*info.n_dim*npart[i] ) )
+                end
+
+            end
+
+
+            close(f)
+            println("Error! Block not present for particle type!")
+            return 1
+        else
+            println("Block not present!")
+            return 1
         end
 
     end
