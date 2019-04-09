@@ -4,7 +4,7 @@
     Author: Ludwig Böss
     Contact: lboess@usm.lmu.de
     Created: 2018-12-12
-    
+
 """
 function head_to_dict(filename::String, cosmic_rays::Bool=false,
                       n_spec_indices::Int64=0)
@@ -79,7 +79,7 @@ function snap_to_dict(filename::String, try_info::Bool=true)
 
             if try_info
 
-                    info = get_info(filename)
+                    info = read_info(filename)
 
                     if typeof(info) == Array{Info_Line,1}
 
