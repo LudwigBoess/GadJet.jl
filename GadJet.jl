@@ -11,6 +11,7 @@ module GadJet
     include(joinpath(dirname(@__FILE__), "sph_to_grid", "sph_types.jl"))
     include(joinpath(dirname(@__FILE__), "sph_to_grid", "kernels.jl"))
     include(joinpath(dirname(@__FILE__), "unit_conversion", "unit_types.jl"))
+    include(joinpath(dirname(@__FILE__), "utility", "riemann_solver.jl"))
 
 
     export Header, Info_Line,       # types
@@ -19,7 +20,7 @@ module GadJet
            head_to_obj,
            print_blocks,
            read_info,
-           read_block_by_name,      # similar to readnew.pro by Klaus Dolag          
+           read_block_by_name,      # similar to readnew.pro by Klaus Dolag
            write_header,
            write_block,
            sphAdaptiveMapping,
@@ -29,7 +30,10 @@ module GadJet
            WendlandC4,
            WendlandC6,
            mappingParameters,
-           GadgetUnitFactors
+           GadgetUnitFactors,
+           RiemannParameters,   # datatype for riemann parameters
+           RiemannSolution,     # datatype for riemann solution
+           solveHydroShock      # function that solves a standard sod shock
 
 
 
