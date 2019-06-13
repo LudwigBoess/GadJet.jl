@@ -94,6 +94,7 @@ mutable struct RiemannParameters
     M::Float64
     t::Float64
     x_contact::Float64
+    Pe_ratio::Float64
     γ_th::Float64
     γ_cr::Float64
     γ_exp::Float64
@@ -104,6 +105,7 @@ mutable struct RiemannParameters
                                 Ul::Float64=0.0, Ur::Float64=0.0,
                                 Mach::Float64=0.0, t::Float64,
                                 x_contact::Float64=70.0,
+                                Pe_ratio::Float64=0.01,
                                 γ_th::Float64=5.0/3.0,
                                 γ_cr::Float64=4.0/3.0)
 
@@ -146,6 +148,7 @@ mutable struct RiemannParameters
             cl, cr,
             Mach, t,
             x_contact,
+            Pe_ratio,
             γ_th, γ_cr, γ_exp, η2)
     end
 end
@@ -158,6 +161,8 @@ mutable struct RiemannSolution
     P_tot::Array{Float64,1}
     P_th::Array{Float64,1}
     P_cr::Array{Float64,1}
+    P_cr_p::Array{Float64,1}
+    P_cr_e::Array{Float64,1}
     P23::Float64
     U::Array{Float64,1}
     v::Array{Float64,1}
@@ -240,20 +245,24 @@ function solveP(x::Float64; par::RiemannParameters, sol::RiemannSolution)
     # returns P values according to position in shocktube
 
     if x <= -par.cl * par.t
-        return par.Pl, par.Pl, 0.0
+        return par.Pl, par.Pl, 0.0, 0.0, 0.0
     elseif -par.cl * par.t < x <= -sol.vt * par.t
         P4 = solveP4(x, par=par)
-        return P4, P4, 0.0
+        return P4, P4, 0.0, 0.0, 0.0
     elseif -sol.vt * par.t < x <= sol.v23 * par.t
-        return sol.P23, sol.P23, 0.0
+        return sol.P23, sol.P23, 0.0, 0.0, 0.0
     elseif sol.v23 * par.t < x <= sol.vs * par.t
         η_cr = get_eff(par.M)
-        return sol.P23, (1.0 - η_cr)*sol.P23, η_cr*sol.P23
+        return sol.P23,                             # total pressure
+               (1.0 - η_cr)*sol.P23,                # thermal pressure
+               η_cr*sol.P23,                        # total cr pressure
+               (1.0 - par.Pe_ratio)*η_cr*sol.P23,   # cr proton pressure
+               par.Pe_ratio*η_cr*sol.P23            # cr electron pressure
     elseif sol.vs * par.t < x
-        return par.Pr, par.Pr, 0.0
+        return par.Pr, par.Pr, 0.0, 0.0, 0.0
     else
         println("Error!")
-        return 0.0, 0.0, 0.0
+        return 0.0, 0.0, 0.0, 0.0, 0.0
     end
 end
 
@@ -363,7 +372,7 @@ function solveHydroShock(x::Array{Float64,1}; par::RiemannParameters)
     sol.v = solveV.(x_in, par=par, sol=sol)
 
     for i = 1:length(sol.x)
-        sol.P_tot[i], sol.P_th[i], sol.P_cr[i] = solveP(x_in[i], par=par, sol=sol)
+        sol.P_tot[i], sol.P_th[i], sol.P_cr[i], sol.P_cr_p[i], sol.P_cr_e[i] = solveP(x_in[i], par=par, sol=sol)
     end
 
     # solve density
