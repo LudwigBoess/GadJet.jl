@@ -180,6 +180,8 @@ mutable struct RiemannSolution
             zeros(N),   # P_tot
             zeros(N),   # P_th
             zeros(N),   # P_cr
+            zeros(N),   # P_cr_e
+            zeros(N),   # P_cr_p
             0.0,        # P23
             zeros(N),   # U
             zeros(N),   # v
