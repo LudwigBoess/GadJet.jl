@@ -39,6 +39,7 @@ module GadJet
            CRShockData,          # datatype to analyse single shocked particle
            readSingleCRShockDataFromOutputFile, # as the name says
            CRMomentumDistributionConfig, # config parameters for momentum distribution function
+           CRMomentumDistribution,
            getCRMomentumDistributionFromPartID # function to get distribution function
 
 

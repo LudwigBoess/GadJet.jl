@@ -274,3 +274,9 @@ function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameter
     return c
 
 end
+
+# """
+#     Mapping similar to that of of SPLASH by
+# """
+# function splash2Dmapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameters, kernel)
+# end

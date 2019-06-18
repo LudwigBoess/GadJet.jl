@@ -73,7 +73,7 @@ mutable struct Header
               flag_ic_info,
               lpt_scalingfactor,
               fill)
-  end
+    end
 end
 
 mutable struct Info_Line

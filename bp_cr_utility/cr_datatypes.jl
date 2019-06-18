@@ -2,8 +2,6 @@
         INFO HERE
 """
 
-
-include()
 """
                 Debug data from shock
 """
@@ -20,7 +18,7 @@ mutable struct CRShockData
    Energy_P::Vector{Float64}
    Energy_e::Vector{Float64}
 
-   function CR_Data(N=0)
+   function CRShockData(N=0)
 
        new(zeros(N), zeros(N), zeros(N), zeros(N),
            zeros(N), zeros(N), zeros(N), zeros(N))
@@ -63,16 +61,18 @@ struct CRMomentumDistributionConfig
 end
 
 mutable struct CRMomentumDistribution
-    CRp_dis::Vector{Float64,1}
-    CRp_bound::Vector{Float64,1}
-    CRe_dis::Vector{Float64,1}
-    CRe_bound::Vector{Float64,1}
 
-    function CRMomentumDistribution(par::MomentumDistributionConfig)
-        CRp_dis = zeros(2*par.Nbins)
-        CRp_bound = = zeros(2*par.Nbins + 1)
-        CRe_dis = zeros(2*par.Nbins)
-        CRe_bound = = zeros(2*par.Nbins + 1)
+    CRp_dis::Vector{Float64}
+    CRp_bound::Vector{Float64}
+    CRe_dis::Vector{Float64}
+    CRe_bound::Vector{Float64}
+
+    function CRMomentumDistribution(Nbins)
+
+        CRp_dis = zeros(2*Nbins)
+        CRp_bound = zeros(2*Nbins + 1)
+        CRe_dis = zeros(2*Nbins)
+        CRe_bound = zeros(2*Nbins + 1)
 
         new( CRp_dis, CRp_bound,
              CRe_dis, CRe_bound )
