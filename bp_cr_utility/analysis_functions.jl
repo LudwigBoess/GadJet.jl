@@ -1,7 +1,7 @@
-include("cr_datatypes.jl")
-file_curr = @__FILE__
-path_gadjet = file_curr[1:end-35]
-include(path_gadjet * "GadJet.jl")
+# include("cr_datatypes.jl")
+# file_curr = @__FILE__
+# path_gadjet = file_curr[1:end-35]
+# include(path_gadjet * "GadJet.jl")
 
 function readSingleCRShockDataFromOutputFile(file)
 

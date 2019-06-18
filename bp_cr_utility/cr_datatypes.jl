@@ -18,7 +18,7 @@ mutable struct CRShockData
    Energy_P::Vector{Float64}
    Energy_e::Vector{Float64}
 
-   function CRShockData(N=0)
+   function CRShockData(N::Int64=0)
 
        new(zeros(N), zeros(N), zeros(N), zeros(N),
            zeros(N), zeros(N), zeros(N), zeros(N))
