@@ -64,7 +64,7 @@ function getCRMomentumDistributionFromPartID(snap_file::String, ID::Int64;
                             info=info[getfield.(info, :block_name) .== "ID"][1],
                             npart=h.npart, parttype=0)
 
-    part = findfirst( id .== UInt32(ID) )
+    part = findfirst( id .== UInt32(ID) )[1]
 
     # protons
     CRpN = read_block_by_name(snap_file, "CRpN",
@@ -89,6 +89,7 @@ function getCRMomentumDistributionFromPartID(snap_file::String, ID::Int64;
                             npart=h.npart, parttype=0)[part]
 
     Nbins = length(CRpS)
+    println(Nbins)
     par = CRMomentumDistributionConfig(pmin, pmax, Nbins)
 
     cr = CRMomentumDistribution(par.Nbins)
@@ -141,7 +142,7 @@ function getCRMomentumDistributionFromPartID(snap_file::String, ID::Int64;
     end
     cr.CRp_dis[j] = CRpN[Nbins] * ( cr.CRp_bound[j]/cr.CRp_bound[j-1])^(-CRpS[Nbins])
     cr.CRp_bound[j+1] = cr.CRp_bound[j]
-    cr.CRp_dis[j] = ymin
+    #cr.CRp_dis[j] = ymin
 
     cr.CRe_bound[j] = pmax
     if cr.CRe_bound[j-1] < CReC/par.mc_e
@@ -149,7 +150,7 @@ function getCRMomentumDistributionFromPartID(snap_file::String, ID::Int64;
     end
     cr.CRe_dis[j] = CReN[Nbins] * ( cr.CRe_bound[j]/cr.CRe_bound[j-1])^(-CReS[Nbins])
     cr.CRe_bound[j+1] = cr.CRe_bound[j]
-    cr.CRe_dis[j] = ymin * 1.e-2
+    #cr.CRe_dis[j] = ymin * 1.e-2
 
     return cr
 end

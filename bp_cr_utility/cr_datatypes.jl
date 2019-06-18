@@ -46,7 +46,7 @@ struct CRMomentumDistributionConfig
    mc_e::Float64
    mc_p::Float64
 
-   function CRMomentumDistributionConfig(pmin::Float64=0.0, pmax::Float64=0.0, Nbins::Float64=24)
+   function CRMomentumDistributionConfig(pmin::Float64=0.0, pmax::Float64=0.0, Nbins::Int64=24)
 
        CNST_ME = 9.1095e-28
        CNST_MP = 1.6726e-24
@@ -69,10 +69,10 @@ mutable struct CRMomentumDistribution
 
     function CRMomentumDistribution(Nbins)
 
-        CRp_dis = zeros(2*Nbins)
-        CRp_bound = zeros(2*Nbins + 1)
-        CRe_dis = zeros(2*Nbins)
-        CRe_bound = zeros(2*Nbins + 1)
+        CRp_dis = zeros(Int(2*Nbins))
+        CRp_bound = zeros(Int(2*Nbins + 1))
+        CRe_dis = zeros(Int(2*Nbins))
+        CRe_bound = zeros(Int(2*Nbins + 1))
 
         new( CRp_dis, CRp_bound,
              CRe_dis, CRe_bound )
