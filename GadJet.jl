@@ -12,6 +12,8 @@ module GadJet
     include(joinpath(dirname(@__FILE__), "sph_to_grid", "kernels.jl"))
     include(joinpath(dirname(@__FILE__), "unit_conversion", "unit_types.jl"))
     include(joinpath(dirname(@__FILE__), "utility", "riemann_solver.jl"))
+    include(joinpath(dirname(@__FILE__), "bp_cr_utility", "cr_datatypes.jl"))
+    include(joinpath(dirname(@__FILE__), "bp_cr_utility", "analysis_functions.jl"))
 
 
     export Header, Info_Line,       # types
@@ -33,7 +35,11 @@ module GadJet
            GadgetUnitFactors,
            RiemannParameters,   # datatype for riemann parameters
            RiemannSolution,     # datatype for riemann solution
-           solveHydroShock      # function that solves a standard sod shock
+           solveHydroShock,      # function that solves a standard sod shock
+           CRShockData,          # datatype to analyse single shocked particle
+           readSingleCRShockDataFromOutputFile, # as the name says
+           CRMomentumDistributionConfig, # config parameters for momentum distribution function
+           getCRMomentumDistributionFromPartID # function to get distribution function
 
 
 

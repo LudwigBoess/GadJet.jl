@@ -35,7 +35,6 @@ function solvePr(Pr::Float64,
     M = vs / c_r
 
     return M - Mach
-
 end
 
 function solvePrfromMach(rhol::Float64, rhor::Float64,
