@@ -123,11 +123,14 @@ function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameter
             of kernel normalisation !!!
         """
 
-    #println("mapping ", length(total_range), " particles")
 
     N = length(M)
     pix_Vol = param.pixelSideLength^3
     boundary = false
+
+    println("mapping ", N, " particles")
+    println("Running on ", Threads.nthreads(), " Threads.")
+
 
     val = zeros(length(param.x), length(param.y),length(param.z))
 
