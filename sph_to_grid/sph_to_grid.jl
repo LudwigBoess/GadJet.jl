@@ -21,30 +21,32 @@ include(joinpath(dirname(@__FILE__), "sph_types.jl"))
 
 using Statistics
 using ProgressMeter
+using Base.Threads
 
 function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
                           param::mappingParameters, kernel)
 
     N = length(M)  # number of particles
 
+    #val = SharedArray{Float64}(length(param.x), length(param.y))
     val = zeros(length(param.x), length(param.y))
-
-    pixmin = Vector{Int64}(undef,3)
-    pixmax = Vector{Int64}(undef,3)
 
     minCoords = [param.x[1], param.y[1], param.z[1]]
 
-    @showprogress 1 "Mapping..." for p = 1:N
+    @threads for p = 1:N
 
-        pos = Pos[p,:]
-        hsml = HSML[p]
-        mass = M[p]
-        rho = ρ[p]
-        bin_quant = Bin_Quant[p]
+        @inbounds pos = Pos[p,:]
+        @inbounds hsml = HSML[p]
+        @inbounds mass = M[p]
+        @inbounds rho = ρ[p]
+        @inbounds bin_quant = Bin_Quant[p]
+
+        pixmin = Vector{Int64}(undef,3)
+        pixmax = Vector{Int64}(undef,3)
 
         for dim = 1:3
 
-            pixmin[dim] = Int64( round((pos[dim] - hsml - minCoords[dim]) / param.pixelSideLength ))
+            @inbounds pixmin[dim] = Int64( round((pos[dim] - hsml - minCoords[dim]) / param.pixelSideLength ))
 
             if pixmin[dim] < 1
 
@@ -65,9 +67,7 @@ function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
 
 
             if pixmax[dim] > max
-
                 pixmax[dim] = max
-
             end
 
         end
@@ -102,8 +102,8 @@ function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
    # end
 
    return val
-
 end
+
 
 function get_bounds(pos::Array{Float32,2}, min::Float64, max::Float64, axis::Int64,
                     range_arr::Vector{Int64})
@@ -137,17 +137,17 @@ function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameter
     minCoords = [param.x[1], param.y[1], param.z[1]]
 
     #@showprogress 1 "Mapping..." for p = 1:N
-    for p = 1:N
+    @threads for p = 1:N
 
-        pos = Pos[p,:]
-        hsml = HSML[p]
-        mass = M[p]
-        rho = ρ[p]
-        bin_quant = Bin_Quant[p]
+        @inbounds pos = Pos[p,:]
+        @inbounds hsml = HSML[p]
+        @inbounds mass = M[p]
+        @inbounds rho = ρ[p]
+        @inbounds bin_quant = Bin_Quant[p]
 
         for dim = 1:3
 
-            pixmin[dim] = Int64( round((pos[dim] - hsml - minCoords[dim]) / param.pixelSideLength ))
+            @inbounds pixmin[dim] = Int64( round((pos[dim] - hsml - minCoords[dim]) / param.pixelSideLength ))
 
             if pixmin[dim] < 1
 
@@ -168,10 +168,8 @@ function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameter
 
 
             if pixmax[dim] > max
-
                 boundary = true
                 pixmax[dim] = max
-
             end
 
         end
@@ -182,21 +180,21 @@ function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameter
         if boundary && hsml > 0.5 * param.pixelSideLength
             norm = 1.0
         else
-            closestPixel = Vector{Int64}(undef,3)
-            closestDistance = Inf
+            # closestPixel = Vector{Int64}(undef,3)
+            # closestDistance = Inf
 
             for i = pixmin[1]:pixmax[1]
                 for j = pixmin[2]:pixmax[2]
                     for k = pixmin[3]:pixmax[3]
 
-                        distance = sqrt.( (param.x[i] - pos[1])^2 +
-                                          (param.y[j] - pos[2])^2 +
-                                          (param.z[k] - pos[3])^2 )
+                        @inbounds distance = sqrt.( (param.x[i] - pos[1])^2 +
+                                                    (param.y[j] - pos[2])^2 +
+                                                    (param.z[k] - pos[3])^2 )
 
-                        if distance < closestDistance
-                            closestPixel = [i, j, k]            # ?
-                            closestDistance = distance          # ?
-                        end
+                        # if distance < closestDistance
+                        #     closestPixel = [i, j, k]            # ?
+                        #     closestDistance = distance          # ?
+                        # end
 
                         norm += kernel_value(kernel, distance/hsml, Float64.(hsml))
 
@@ -224,7 +222,7 @@ function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameter
                 for j = pixmin[2]:pixmax[2]
                     for k = pixmin[3]:pixmax[3]
 
-                        distance = sqrt.( (param.x[i] - pos[1])^2 +
+                        @inbounds distance = sqrt.( (param.x[i] - pos[1])^2 +
                                           (param.y[j] - pos[2])^2 +
                                           (param.z[k] - pos[3])^2 )
 
@@ -253,12 +251,12 @@ function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameter
     # c = zeros(length(param.x), length(param.y))
      c = zeros(length(param.y), length(param.x))
 
-    cell_count = 1
+    #cell_count = 1
     for i = 1:length(param.x)
         for j = 1:length(param.y)
 
 
-            c[i,j] = sum(val[i,j,:])
+            @inbounds c[i,j] = sum(val[i,j,:])
             #c[j,i] = sum(val[i,j,:]) # transpose for imshow()
 
             # x[cell_count] = param.x[i]
