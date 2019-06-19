@@ -131,8 +131,7 @@ function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameter
 
     val = zeros(length(param.x), length(param.y),length(param.z))
 
-    pixmin = Vector{Int64}(undef,3)
-    pixmax = Vector{Int64}(undef,3)
+
 
     minCoords = [param.x[1], param.y[1], param.z[1]]
 
@@ -144,6 +143,9 @@ function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameter
         @inbounds mass = M[p]
         @inbounds rho = ρ[p]
         @inbounds bin_quant = Bin_Quant[p]
+
+        pixmin = Vector{Int64}(undef,3)
+        pixmax = Vector{Int64}(undef,3)
 
         for dim = 1:3
 
