@@ -40,7 +40,10 @@ module GadJet
            readSingleCRShockDataFromOutputFile, # as the name says
            CRMomentumDistributionConfig, # config parameters for momentum distribution function
            CRMomentumDistribution,
-           getCRMomentumDistributionFromPartID # function to get distribution function
+           getCRMomentumDistributionFromPartID, # function to get distribution function
+           calculateCREnergyInCGS,
+           calculateCRNumber
+
 
 
 
