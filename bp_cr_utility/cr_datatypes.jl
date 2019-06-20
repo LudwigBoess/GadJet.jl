@@ -38,7 +38,7 @@ struct CRMomentumDistributionConfig
    """
    pmin::Float64
    pmax::Float64
-   Nbins::Float64
+   Nbins::Int64
    bin_width::Float64
    mp::Float64
    me::Float64
