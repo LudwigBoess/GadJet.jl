@@ -67,7 +67,7 @@ mutable struct CRMomentumDistribution
     CRe_dis::Vector{Float64}
     CRe_bound::Vector{Float64}
 
-    function CRMomentumDistribution(Nbins::Int64, pmin::Float64, pmax::Float64)
+    function CRMomentumDistribution(Nbins::Int64)
 
         CRp_dis = zeros(Int(2*Nbins))
         CRe_dis = zeros(Int(2*Nbins))
