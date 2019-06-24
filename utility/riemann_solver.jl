@@ -163,7 +163,10 @@ mutable struct RiemannSolution
     P_cr_p::Array{Float64,1}
     P_cr_e::Array{Float64,1}
     P23::Float64
-    U::Array{Float64,1}
+    U_tot::Array{Float64,1}
+    U_th::Array{Float64,1}
+    E_cr_p::Array{Float64,1}
+    E_cr_e::Array{Float64,1}
     v::Array{Float64,1}
     v23::Float64
     vt::Float64
@@ -182,7 +185,10 @@ mutable struct RiemannSolution
             zeros(N),   # P_cr_e
             zeros(N),   # P_cr_p
             0.0,        # P23
-            zeros(N),   # U
+            zeros(N),   # U_tot
+            zeros(N),   # U_th
+            zeros(N),   # E_cr_p
+            zeros(N),   # E_cr_e
             zeros(N),   # v
             0.0,        # v23
             0.0,        # vt
@@ -383,7 +389,10 @@ function solveHydroShock(x::Array{Float64,1}; par::RiemannParameters)
 
     sol.Mach = par.M
 
-    sol.U = sol.P_tot ./ ( (par.γ_th - 1.0) .* sol.rho )
+    sol.U_tot = sol.P_tot ./ ( (par.γ_th - 1.0) .* sol.rho )
+    sol.U_th = sol.P_th ./ ( (par.γ_th - 1.0) .* sol.rho )
+    sol.E_cr_p = sol.P_cr_p ./ ( (par.γ_cr - 1.0) .* sol.rho )
+    sol.E_cr_e = sol.P_cr_e ./ ( (par.γ_cr - 1.0) .* sol.rho )
 
     return sol
 end
