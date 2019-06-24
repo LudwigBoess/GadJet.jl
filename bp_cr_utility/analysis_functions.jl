@@ -1,7 +1,3 @@
-# include("cr_datatypes.jl")
-# file_curr = @__FILE__
-# path_gadjet = file_curr[1:end-35]
-# include(path_gadjet * "GadJet.jl")
 
 function readSingleCRShockDataFromOutputFile(file)
 
@@ -89,7 +85,7 @@ function getCRMomentumDistributionFromPartID(snap_file::String, ID::Int64;
                             npart=h.npart, parttype=0)[part]
 
     Nbins = length(CRpS)
-    println(Nbins)
+
     par = CRMomentumDistributionConfig(pmin, pmax, Nbins)
 
     cr = CRMomentumDistribution(par.Nbins)
@@ -220,8 +216,6 @@ function calculateCREnergyInCGS(CR_N, CR_S, CR_Cut, ρ; pmin=10.0, pmax=1.e7, mc
     end
     return CR_E
 end
-
-
 
 
 function density_integral(bound_low, bound_up, norm, slope, ρ)
