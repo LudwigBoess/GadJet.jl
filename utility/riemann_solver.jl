@@ -79,9 +79,66 @@ function solveMach(Pl::Float64, Pr::Float64,
 end
 
 """
+        DSA Models
+"""
+
+"""
+    Kang&Ryu 2007, http://arxiv.org/abs/0704.1521v1
+"""
+function KR07(M::Float64)
+    if M <= 2.0
+        return 1.96e-3*(M^2 - 1.)               # eq. A3
+    else
+        b = [5.46, -9.78, 4.17, -0.337, 0.57]   # eq. A4
+        η = 0.
+        for i ∈ 1:length(b)
+            η += b[i] * ((M - 1.)^(i-1))/M^4    # eq. A5
+        end
+        return η
+    end
+end
+
+"""
+    Kang&Ryu 2013, doi:10.1088/0004-637X/764/1/95
+"""
+function KR13(M::Float64)
+    if M > 2.0
+        param = [-2.8696966498579606, 9.667563166507879, -8.877138312318019, 1.938386688261113, 0.1806112438315771]
+        return (param[1] .+ param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
+    else
+        return 0.0
+    end
+end
+
+"""
+    Kang&Ryu 2013, doi:10.1088/0004-637X/764/1/95
+    with modifications for 2.25 < M <= 5.0 from
+    Ryu et al. 2019, https://arxiv.org/abs/1905.04476
+"""
+function KR13_19(M::Float64)
+
+    if 2.25 < M <= 5.0
+        param = [1.1006004346467124, -2.923679036380424, 2.599624937871855, -0.9538130179325343, 0.16080793189704362]
+        return (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
+    elseif M > 5.0
+        param = [-2.8696966498579606, 9.667563166507879, -8.877138312318019, 1.938386688261113, 0.1806112438315771]
+        return (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
+    else
+        return 0.0
+    end
+end
+
+"""
+    Caprioli&Spitkovsky 2015,
+"""
+function CS15(M::Float64)
+    return 0.0
+end
+
+"""
     Datatypes for IC Parameters and Solution
 """
-mutable struct RiemannParameters
+mutable struct RiemannParameters#{F<:Function}
     rhol::Float64
     rhor::Float64
     Pl::Float64
@@ -98,16 +155,17 @@ mutable struct RiemannParameters
     γ_cr::Float64
     γ_exp::Float64
     η2::Float64
+    eff_function#::F
 
-    function RiemannParameters(;rhol::Float64=1.0, rhor::Float64=0.125,
-                                Pl::Float64=0.0, Pr::Float64=0.0,
-                                Ul::Float64=0.0, Ur::Float64=0.0,
-                                Mach::Float64=0.0, t::Float64,
+    function RiemannParameters(;rhol::Float64=1.0,  rhor::Float64=0.125,
+                                Pl::Float64=0.0,    Pr::Float64=0.0,
+                                Ul::Float64=0.0,    Ur::Float64=0.0,
+                                Mach::Float64=0.0,  t::Float64,
                                 x_contact::Float64=70.0,
                                 Pe_ratio::Float64=0.01,
                                 γ_th::Float64=5.0/3.0,
-                                γ_cr::Float64=4.0/3.0)
-
+                                γ_cr::Float64=4.0/3.0,
+                                eff_model::Int64=0)
 
         γ_exp    = ( γ_th - 1.0 )/( 2.0 * γ_th )
         η2       = (γ_th-1.0)/(γ_th+1.0)
@@ -141,6 +199,22 @@ mutable struct RiemannParameters
         cl = sqrt.(γ_th * Pl / rhol)
         cr = sqrt.(γ_th * Pr / rhor)
 
+        if eff_model == 0
+            eff_function = KR07
+        elseif eff_model == 1
+            eff_function = KR13
+        elseif eff_model == 2
+            eff_function = KR13_19
+        elseif eff_model == 3
+            println("Caprioli&Spitkovsky DSA model not implemented yet!")
+            eff_function = CS15
+        else
+            println("Invalid DSA model selection!")
+            println("Falling back on default model by Kang&Ryu 2013 with modifications from Ryu+ 2019")
+            eff_function = KR13_19
+        end
+
+        #new{typeof(F)}
         new(rhol, rhor,
             Pl, Pr,
             Ul, Ur,
@@ -148,7 +222,8 @@ mutable struct RiemannParameters
             Mach, t,
             x_contact,
             Pe_ratio,
-            γ_th, γ_cr, γ_exp, η2)
+            γ_th, γ_cr, γ_exp, η2,
+            eff_function)
     end
 end
 
@@ -197,30 +272,6 @@ mutable struct RiemannSolution
     end
 end
 
-"""
-    Acceleration efficiencies for CRs
-        (Kang et al. 2006, http://arxiv.org/abs/0704.1521v1)
-"""
-function ηle2(M)
-    return 1.96e-3*(M^2 - 1.)               # eq. A3
-end
-
-function ηg2(M)
-    b = [5.46, -9.78, 4.17, -0.337, 0.57]   # eq. A4
-    η = 0.
-    for i ∈ 1:length(b)
-        η += b[i] * ((M - 1.)^(i-1))/M^4    # eq. A5
-    end
-    return η
-end
-
-function get_eff(M)
-    if M <= 2.0
-        return ηle2(M)
-    else
-        return ηg2(M)
-    end
-end
 
 
 """
@@ -259,7 +310,7 @@ function solveP(x::Float64; par::RiemannParameters, sol::RiemannSolution)
     elseif -sol.vt * par.t < x <= sol.v23 * par.t
         return sol.P23, sol.P23, 0.0, 0.0, 0.0
     elseif sol.v23 * par.t < x <= sol.vs * par.t
-        η_cr = get_eff(par.M)
+        η_cr = par.eff_function(par.M)
         return sol.P23,                             # total pressure
                (1.0 - η_cr)*sol.P23,                # thermal pressure
                η_cr*sol.P23,                        # total cr pressure
@@ -396,3 +447,20 @@ function solveHydroShock(x::Array{Float64,1}; par::RiemannParameters)
 
     return sol
 end
+
+
+xmin = 70.0
+xmax = 95.0
+ymin =  0.0
+ymax = 30.0
+x_step = 0.01
+x_ideal = collect(xmin:x_step:xmax)
+P_left = 2.0/3.0 * 100.0
+Pe_Ratio = 0.01
+M = 60.0
+par = RiemannParameters(Pl=P_left, Mach=M, t=1.5, Pe_ratio=Pe_Ratio, eff_model=1)
+sol = solveHydroShock(x_ideal, par=par)
+
+par.eff_function(M)
+
+KR13_19(M)
