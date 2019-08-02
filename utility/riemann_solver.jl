@@ -447,20 +447,3 @@ function solveHydroShock(x::Array{Float64,1}; par::RiemannParameters)
 
     return sol
 end
-
-
-xmin = 70.0
-xmax = 95.0
-ymin =  0.0
-ymax = 30.0
-x_step = 0.01
-x_ideal = collect(xmin:x_step:xmax)
-P_left = 2.0/3.0 * 100.0
-Pe_Ratio = 0.01
-M = 60.0
-par = RiemannParameters(Pl=P_left, Mach=M, t=1.5, Pe_ratio=Pe_Ratio, eff_model=1)
-sol = solveHydroShock(x_ideal, par=par)
-
-par.eff_function(M)
-
-KR13_19(M)
