@@ -114,21 +114,29 @@ function KR13(M::Float64)
 end
 
 """
-    Kang&Ryu 2013, doi:10.1088/0004-637X/764/1/95
-    with modifications for 2.25 < M <= 5.0 from
     Ryu et al. 2019, https://arxiv.org/abs/1905.04476
+    values for 2.25 < M <= 5.0 extrapolated to entire range
 """
-function KR13_19(M::Float64)
+function R_19(M::Float64)
 
-    if 2.25 < M <= 5.0
-        param = [1.1006004346467124, -2.923679036380424, 2.599624937871855, -0.9538130179325343, 0.16080793189704362]
-        return (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
-    elseif M > 5.0
-        param = [-2.8696966498579606, 9.667563166507879, -8.877138312318019, 1.938386688261113, 0.1806112438315771]
+    if M < 2.25
+        return 0.0
+    elseif M <= 34.0
+        param = [-1.5255114554627316, 2.4026049650156693, -1.2534251472776456, 0.22152323784680614, 0.0335800899612107]
         return (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
     else
-        return 0.0
+        return  0.0348
     end
+
+    # if 2.25 < M <= 5.0
+    #     param = [1.1006004346467124, -2.923679036380424, 2.599624937871855, -0.9538130179325343, 0.16080793189704362]
+    #     return (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
+    # elseif M > 5.0
+    #     param = [-2.8696966498579606, 9.667563166507879, -8.877138312318019, 1.938386688261113, 0.1806112438315771]
+    #     return (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
+    # else
+    #     return 0.0
+    # end
 end
 
 """
@@ -207,7 +215,7 @@ mutable struct RiemannParameters#{F<:Function}
         elseif eff_model == 1
             eff_function = KR13
         elseif eff_model == 2
-            eff_function = KR13_19
+            eff_function = R_19
         elseif eff_model == 3
             println("Caprioli&Spitkovsky DSA model not implemented yet!")
             eff_function = CS15
