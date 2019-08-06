@@ -28,7 +28,6 @@ end
 
 
 
-
 """
                 Distribution spectrum in momentum space
 """
