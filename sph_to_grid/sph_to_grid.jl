@@ -128,8 +128,8 @@ function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameter
     pix_Vol = param.pixelSideLength^3
     boundary = false
 
-    println("mapping ", N, " particles")
-    println("Running on ", Threads.nthreads(), " Threads.")
+    # println("mapping ", N, " particles")
+    # println("Running on ", Threads.nthreads(), " Threads.")
 
 
     val = zeros(length(param.x), length(param.y),length(param.z))
