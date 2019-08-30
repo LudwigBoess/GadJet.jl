@@ -146,6 +146,11 @@ end
     Caprioli&Spitkovsky 2015,
 """
 function CS15(M::Float64)
+    vazza_factor = 0.5
+    return vazza_factor * KR13(M)
+end
+
+function null_eff(M::Float64)
     return 0.0
 end
 
@@ -214,18 +219,19 @@ mutable struct RiemannParameters#{F<:Function}
         cr = sqrt.(γ_th * Pr / rhor)
 
         if eff_model == 0
-            eff_function = KR07
+            eff_function = null_eff
         elseif eff_model == 1
-            eff_function = KR13
+            eff_function = KR07
         elseif eff_model == 2
-            eff_function = R_19
+            eff_function = KR13
         elseif eff_model == 3
-            println("Caprioli&Spitkovsky DSA model not implemented yet!")
+            eff_function = R_19
+        elseif eff_model == 4
             eff_function = CS15
         else
             println("Invalid DSA model selection!")
-            println("Falling back on default model by Kang&Ryu 2013 with modifications from Ryu+ 2019")
-            eff_function = KR13_19
+            println("Selecting null function")
+            eff_function = null_eff
         end
 
         #new{typeof(F)}
@@ -244,20 +250,20 @@ end
 mutable struct RiemannSolution
     x::Array{Float64,1}
     rho::Array{Float64,1}
-    rho2::Float64
+    rho4::Float64
     rho3::Float64
     P_tot::Array{Float64,1}
     P_th::Array{Float64,1}
     P_cr::Array{Float64,1}
     P_cr_p::Array{Float64,1}
     P_cr_e::Array{Float64,1}
-    P23::Float64
+    P34::Float64
     U_tot::Array{Float64,1}
     U_th::Array{Float64,1}
     E_cr_p::Array{Float64,1}
     E_cr_e::Array{Float64,1}
     v::Array{Float64,1}
-    v23::Float64
+    v34::Float64
     vt::Float64
     vs::Float64
     Mach::Float64
@@ -273,7 +279,7 @@ mutable struct RiemannSolution
             zeros(N),   # P_cr
             zeros(N),   # P_cr_e
             zeros(N),   # P_cr_p
-            0.0,        # P23
+            0.0,        # P34
             zeros(N),   # U_tot
             zeros(N),   # U_th
             zeros(N),   # E_cr_p
@@ -296,19 +302,19 @@ end
 """
     Pressure
 """
-function solveP23(;par::RiemannParameters)
+function solveP34(;par::RiemannParameters)
     # Solves the pressure of the middle state in a shocktube
 
     P_m(P) = ( P/par.Pr - 1.0 ) * sqrt.( ( 1.0 - par.η2 ) / ( par.γ_th *
              ( P/par.Pr + par.η2 ) )) - 2.0 / (par.γ_th - 1.0 ) * par.cl / par.cr *
              ( 1.0 - ( P/par.Pl )^par.γ_exp )
 
-    P23 = find_zero( P_m, (par.Pr, par.Pl), Bisection() )
+    P34 = find_zero( P_m, (par.Pr, par.Pl), Bisection() )
 
-    return P23
+    return P34
 end
 
-function solveP4(x::Float64; par::RiemannParameters)
+function solveP2(x::Float64; par::RiemannParameters)
     # solves the pressure along the rarefaction wave
     return par.Pl * ( -par.η2 * x / ( par.cl * par.t ) + ( 1.0 - par.η2 ) )^( 1.0/par.γ_exp )
 end
@@ -319,17 +325,17 @@ function solveP(x::Float64; par::RiemannParameters, sol::RiemannSolution)
     if x <= -par.cl * par.t
         return par.Pl, par.Pl, 0.0, 0.0, 0.0
     elseif -par.cl * par.t < x <= -sol.vt * par.t
-        P4 = solveP4(x, par=par)
-        return P4, P4, 0.0, 0.0, 0.0
-    elseif -sol.vt * par.t < x <= sol.v23 * par.t
-        return sol.P23, sol.P23, 0.0, 0.0, 0.0
-    elseif sol.v23 * par.t < x <= sol.vs * par.t
+        P2 = solveP2(x, par=par)
+        return P2, P2, 0.0, 0.0, 0.0
+    elseif -sol.vt * par.t < x <= sol.v34 * par.t
+        return sol.P34, sol.P34, 0.0, 0.0, 0.0
+    elseif sol.v34 * par.t < x <= sol.vs * par.t
         η_cr = par.eff_function(par.M)
-        return sol.P23,                             # total pressure
-               (1.0 - η_cr)*sol.P23,                # thermal pressure
-               η_cr*sol.P23,                        # total cr pressure
-               (1.0 - par.Pe_ratio)*η_cr*sol.P23,   # cr proton pressure
-               par.Pe_ratio*η_cr*sol.P23            # cr electron pressure
+        return sol.P34,                             # total pressure
+               (1.0 - η_cr)*sol.P34,                # thermal pressure
+               η_cr*sol.P34,                        # total cr pressure
+               (1.0 - par.Pe_ratio)*η_cr*sol.P34,   # cr proton pressure
+               par.Pe_ratio*η_cr*sol.P34            # cr electron pressure
     elseif sol.vs * par.t < x
         return par.Pr, par.Pr, 0.0, 0.0, 0.0
     else
@@ -342,7 +348,7 @@ end
 """
     Density
 """
-function solveRho4(x::Float64 ;par::RiemannParameters)
+function solveRho2(x::Float64 ;par::RiemannParameters)
     # solves density along the rarefaction wave
     return par.rhol * ( -par.η2 * x / ( par.cl * par.t ) +
                       ( 1.0 - par.η2 ) )^( 2.0 / (par.γ_th - 1.0 ) )
@@ -350,13 +356,31 @@ end
 
 function solveRho3(;par::RiemannParameters, sol::RiemannSolution)
     # solves density left of contact discontiuity and right of refraction wave
-    return par.rhol * ( sol.P23/par.Pl )^( 1.0/par.γ_th )
+    return par.rhol * ( sol.P34/par.Pl )^( 1.0/par.γ_th )
 end
 
-function solveRho2(;par::RiemannParameters)
-    # solves density left of shockfront
-    return ( ( par.γ_th + 1.0 ) * par.M^2 ) /
+# function solveRho4(;par::RiemannParameters)
+#     # solves density left of shockfront
+#     return ( ( par.γ_th + 1.0 ) * par.M^2 ) /
+#            ( 2.0 + ( par.γ_th - 1.0 ) * par.M^2 ) * par.rhor
+# end
+
+function solveRho4(;par::RiemannParameters, sol::RiemannSolution)
+
+    η_cr = par.eff_function(par.M)
+    P_cr = η_cr*sol.P34
+
+    rho0 = ( ( par.γ_th + 1.0 ) * par.M^2 ) /
            ( 2.0 + ( par.γ_th - 1.0 ) * par.M^2 ) * par.rhor
+
+    C = 2.0*(par.γ_th - par.γ_cr)*P_cr/((par.γ_th - 1.0)*sol.v34^2*(par.γ_cr - 1.0))
+
+    find_rho1(rho1) = rho0/(1.0 - C/rho1) - rho1
+
+    ρ1 = find_zero( find_rho1, (0.9*rho0, 10.0*rho0), Bisection() )
+
+    return ρ1
+
 end
 
 function solveRho(x::Float64; par::RiemannParameters, sol::RiemannSolution)
@@ -365,11 +389,11 @@ function solveRho(x::Float64; par::RiemannParameters, sol::RiemannSolution)
     if x <= -par.cl * par.t
         return par.rhol
     elseif -par.cl * par.t < x <= -sol.vt * par.t
-        return solveRho4(x, par=par)
-    elseif -sol.vt * par.t < x <= sol.v23 * par.t
+        return solveRho2(x, par=par)
+    elseif -sol.vt * par.t < x <= sol.v34 * par.t
         return sol.rho3
-    elseif sol.v23 * par.t < x <= sol.vs * par.t
-        return sol.rho2
+    elseif sol.v34 * par.t < x <= sol.vs * par.t
+        return sol.rho4
     elseif sol.vs * par.t < x
         return par.rhor
     else
@@ -382,24 +406,24 @@ end
 """
     Velocity
 """
-function solveV23(;par::RiemannParameters, sol::RiemannSolution)
+function solveV34(;par::RiemannParameters, sol::RiemannSolution)
     # solves velocity along the isopressure region 2-3
-    return 2.0 * par.cl / ( par.γ_th - 1.0 ) * ( 1.0 - (sol.P23 / par.Pl)^par.γ_exp )
+    return 2.0 * par.cl / ( par.γ_th - 1.0 ) * ( 1.0 - (sol.P34 / par.Pl)^par.γ_exp )
 end
 
-function solveV4(x::Float64; par::RiemannParameters)
+function solveV2(x::Float64; par::RiemannParameters)
     # solves the velocity along the rarefaction wave
     return ( 1.0 - par.η2 ) * ( x / par.t + par.cl )
 end
 
 function solveVs(;par::RiemannParameters, sol::RiemannSolution)
     # solves the shock velocity
-    return sol.v23 / ( 1.0 - par.rhor / sol.rho2 )
+    return sol.v34 / ( 1.0 - par.rhor / sol.rho4 )
 end
 
 function solveVt(;par::RiemannParameters, sol::RiemannSolution)
     # solves the velocity of the tail of the rarefaction wave
-    return par.cl - sol.v23/( 1.0 - par.η2 )
+    return par.cl - sol.v34/( 1.0 - par.η2 )
 end
 
 function solveV(x::Float64; par::RiemannParameters, sol::RiemannSolution)
@@ -407,9 +431,9 @@ function solveV(x::Float64; par::RiemannParameters, sol::RiemannSolution)
     if x <= -par.cl * par.t
         return 0.0
     elseif -par.cl * par.t < x <= -sol.vt * par.t
-        return solveV4(x, par=par)
+        return solveV2(x, par=par)
     elseif -sol.vt * par.t < x <= sol.vs * par.t
-        return sol.v23
+        return sol.v34
     elseif sol.vs * par.t < x
         return 0.0
     else
@@ -432,12 +456,12 @@ function solveHydroShock(x::Array{Float64,1}; par::RiemannParameters)
     x_in = sol.x .- par.x_contact
 
     # solve Pressure
-    sol.P23 = solveP23(par=par)
+    sol.P34 = solveP34(par=par)
 
     # solve velocity
-    sol.v23 = solveV23(par=par, sol=sol)
+    sol.v34 = solveV34(par=par, sol=sol)
 
-    sol.rho2 = solveRho2(par=par)
+    sol.rho4 = solveRho4(par=par, sol=sol)
 
     sol.vs = solveVs(par=par, sol=sol)
     sol.vt = solveVt(par=par, sol=sol)
@@ -448,9 +472,11 @@ function solveHydroShock(x::Array{Float64,1}; par::RiemannParameters)
     end
 
     # solve density
-
     sol.rho3 = solveRho3(par=par, sol=sol)
-    sol.rho = solveRho.(x_in, par=par, sol=sol)
+
+    for i = 1:length(sol.x)
+        sol.rho[i] = solveRho(x_in[i], par=par, sol=sol)
+    end
 
     sol.Mach = par.M
 
