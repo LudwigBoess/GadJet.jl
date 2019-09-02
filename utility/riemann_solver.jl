@@ -38,7 +38,7 @@ function solvePr(Pr::Float64,
 
     find_rho1(rho1) = ρ_mr0/(1.0 - C/rho1) - rho1
 
-    ρ_mr = find_zero( find_rho1, (0.9*ρ_mr0, 10.0*ρ_mr0), Bisection() )
+    ρ_mr = find_zero( find_rho1, ρ_mr0 )
 
     vm = 2.0 * c_l / γ_1 * ( 1.0 - (P_m/Pl)^γ_pow )
 
@@ -54,10 +54,19 @@ function solvePrfromMach(rhol::Float64, rhor::Float64,
                          γ::Float64, γ_cr::Float64,
                          eff_function)
 
+    # first approx without CRs
     findPrHelper(P) = solvePr(P, rhol, rhor,
-                              Pl, Mach, γ, γ_cr, eff_function)
+                              Pl, Mach, γ, γ_cr, null_eff)
 
     Pr = find_zero(findPrHelper, (1.e-5, 1.e5), Bisection() )
+
+    # find it with CRs
+    if eff_function != null_eff
+        findPrHelper(P) = solvePr(P, rhol, rhor,
+                                Pl, Mach, γ, γ_cr, eff_function)
+
+        Pr = find_zero(findPrHelper, (1.e-2*Pr, Pr), Bisection() )
+    end
 
     return Pr
 end
