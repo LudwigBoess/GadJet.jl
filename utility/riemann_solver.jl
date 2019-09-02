@@ -10,7 +10,8 @@ using Roots
 function solvePr(Pr::Float64,
                  rhol::Float64, rhor::Float64,
                  Pl::Float64, Mach::Float64,
-                 γ::Float64)
+                 γ::Float64, γ_cr::Float64,
+                 eff_function)
 
     γ_1 = γ - 1.0
     γ_pow = γ_1/(2.0*γ)
@@ -24,9 +25,20 @@ function solvePr(Pr::Float64,
 
     P_m = find_zero(f, (Pr, Pl), Bisection())
 
+    # CR part
 
-    ρ_mr = rhor * ( ( P_m + η2 * Pr ) / ( Pr + η2 * P_m))
-    ρ_ml = rhol * ( P_m / Pl )^(1.0/γ)
+    P_cr = eff_function(Mach) * P_m
+
+    vm = 2.0 * c_l / γ_1 * ( 1.0 - (P_m/Pl)^γ_pow )
+
+    C = 2.0*(γ - γ_cr)*P_cr/( γ_1* vm^2 * (γ_cr - 1.0) )
+
+    ρ_mr0 = rhor * ( ( P_m + η2 * Pr ) / ( Pr + η2 * P_m))
+    #ρ_ml = rhol * ( P_m / Pl )^(1.0/γ)
+
+    find_rho1(rho1) = ρ_mr0/(1.0 - C/rho1) - rho1
+
+    ρ_mr = find_zero( find_rho1, (0.9*ρ_mr0, 10.0*ρ_mr0), Bisection() )
 
     vm = 2.0 * c_l / γ_1 * ( 1.0 - (P_m/Pl)^γ_pow )
 
@@ -39,10 +51,11 @@ end
 
 function solvePrfromMach(rhol::Float64, rhor::Float64,
                          Pl::Float64, Mach::Float64,
-                         γ::Float64)
+                         γ::Float64, γ_cr::Float64,
+                         eff_function)
 
     findPrHelper(P) = solvePr(P, rhol, rhor,
-                              Pl, Mach, γ)
+                              Pl, Mach, γ, γ_cr, eff_function)
 
     Pr = find_zero(findPrHelper, (1.e-5, 1.e5), Bisection() )
 
@@ -198,26 +211,6 @@ mutable struct RiemannParameters#{F<:Function}
             println("Error! Both Ul and Pl are zero!")
         end
 
-        # calculate Ur and Pr depending on input
-        if (Pr == 0.0) & (Ur != 0.0)
-            Pr = ( γ_th - 1.0 ) * rhor * Ur
-        elseif (Ur == 0.0) & (Pr != 0.0)
-            Ur = Pr / ( (γ_th - 1.0) * rhor )
-        elseif (Ur == 0.0) & (Pr == 0.0) & (Mach == 0.0)
-            println("Error! Ur, Pr and Mach are zero! Can't find solution!")
-        else
-            println("Both Ur and Pr are zero! Will calculate them depending on Machnumber.")
-            Pr = solvePrfromMach(rhol, rhor, Pl, Mach, γ_th)
-            Ur = Pr / ( (γ_th - 1.0) * rhor )
-        end
-
-        if Mach == 0.0
-            Mach = solveMach(Pl, Pr, rhol, rhor, γ_th)
-        end
-
-        cl = sqrt.(γ_th * Pl / rhol)
-        cr = sqrt.(γ_th * Pr / rhor)
-
         if eff_model == 0
             eff_function = null_eff
         elseif eff_model == 1
@@ -233,6 +226,28 @@ mutable struct RiemannParameters#{F<:Function}
             println("Selecting null function")
             eff_function = null_eff
         end
+
+        # calculate Ur and Pr depending on input
+        if (Pr == 0.0) & (Ur != 0.0)
+            Pr = ( γ_th - 1.0 ) * rhor * Ur
+        elseif (Ur == 0.0) & (Pr != 0.0)
+            Ur = Pr / ( (γ_th - 1.0) * rhor )
+        elseif (Ur == 0.0) & (Pr == 0.0) & (Mach == 0.0)
+            println("Error! Ur, Pr and Mach are zero! Can't find solution!")
+        else
+            println("Both Ur and Pr are zero! Will calculate them depending on Machnumber.")
+            Pr = solvePrfromMach(rhol, rhor, Pl, Mach, γ_th, γ_cr, eff_function)
+            Ur = Pr / ( (γ_th - 1.0) * rhor )
+        end
+
+        if Mach == 0.0
+            Mach = solveMach(Pl, Pr, rhol, rhor, γ_th)
+        end
+
+        cl = sqrt.(γ_th * Pl / rhol)
+        cr = sqrt.(γ_th * Pr / rhor)
+
+
 
         #new{typeof(F)}
         new(rhol, rhor,
