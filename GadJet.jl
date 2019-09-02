@@ -159,7 +159,9 @@ module GadJet
            data_type == "floatn"
                 dt = Float32
         elseif data_type == "long"
-                dt = UInt32
+                dt = Int32
+        elseif data_type == "llong"
+                dt = Int64
         elseif data_type == "double" ||
                data_type == "doublen"
                 dt = Float64
