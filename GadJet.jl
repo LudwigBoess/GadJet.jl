@@ -11,7 +11,13 @@ module GadJet
     include(joinpath(dirname(@__FILE__), "sph_to_grid", "sph_types.jl"))
     include(joinpath(dirname(@__FILE__), "sph_to_grid", "kernels.jl"))
     include(joinpath(dirname(@__FILE__), "unit_conversion", "unit_types.jl"))
-    include(joinpath(dirname(@__FILE__), "utility", "riemann_solver.jl"))
+    # old riemann solver
+    include(joinpath(dirname(@__FILE__), "riemann_solvers", "riemann_solver.jl"))
+
+    # test for new riemann solvers
+    #include(joinpath(dirname(@__FILE__), "riemann_solvers", "sod_shock.jl"))
+    #include(joinpath(dirname(@__FILE__), "riemann_solvers", "cr_sod_shock.jl"))
+
     include(joinpath(dirname(@__FILE__), "bp_cr_utility", "cr_datatypes.jl"))
     include(joinpath(dirname(@__FILE__), "bp_cr_utility", "analysis_functions.jl"))
 
@@ -33,9 +39,20 @@ module GadJet
            WendlandC6,
            mappingParameters,
            GadgetUnitFactors,
+
+           # old riemann solver
            RiemannParameters,   # datatype for riemann parameters
            RiemannSolution,     # datatype for riemann solution
            solveHydroShock,      # function that solves a standard sod shock
+
+           # Test for different riemann solvers
+           #SodParameters,       # datatype for sod parameters
+           #SodHydroSolution,     # datatype for sod hydro solution
+           #SodCRParameters,       # datatype for sod parameters with CRs
+           #SodCRSolution,     # datatype for sod solution with CRs
+           #solveSodShock,   # function that solves a standard sod shock
+           #solveSodShockCR,      # function that solves a sod shock with CRs
+
            CRShockData,          # datatype to analyse single shocked particle
            readSingleCRShockDataFromOutputFile, # as the name says
            CRMomentumDistributionConfig, # config parameters for momentum distribution function

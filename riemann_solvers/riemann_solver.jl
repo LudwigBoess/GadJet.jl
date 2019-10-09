@@ -109,14 +109,14 @@ end
 """
 function KR07(M::Float64)
     if M <= 2.0
-        return 1.96e-3*(M^2 - 1.)               # eq. A3
+        return (1.96e-3*(M^2 - 1.))^2               # eq. A3
     else
         b = [5.46, -9.78, 4.17, -0.337, 0.57]   # eq. A4
         η = 0.
         for i ∈ 1:length(b)
             η += b[i] * ((M - 1.)^(i-1))/M^4    # eq. A5
         end
-        return η
+        return η^2
     end
 end
 
@@ -129,12 +129,13 @@ function KR13(M::Float64)
         return 0.0
     elseif 2.0 <= M <= 5.0
         param = [-0.0005950569221922047, 1.880258286365841e-5, 5.334076006529829 ]
-        return param[1] + param[2]*M^param[3]
+        return (param[1] + param[2]*M^param[3])^2
     elseif 5.0 < M <= 15.0
         param = [-2.8696966498579606, 9.667563166507879, -8.877138312318019, 1.938386688261113, 0.1806112438315771]
-        return (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
+        η = (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
+        return η^2
     else
-        return 0.21152
+        return (0.21152)^2
     end
 end
 
@@ -148,9 +149,10 @@ function R_19(M::Float64)
         return 0.0
     elseif M <= 34.0
         param = [-1.5255114554627316, 2.4026049650156693, -1.2534251472776456, 0.22152323784680614, 0.0335800899612107]
-        return (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
+        η = (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
+        return η^2
     else
-        return  0.0348
+        return  (0.0348)^2
     end
 
     # if 2.25 < M <= 5.0
@@ -169,7 +171,11 @@ end
 """
 function CS15(M::Float64)
     vazza_factor = 0.5
-    return vazza_factor * KR13(M)
+    return (vazza_factor * KR13(M))^2
+end
+
+function P16(M::Float64)
+    return 0.25
 end
 
 function null_eff(M::Float64)
@@ -206,7 +212,7 @@ mutable struct RiemannParameters#{F<:Function}
                                 Pe_ratio::Float64=0.01,
                                 γ_th::Float64=5.0/3.0,
                                 γ_cr::Float64=4.0/3.0,
-                                eff_model::Int64=0)
+                                eff_model::Int64=-1)
 
         γ_exp    = ( γ_th - 1.0 )/( 2.0 * γ_th )
         η2       = (γ_th-1.0)/(γ_th+1.0)
@@ -220,16 +226,18 @@ mutable struct RiemannParameters#{F<:Function}
             println("Error! Both Ul and Pl are zero!")
         end
 
-        if eff_model == 0
+        if eff_model == -1
             eff_function = null_eff
-        elseif eff_model == 1
+        elseif eff_model == 0
             eff_function = KR07
-        elseif eff_model == 2
+        elseif eff_model == 1
             eff_function = KR13
-        elseif eff_model == 3
+        elseif eff_model == 2
             eff_function = R_19
-        elseif eff_model == 4
+        elseif eff_model == 3
             eff_function = CS15
+        elseif eff_model == 4
+            eff_function = P16
         else
             println("Invalid DSA model selection!")
             println("Selecting null function")
@@ -242,7 +250,7 @@ mutable struct RiemannParameters#{F<:Function}
         elseif (Ur == 0.0) & (Pr != 0.0)
             Ur = Pr / ( (γ_th - 1.0) * rhor )
         elseif (Ur == 0.0) & (Pr == 0.0) & (Mach == 0.0)
-            println("Error! Ur, Pr and Mach are zero! Can't find solution!")
+            error("Ur, Pr and Mach are zero! Can't find solution!")
         else
             println("Both Ur and Pr are zero! Will calculate them depending on Machnumber.")
             Pr = solvePrfromMach(rhol, rhor, Pl, Mach, γ_th, γ_cr, eff_function)

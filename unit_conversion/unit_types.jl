@@ -48,7 +48,6 @@ mutable struct GadgetUnitFactors
         B_cgs = 1.0    # gadget outputs in cgs
         B_si = 1.e-4
 
-
         mp = 1.6726219e-24
 
         rho_unit = m_unit/l_unit^3  # 10 M_⊙/pc^3
