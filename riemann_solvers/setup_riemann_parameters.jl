@@ -33,9 +33,9 @@ function RiemannParameters(;rhol::Float64=1.0,        rhor::Float64=0.125,
 
          println("Setting up parameters for pure hydro Sod-shock.")
 
-         return SodParameters(rhol, rhor, Pl, Pr,
-                              Ul, Ur, Mach, t,
-                              x_contact, γ_th)
+         return SodParameters(rhol=rhol, rhor=rhor, Pl=Pl, Pr=Pr,
+                              Ul=Ul, Ur=Ur, Mach=Mach, t=t,
+                              x_contact=x_contact, γ_th=γ_th)
 
     elseif dsa_model != -1
 
@@ -69,12 +69,12 @@ function RiemannParameters(;rhol::Float64=1.0,        rhor::Float64=0.125,
          dsa_model == -1
 
          println("Setting up parameters for multicomponent shock without CR acceleration.")
-         return SodCRParameters_withCRs(rhol, rhor, Pl, Pr,
-                                         Ul, Ur, P_cr_l, P_cr_r,
-                                         E_cr_l, E_cr_r,
-                                         Mach, t, x_contact,
-                                         Pe_ratio, γ_th, γ_cr,
-                                         eff_model)
+         return SodCRParameters_withCRs(rhol=rhol, rhor=rhor, Pl=Pl, Pr=Pr,
+                                         Ul=Ul, Ur=Ur, P_cr_l=P_cr_l, P_cr_r=P_cr_r,
+                                         E_cr_l=E_cr_l, E_cr_r=E_cr_r,
+                                         Mach=Mach, t=t, x_contact=x_contact,
+                                         Pe_ratio=Pe_ratio, γ_th=γ_th, γ_cr=γ_cr,
+                                         dsa_model=dsa_model)
 
     end # Seed CRs without acc
 
