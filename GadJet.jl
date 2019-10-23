@@ -7,15 +7,21 @@ module GadJet
     include(joinpath(dirname(@__FILE__), "read_snapshot", "dict_functions.jl"))
     include(joinpath(dirname(@__FILE__), "read_snapshot", "obj_functions.jl"))
     include(joinpath(dirname(@__FILE__), "write_snapshot", "write_snap.jl"))
+    # sph to grid mapping internal module
+    include(joinpath(dirname(@__FILE__), "sph_to_grid", "kernels.jl"))
     include(joinpath(dirname(@__FILE__), "sph_to_grid", "sph_to_grid.jl"))
     include(joinpath(dirname(@__FILE__), "sph_to_grid", "sph_types.jl"))
-    include(joinpath(dirname(@__FILE__), "sph_to_grid", "kernels.jl"))
+    # sph to grid mapping with Smac
+    include(joinpath(dirname(@__FILE__), "sph_to_grid", "smac1_utility.jl"))
+    # sph to grid mapping with Smac
+    include(joinpath(dirname(@__FILE__), "sph_to_grid", "smac2_utility.jl"))
+    # unit conversion
     include(joinpath(dirname(@__FILE__), "unit_conversion", "unit_types.jl"))
     # old riemann solver
-    include(joinpath(dirname(@__FILE__), "riemann_solvers", "riemann_solver.jl"))
+    #include(joinpath(dirname(@__FILE__), "riemann_solvers", "riemann_solver.jl"))
 
     # test for new riemann solvers
-    #include(joinpath(dirname(@__FILE__), "riemann_solvers", "sod_shock.jl"))
+    include(joinpath(dirname(@__FILE__), "riemann_solvers", "setup_riemann_parameters.jl"))
     #include(joinpath(dirname(@__FILE__), "riemann_solvers", "cr_sod_shock.jl"))
 
     include(joinpath(dirname(@__FILE__), "bp_cr_utility", "cr_datatypes.jl"))
@@ -31,28 +37,34 @@ module GadJet
            read_block_by_name,      # similar to readnew.pro by Klaus Dolag
            write_header,
            write_block,
-           sphAdaptiveMapping,
-           sphCenterMapping,
+
+           # Kernels
            Cubic,
            Quintic,
            WendlandC4,
            WendlandC6,
+           # internal sph mapping
            mappingParameters,
-           GadgetUnitFactors,
+           sphAdaptiveMapping,
+           sphCenterMapping,
+           # helper functions and datatypes for Smac
+           Smac1ImageInfo,
+           read_smac1_binary_image,
+           read_smac1_binary_info,
+           # helper function for P-Smac2
+           write_smac2_par,
 
+           GadgetUnitFactors,
            # old riemann solver
-           RiemannParameters,   # datatype for riemann parameters
-           RiemannSolution,     # datatype for riemann solution
-           solveHydroShock,      # function that solves a standard sod shock
+           #RiemannParameters,   # datatype for riemann parameters
+           #RiemannSolution,     # datatype for riemann solution
+           #solveHydroShock,      # function that solves a standard sod shock
 
            # Test for different riemann solvers
-           #SodParameters,       # datatype for sod parameters
-           #SodHydroSolution,     # datatype for sod hydro solution
-           #SodCRParameters,       # datatype for sod parameters with CRs
-           #SodCRSolution,     # datatype for sod solution with CRs
-           #solveSodShock,   # function that solves a standard sod shock
-           #solveSodShockCR,      # function that solves a sod shock with CRs
+           RiemannParameters,    # helper function to set up solution
+           solve,                # overloaded function to solve riemann problems
 
+           # datatypes and helper functions for BP_REAL_CRs
            CRShockData,          # datatype to analyse single shocked particle
            readSingleCRShockDataFromOutputFile, # as the name says
            CRMomentumDistributionConfig, # config parameters for momentum distribution function
@@ -210,7 +222,7 @@ module GadJet
         if info.block_name == ""
             info = read_info(filename)
             if info == 1
-                println("Error! No Info block in snapshot! Supply Info_Line type!")
+                error("No Info block in snapshot! Supply Info_Line type!")
                 return 1
             end
             for i ∈ 1:length(info)
@@ -231,7 +243,8 @@ module GadJet
         first_block = read(f, Int32)
 
         if first_block != Int32(8)
-            return "Only snapshots of format 2 can be read by name!"
+            error("Only snapshots of format 2 can be read by name!")
+            return
         end
 
         while eof(f) != true
@@ -289,6 +302,5 @@ module GadJet
         end # eof(f) != true
 
     end
-
 
 end
