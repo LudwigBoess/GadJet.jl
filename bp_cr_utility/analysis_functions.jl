@@ -90,9 +90,9 @@ function getCRMomentumDistributionFromPartID(snap_file::String, ID::Int64;
 
     cr = CRMomentumDistribution(par.Nbins)
 
-    # compensate for io
-    CRpN .*= 1.e20
-    CReN .*= 1.e20
+    # compensate for io - needs to be converted to Float64!
+    CRpN = 1.e20 .* Float64.(CRpN)
+    CReN = 1.e20 .* Float64.(CReN)
 
     # get zeroth bin
     cr.CRp_bound[1] = pmin
