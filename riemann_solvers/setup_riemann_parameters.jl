@@ -1,3 +1,4 @@
+include("sod_shock.jl")
 include("cr_sod_shock_main.jl")
 include("cr_sod_shock_noprepopulation.jl")
 include("cr_sod_shock_withprepopulation.jl")
@@ -20,7 +21,7 @@ function RiemannParameters(;rhol::Float64=1.0,        rhor::Float64=0.125,
 
 
     # Error handling
-    if (Pl == 0.0 & Ul == 0.0)
+    if (Pl == 0.0 && Ul == 0.0)
         error("Both Ul and Pl are zero!")
     end # error handling
 
@@ -49,7 +50,7 @@ function RiemannParameters(;rhol::Float64=1.0,        rhor::Float64=0.125,
                                          Mach=Mach, t=t, x_contact=x_contact,
                                          Pe_ratio=Pe_ratio, γ_th=γ_th, γ_cr=γ_cr,
                                          thetaB=thetaB, theta_crit=theta_crit,
-                                         eff_model=eff_model)
+                                         dsa_model=dsa_model)
         else
             println("With seed CRs.")
             return SodCRParameters_withCRs(rhol=rhol, rhor=rhor,
@@ -59,12 +60,13 @@ function RiemannParameters(;rhol::Float64=1.0,        rhor::Float64=0.125,
                                            Mach=Mach, t=t, x_contact=x_contact,
                                            Pe_ratio=Pe_ratio, γ_th=γ_th, γ_cr=γ_cr,
                                            thetaB=thetaB, theta_crit=theta_crit,
-                                           eff_model=eff_model)
-        end # dsa_model != -1
+                                           dsa_model=dsa_model)
+        end #
+    end # dsa_model != -1
 
     if ( (P_cr_l != 0.0 && P_cr_r != 0.0) ||
          (E_cr_l != 0.0 && E_cr_r != 0.0) ) &&
-         dsa_model == 4
+         dsa_model == -1
 
          println("Setting up parameters for multicomponent shock without CR acceleration.")
          return SodCRParameters_withCRs(rhol, rhor, Pl, Pr,

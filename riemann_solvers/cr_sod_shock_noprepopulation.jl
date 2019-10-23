@@ -47,21 +47,17 @@ mutable struct SodCRParameters_noCRs
             error("Both Ul and Pl are zero!")
         end
 
-        # calculate B angle dependent efficiency following Pais+ 2018, MNRAS, 478, 5278
-        delta_theta = π/18.0
-        thetaB *= (π/180)
-        etaB = 0.5*( tanh( (theta_crit - thetaB)/delta_theta ) + 1.0 )
 
         if dsa_model == 0
-            acc_function(M::Float64) = etaB * KR07_acc(M::Float64)
+            acc_function = KR07_acc
         elseif dsa_model == 1
-            acc_function(M::Float64) =  etaB * KR13_acc(M::Float64)
+            acc_function = KR13_acc
         elseif dsa_model == 2
-            acc_function(M::Float64) = etaB * Ryu19_acc(M::Float64)
+            acc_function = Ryu19_acc
         elseif dsa_model == 3
-            acc_function(M::Float64) = etaB * CS14_acc(M::Float64)
+            acc_function = CS14_acc
         elseif dsa_model == 4
-            acc_function(M::Float64) = etaB * P16_acc(M::Float64)
+            acc_function = P16_acc
         else
             error("Invalid DSA model selection!\n
                    Pick one of the available models, or solve a pure Hydro shock with:\n
@@ -85,13 +81,12 @@ mutable struct SodCRParameters_noCRs
             Ur = Pr / ( (γ_th - 1.0) * rhor )
         end
 
-        if Mach == 0.0
-            Mach = solveMachCR(Pl, Pr,
-                               rhor, rhol,
-                               γ_th, γ_cr,
-                               Mach, acc_function)
-        end
+        # calculate B angle dependent efficiency following Pais+ 2018, MNRAS, 478, 5278
+        delta_theta = π/18.0
+        thetaB *= (π/180)
+        etaB = 0.5*( tanh( (theta_crit - thetaB)/delta_theta ) + 1.0 )
 
+        #ξ = etaB*acc_function(Mach)/(1.0 - etaB*acc_function(Mach))
         ξ = acc_function(Mach)/(1.0 - acc_function(Mach))
 
 

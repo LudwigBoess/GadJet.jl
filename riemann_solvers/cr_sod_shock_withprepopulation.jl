@@ -1,10 +1,10 @@
-using Roots
-using Distributions
-using NLsolve
-#using ForwardDiff
-#using SpecialFunctions
-include("cr_sod_shock_main.jl")
-include("beta_inc_functions.jl")
+# using Roots
+# using Distributions
+# using NLsolve
+# #using ForwardDiff
+# #using SpecialFunctions
+# include("cr_sod_shock_main.jl")
+# include("beta_inc_functions.jl")
 
 mutable struct SodCRParameters_withCRs
 
@@ -129,194 +129,194 @@ end
 """
         Integral function
 """
-
-@inline A(P::Float64, ρ::Float64, γ::Float64) = γ * P * ρ^(-γ)
-@inline a(P::Float64, γ::Float64) = γ * P
-
-@inline function x(ρ::Float64, P_th::Float64, P_cr::Float64, par::SodCRParameters)
-    return  a(P_th, par.γ_th)/(a(P_th, par.γ_th) + a(P_cr, par.γ_cr))
-end
-
-
-
-@inline function reduced_Beta(x, α, β)
-    return 1.0/beta(α, β) * x^(α - 1.0) * ( 1.0 - x )^(β - 1.0)
-end
-
-@inline function γ_eff(P_th::Float64, P_cr::Float64, γ_th::Float64, γ_cr::Float64)
-    return (γ_cr*P_cr + γ_th*P_th)/(P_th + P_cr)
-end
-
-@inline function I(rho::Float64, P_th::Float64, P_cr::Float64, par::SodCRParameters)
-
-    x_ = x(rho, P_th, P_cr,  par)
-    A_cr = A(P_cr, rho, par.γ_cr)
-    A_th = A(P_th, rho, par.γ_th)
-
-    return √(A_cr)/par.Δγ * (A_cr/A_th)^par.α * beta_inc( par.α, par.β, x_ )[1]
-end
+#
+# @inline A(P::Float64, ρ::Float64, γ::Float64) = γ * P * ρ^(-γ)
+# @inline a(P::Float64, γ::Float64) = γ * P
+#
+# @inline function x(ρ::Float64, P_th::Float64, P_cr::Float64, par::SodCRParameters)
+#     return  a(P_th, par.γ_th)/(a(P_th, par.γ_th) + a(P_cr, par.γ_cr))
+# end
+#
+#
+#
+# @inline function reduced_Beta(x, α, β)
+#     return 1.0/beta(α, β) * x^(α - 1.0) * ( 1.0 - x )^(β - 1.0)
+# end
+#
+# @inline function γ_eff(P_th::Float64, P_cr::Float64, γ_th::Float64, γ_cr::Float64)
+#     return (γ_cr*P_cr + γ_th*P_th)/(P_th + P_cr)
+# end
+#
+# @inline function I(rho::Float64, P_th::Float64, P_cr::Float64, par::SodCRParameters)
+#
+#     x_ = x(rho, P_th, P_cr,  par)
+#     A_cr = A(P_cr, rho, par.γ_cr)
+#     A_th = A(P_th, rho, par.γ_th)
+#
+#     return √(A_cr)/par.Δγ * (A_cr/A_th)^par.α * beta_inc( par.α, par.β, x_ )[1]
+# end
 
 """
     Pressure
 """
-function solveP3(par::SodCRParameters_withCRs, sol::SodCRSolution)
-    # Solves the pressure of the middle state in a shocktube
-
-    Pcr3 = par.P_cr_l * ( sol.rho3/par.rhol )^par.γ_cr
-    P3 = par.Pl * ( sol.rho3/par.rhol )^par.γ_th
-
-    return P3, Pcr3
-end
-
-function solveP2(x::Float64; par::SodCRParameters_withCRs)
-    # solves the pressure along the rarefaction wave
-    return par.Pl * ( -par.η2 * x / ( par.cl * par.t ) + ( 1.0 - par.η2 ) )^( 1.0/par.γ_exp )
-end
-
-function solveP(x::Float64, par::SodCRParameters_withCRs, sol::SodCRSolution)
-    # returns P values according to position in shocktube
-
-    if x <= -par.cl * par.t
-        return (par.Pl + par.P_cr_l),
-                par.Pl, par.P_cr_l,
-                (1.0 - par.Pe_ratio)*par.P_cr_l,
-                par.Pe_ratio*par.P_cr_l
-
-    elseif -par.cl * par.t < x <= -sol.vt * par.t
-        return 0.0, 0.0, 0.0, 0.0, 0.0
-
-    elseif -sol.vt * par.t < x <= sol.v34 * par.t
-        return (sol.P3_th + sol.P3_cr),
-                sol.P3_th, sol.P3_cr,
-                (1.0 - par.Pe_ratio)*sol.P3_cr,
-                par.Pe_ratio*sol.P3_cr
-
-    elseif sol.v34 * par.t < x <= sol.vs * par.t
-        return (sol.P4_th + sol.P4_cr),
-                sol.P4_th, sol.P4_cr,
-                (1.0 - par.Pe_ratio)*par.P4_cr,
-                par.Pe_ratio*par.P4_cr
-
-    elseif sol.vs * par.t < x
-        return (par.Pr + par.P_cr_r),
-                par.Pr, par.P_cr_r,
-                (1.0 - par.Pe_ratio)*par.P_cr_r,
-                par.Pe_ratio*par.P_cr_r
-    else
-        println("Error! x = $x  t = $(par.t)")
-        return 0.0, 0.0, 0.0, 0.0, 0.0
-    end
-end
+# function solveP3(par::SodCRParameters_withCRs, sol::SodCRSolution)
+#     # Solves the pressure of the middle state in a shocktube
+#
+#     Pcr3 = par.P_cr_l * ( sol.rho3/par.rhol )^par.γ_cr
+#     P3 = par.Pl * ( sol.rho3/par.rhol )^par.γ_th
+#
+#     return P3, Pcr3
+# end
+#
+# function solveP2(x::Float64; par::SodCRParameters_withCRs)
+#     # solves the pressure along the rarefaction wave
+#     return par.Pl * ( -par.η2 * x / ( par.cl * par.t ) + ( 1.0 - par.η2 ) )^( 1.0/par.γ_exp )
+# end
+#
+# function solveP(x::Float64, par::SodCRParameters_withCRs, sol::SodCRSolution)
+#     # returns P values according to position in shocktube
+#
+#     if x <= -par.cl * par.t
+#         return (par.Pl + par.P_cr_l),
+#                 par.Pl, par.P_cr_l,
+#                 (1.0 - par.Pe_ratio)*par.P_cr_l,
+#                 par.Pe_ratio*par.P_cr_l
+#
+#     elseif -par.cl * par.t < x <= -sol.vt * par.t
+#         return 0.0, 0.0, 0.0, 0.0, 0.0
+#
+#     elseif -sol.vt * par.t < x <= sol.v34 * par.t
+#         return (sol.P3_th + sol.P3_cr),
+#                 sol.P3_th, sol.P3_cr,
+#                 (1.0 - par.Pe_ratio)*sol.P3_cr,
+#                 par.Pe_ratio*sol.P3_cr
+#
+#     elseif sol.v34 * par.t < x <= sol.vs * par.t
+#         return (sol.P4_th + sol.P4_cr),
+#                 sol.P4_th, sol.P4_cr,
+#                 (1.0 - par.Pe_ratio)*par.P4_cr,
+#                 par.Pe_ratio*par.P4_cr
+#
+#     elseif sol.vs * par.t < x
+#         return (par.Pr + par.P_cr_r),
+#                 par.Pr, par.P_cr_r,
+#                 (1.0 - par.Pe_ratio)*par.P_cr_r,
+#                 par.Pe_ratio*par.P_cr_r
+#     else
+#         println("Error! x = $x  t = $(par.t)")
+#         return 0.0, 0.0, 0.0, 0.0, 0.0
+#     end
+# end
 
 
 """
     Density
 """
-function solveRho2(x::Float64, par::SodCRParameters_withCRs)
-    # solves density along the rarefaction wave
-
-    #f(rho) = I(rho) - I(par.rhol) + x/par.t + sqrt.( A())
-    return 0.0
-
-end
-
-
-function rho34_solver!(F, x, par::SodCRParameters_withCRs)
-
-    xs(rho4)        = rho4/par.rhor
-    xr(rho3)        = rho3/par.rhol
-
-    P34(rho3)       = par.P_cr_l*xr(rho3)^par.γ_cr + par.Pl*xr(rho3)^par.γ_th
-
-    Pcr4(rho4)      = par.P_cr_r*xs(rho4)^par.γ_cr
-
-    ε2(rho4, rho3)  = par.E_cr_r*xs(rho4)^par.γ_cr + 1.0/(par.γ_th - 1.0) *
-                     ( P34(rho3) - Pcr4(rho4) )
-
-    Pth3(rho3)      = par.Pl * xr(rho3)^par.γ_th
-    Pcr3(rho3)      = par.P_cr_l * xs(rho3)^par.γ_cr
-
-    F[1] = (P34(x[1]) - (par.Pr + par.P_cr_r)) * ( xs(x[2]) - 1.0 ) -
-            par.rhor * xs(x[2]) * ( I(par.rhol, par.Pl, par.P_cr_l, par) - I(x[1], Pth3(x[1]), Pcr3(x[1]), par) )^2
-
-    F[2] = (P34(x[1]) + (par.Pr + par.P_cr_r)) * ( xs(x[2]) - 1.0 ) +
-            2.0 * ( xs(x[2]) * (par.Ur + par.E_cr_r) - ε2(x[2], x[1]) )
-
-end
-
-function solveRho34(par::SodCRParameters_withCRs)
-
-    rho34_helper!(F, x) = rho34_solver!(F, x, par)
-
-    initial_x = [par.rhol, par.rhor]
-    nlsolve(rho34_helper!, initial_x)
-
-        #   rho3           rho4
-    return initial_x[1], initial_x[2]
-
-end
-
-function solveRho(x::Float64, par::SodCRParameters_withCRs, sol::SodCRSolution)
-    # returns P values according to position in shocktube
-
-    if x <= -par.cl * par.t
-        return par.rhol
-    elseif -par.cl * par.t < x <= -sol.vt * par.t
-        return solveRho2(x, par)
-    elseif -sol.vt * par.t < x <= sol.v34 * par.t
-        return sol.rho3
-    elseif sol.v34 * par.t < x <= sol.vs * par.t
-        return sol.rho4
-    elseif sol.vs * par.t < x
-        return par.rhor
-    else
-        println("Error!")
-        return 0.0
-    end
-end
+# function solveRho2(x::Float64, par::SodCRParameters_withCRs)
+#     # solves density along the rarefaction wave
+#
+#     #f(rho) = I(rho) - I(par.rhol) + x/par.t + sqrt.( A())
+#     return 0.0
+#
+# end
+#
+#
+# function rho34_solver!(F, x, par::SodCRParameters_withCRs)
+#
+#     xs(rho4)        = rho4/par.rhor
+#     xr(rho3)        = rho3/par.rhol
+#
+#     P34(rho3)       = par.P_cr_l*xr(rho3)^par.γ_cr + par.Pl*xr(rho3)^par.γ_th
+#
+#     Pcr4(rho4)      = par.P_cr_r*xs(rho4)^par.γ_cr
+#
+#     ε2(rho4, rho3)  = par.E_cr_r*xs(rho4)^par.γ_cr + 1.0/(par.γ_th - 1.0) *
+#                      ( P34(rho3) - Pcr4(rho4) )
+#
+#     Pth3(rho3)      = par.Pl * xr(rho3)^par.γ_th
+#     Pcr3(rho3)      = par.P_cr_l * xs(rho3)^par.γ_cr
+#
+#     F[1] = (P34(x[1]) - (par.Pr + par.P_cr_r)) * ( xs(x[2]) - 1.0 ) -
+#             par.rhor * xs(x[2]) * ( I(par.rhol, par.Pl, par.P_cr_l, par) - I(x[1], Pth3(x[1]), Pcr3(x[1]), par) )^2
+#
+#     F[2] = (P34(x[1]) + (par.Pr + par.P_cr_r)) * ( xs(x[2]) - 1.0 ) +
+#             2.0 * ( xs(x[2]) * (par.Ur + par.E_cr_r) - ε2(x[2], x[1]) )
+#
+# end
+#
+# function solveRho34(par::SodCRParameters_withCRs)
+#
+#     rho34_helper!(F, x) = rho34_solver!(F, x, par)
+#
+#     initial_x = [par.rhol, par.rhor]
+#     nlsolve(rho34_helper!, initial_x)
+#
+#         #   rho3           rho4
+#     return initial_x[1], initial_x[2]
+#
+# end
+#
+# function solveRho(x::Float64, par::SodCRParameters_withCRs, sol::SodCRSolution)
+#     # returns P values according to position in shocktube
+#
+#     if x <= -par.cl * par.t
+#         return par.rhol
+#     elseif -par.cl * par.t < x <= -sol.vt * par.t
+#         return solveRho2(x, par)
+#     elseif -sol.vt * par.t < x <= sol.v34 * par.t
+#         return sol.rho3
+#     elseif sol.v34 * par.t < x <= sol.vs * par.t
+#         return sol.rho4
+#     elseif sol.vs * par.t < x
+#         return par.rhor
+#     else
+#         println("Error!")
+#         return 0.0
+#     end
+# end
 
 
 """
     Velocity
 """
-function solveV34(par::SodCRParameters_withCRs, sol::SodCRSolution)
-    # solves velocity along the isopressure region 2-3
-    return sqrt.( (sol.P34_tot - (par.Pr + par.P_cr_r ) ) * (sol.rho4 - par.rhor)/sol.rho4*par.rhor )
-end
-
-function solveV2(x::Float64, par::SodCRParameters_withCRs)
-    # solves the velocity along the rarefaction wave
-    return 0.0
-end
-
-function solveVs(par::SodCRParameters_withCRs, sol::SodCRSolution)
-    # solves the shock velocity
-    return sol.v34 * sol.rho4 / ( sol.rho4 - par.rhor )
-end
-
-function solveVt(par::SodCRParameters_withCRs, sol::SodCRSolution)
-    # solves the velocity of the tail of the rarefaction wave
-    return I(sol.rho3, sol.P3_th, sol.P3_cr, par) - I(par.rhol, par.Pl, par.P_cr_l, par) +
-            sqrt.(
-                A(sol.P3_cr, sol.rho3, par.γ_cr)*sol.rho3^(par.γ_cr - 1.0) +
-                A(sol.P3_th, sol.rho3, par.γ_th)*sol.rho3^(par.γ_th - 1.0) )
-end
-
-function solveV(x::Float64, par::SodCRParameters_withCRs, sol::SodCRSolution)
-    # solves the velocity along the shocktube
-    if x <= -par.cl * par.t
-        return 0.0
-    elseif -par.cl * par.t < x <= -sol.vt * par.t
-        return solveV2(x, par)
-    elseif -sol.vt * par.t < x <= sol.vs * par.t
-        return sol.v34
-    elseif sol.vs * par.t < x
-        return 0.0
-    else
-        println("Error!")
-        return 0.0
-    end
-end
+# function solveV34(par::SodCRParameters_withCRs, sol::SodCRSolution)
+#     # solves velocity along the isopressure region 2-3
+#     return sqrt.( (sol.P34_tot - (par.Pr + par.P_cr_r ) ) * (sol.rho4 - par.rhor)/sol.rho4*par.rhor )
+# end
+#
+# function solveV2(x::Float64, par::SodCRParameters_withCRs)
+#     # solves the velocity along the rarefaction wave
+#     return 0.0
+# end
+#
+# function solveVs(par::SodCRParameters_withCRs, sol::SodCRSolution)
+#     # solves the shock velocity
+#     return sol.v34 * sol.rho4 / ( sol.rho4 - par.rhor )
+# end
+#
+# function solveVt(par::SodCRParameters_withCRs, sol::SodCRSolution)
+#     # solves the velocity of the tail of the rarefaction wave
+#     return I(sol.rho3, sol.P3_th, sol.P3_cr, par) - I(par.rhol, par.Pl, par.P_cr_l, par) +
+#             sqrt.(
+#                 A(sol.P3_cr, sol.rho3, par.γ_cr)*sol.rho3^(par.γ_cr - 1.0) +
+#                 A(sol.P3_th, sol.rho3, par.γ_th)*sol.rho3^(par.γ_th - 1.0) )
+# end
+#
+# function solveV(x::Float64, par::SodCRParameters_withCRs, sol::SodCRSolution)
+#     # solves the velocity along the shocktube
+#     if x <= -par.cl * par.t
+#         return 0.0
+#     elseif -par.cl * par.t < x <= -sol.vt * par.t
+#         return solveV2(x, par)
+#     elseif -sol.vt * par.t < x <= sol.vs * par.t
+#         return sol.v34
+#     elseif sol.vs * par.t < x
+#         return 0.0
+#     else
+#         println("Error!")
+#         return 0.0
+#     end
+# end
 
 
 """
@@ -328,49 +328,49 @@ function solveSodShockCR_withPrepopulation(x::Array{Float64,1}; par::SodCRParame
 
     # set up datatype to store riemann solution
     sol = SodCRSolution(x)
-
-    # transform into rest-frame of contact discontiuity
-    x_in = sol.x .- par.x_contact
-
-    # solve Pressure
-    sol.rho3, sol.rho4 = solveRho34(par)
-
-
-    sol.xs  = sol.rho4/par.rhor
-    sol.xr  = sol.rho3/par.rhol
-
-    sol.P34_tot = par.P_cr_l*sol.xr^par.γ_cr + par.Pl*sol.xr^par.γ_th
-
-    sol.P3_cr = par.P_cr_l*(sol.rho3/par.rhol)^par.γ_cr
-    sol.P3_th = sol.P34_tot - sol.P3_cr
-
-    sol.P4_cr = par.P_cr_r*sol.xs^par.γ_cr
-    sol.P4_th = sol.P34_tot - sol.P4_cr
-
-    # solve velocity
-    sol.v34 = solveV34(par, sol)
-
-    sol.vs = solveVs(par, sol)
-    sol.vt = solveVt(par, sol)
-
-    for i=1:length(sol.x)
-        sol.v[i] = solveV(x_in[i], par, sol)
-    end
-
-    for i = 1:length(sol.x)
-        sol.P_tot[i], sol.P_th[i], sol.P_cr[i], sol.P_cr_p[i], sol.P_cr_e[i] = solveP(x_in[i], par, sol)
-    end
-
-    for i = 1:length(sol.x)
-        sol.rho[i] = solveRho(x_in[i], par, sol)
-    end
-
-    sol.Mach = sol.vs/par.cr
-
-    sol.U_tot = sol.P_tot ./ ( (par.γ_th - 1.0) .* sol.rho )
-    sol.U_th = sol.P_th ./ ( (par.γ_th - 1.0) .* sol.rho )
-    sol.E_cr_p = sol.P_cr_p ./ ( (par.γ_cr - 1.0) .* sol.rho )
-    sol.E_cr_e = sol.P_cr_e ./ ( (par.γ_cr - 1.0) .* sol.rho )
+    # 
+    # # transform into rest-frame of contact discontiuity
+    # x_in = sol.x .- par.x_contact
+    #
+    # # solve Pressure
+    # sol.rho3, sol.rho4 = solveRho34(par)
+    #
+    #
+    # sol.xs  = sol.rho4/par.rhor
+    # sol.xr  = sol.rho3/par.rhol
+    #
+    # sol.P34_tot = par.P_cr_l*sol.xr^par.γ_cr + par.Pl*sol.xr^par.γ_th
+    #
+    # sol.P3_cr = par.P_cr_l*(sol.rho3/par.rhol)^par.γ_cr
+    # sol.P3_th = sol.P34_tot - sol.P3_cr
+    #
+    # sol.P4_cr = par.P_cr_r*sol.xs^par.γ_cr
+    # sol.P4_th = sol.P34_tot - sol.P4_cr
+    #
+    # # solve velocity
+    # sol.v34 = solveV34(par, sol)
+    #
+    # sol.vs = solveVs(par, sol)
+    # sol.vt = solveVt(par, sol)
+    #
+    # for i=1:length(sol.x)
+    #     sol.v[i] = solveV(x_in[i], par, sol)
+    # end
+    #
+    # for i = 1:length(sol.x)
+    #     sol.P_tot[i], sol.P_th[i], sol.P_cr[i], sol.P_cr_p[i], sol.P_cr_e[i] = solveP(x_in[i], par, sol)
+    # end
+    #
+    # for i = 1:length(sol.x)
+    #     sol.rho[i] = solveRho(x_in[i], par, sol)
+    # end
+    #
+    # sol.Mach = sol.vs/par.cr
+    #
+    # sol.U_tot = sol.P_tot ./ ( (par.γ_th - 1.0) .* sol.rho )
+    # sol.U_th = sol.P_th ./ ( (par.γ_th - 1.0) .* sol.rho )
+    # sol.E_cr_p = sol.P_cr_p ./ ( (par.γ_cr - 1.0) .* sol.rho )
+    # sol.E_cr_e = sol.P_cr_e ./ ( (par.γ_cr - 1.0) .* sol.rho )
 
     return sol
 end
