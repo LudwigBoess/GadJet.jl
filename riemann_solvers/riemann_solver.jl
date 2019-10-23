@@ -11,6 +11,7 @@ function solvePr(Pr::Float64,
                  rhol::Float64, rhor::Float64,
                  Pl::Float64, Mach::Float64,
                  γ::Float64, γ_cr::Float64,
+                 B_angle_efficiency::Float64,
                  eff_function)
 
     γ_1 = γ - 1.0
@@ -27,7 +28,7 @@ function solvePr(Pr::Float64,
 
     # CR part
 
-    P_cr = eff_function(Mach) * P_m
+    P_cr = eff_function(Mach, B_angle_efficiency) * P_m
 
     vm = 2.0 * c_l / γ_1 * ( 1.0 - (P_m/Pl)^γ_pow )
 
@@ -52,20 +53,25 @@ end
 function solvePrfromMach(rhol::Float64, rhor::Float64,
                          Pl::Float64, Mach::Float64,
                          γ::Float64, γ_cr::Float64,
+                         B_angle_efficiency::Float64,
                          eff_function)
 
     # first approx without CRs
     findPrHelper(P) = solvePr(P, rhol, rhor,
-                              Pl, Mach, γ, γ_cr, null_eff)
+                              Pl, Mach, γ, γ_cr,
+                              B_angle_efficiency,
+                              null_eff)
 
     Pr = find_zero(findPrHelper, (1.e-5, 1.e5), Bisection() )
 
     # find it with CRs
     if eff_function != null_eff
         findPrHelper(P) = solvePr(P, rhol, rhor,
-                                Pl, Mach, γ, γ_cr, eff_function)
+                                Pl, Mach, γ, γ_cr,
+                                B_angle_efficiency,
+                                eff_function)
 
-        Pr = find_zero(findPrHelper, (1.e-2*Pr, Pr), Bisection() )
+        Pr = find_zero(findPrHelper, (1.e-3*Pr, Pl), Bisection() )
     end
 
     return Pr
@@ -85,7 +91,7 @@ function solveMach(Pl::Float64, Pr::Float64,
    f(x) = ( x/Pr - 1.0 ) * sqrt.( (1.0 - η2) / (γ * ( x/Pr + η2 ) )) -
            2.0 / γ_1 * c_l / c_r * ( 1.0 - ( x/Pl )^γ_pow )
 
-   P_m = find_zero(f, (Pr, Pl), Bisection())
+   P_m = find_zero(f, (Pr + Pl)/2.0)
 
 
    ρ_mr = rhor * ( ( P_m + η2 * Pr ) / ( Pr + η2 * P_m))
@@ -107,53 +113,57 @@ end
 """
     Kang&Ryu 2007, http://arxiv.org/abs/0704.1521v1
 """
-function KR07(M::Float64)
+function KR07(M::Float64, etaB::Float64)
     if M <= 2.0
-        return (1.96e-3*(M^2 - 1.))^2               # eq. A3
+        η = (1.96e-3*(M^2 - 1.))              # eq. A3
     else
         b = [5.46, -9.78, 4.17, -0.337, 0.57]   # eq. A4
         η = 0.
         for i ∈ 1:length(b)
             η += b[i] * ((M - 1.)^(i-1))/M^4    # eq. A5
         end
-        return η^2
     end
+    return η * etaB
 end
 
 """
     Kang&Ryu 2013, doi:10.1088/0004-637X/764/1/95
 """
-function KR13(M::Float64)
+function KR13(M::Float64, etaB::Float64)
 
     if M < 2.0
-        return 0.0
+        η = 0.0
     elseif 2.0 <= M <= 5.0
         param = [-0.0005950569221922047, 1.880258286365841e-5, 5.334076006529829 ]
-        return (param[1] + param[2]*M^param[3])^2
+        η = param[1] + param[2]*M^param[3]
     elseif 5.0 < M <= 15.0
         param = [-2.8696966498579606, 9.667563166507879, -8.877138312318019, 1.938386688261113, 0.1806112438315771]
         η = (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
-        return η^2
     else
-        return (0.21152)^2
+        η = 0.21152
     end
+
+    return etaB * η
+
 end
+
 
 """
     Ryu et al. 2019, https://arxiv.org/abs/1905.04476
     values for 2.25 < M <= 5.0 extrapolated to entire range
 """
-function R_19(M::Float64)
+function R_19(M::Float64, etaB::Float64)
 
     if M < 2.25
-        return 0.0
+        η = 0.0
     elseif M <= 34.0
         param = [-1.5255114554627316, 2.4026049650156693, -1.2534251472776456, 0.22152323784680614, 0.0335800899612107]
         η = (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
-        return η^2
     else
-        return  (0.0348)^2
+        η = 0.0348
     end
+
+    return etaB * η
 
     # if 2.25 < M <= 5.0
     #     param = [1.1006004346467124, -2.923679036380424, 2.599624937871855, -0.9538130179325343, 0.16080793189704362]
@@ -169,16 +179,18 @@ end
 """
     Caprioli&Spitkovsky 2015,
 """
-function CS15(M::Float64)
+function CS15(M::Float64, etaB::Float64)
     vazza_factor = 0.5
-    return (vazza_factor * KR13(M))^2
+    η = vazza_factor * KR13(M)
+    return etaB * η
 end
 
-function P16(M::Float64)
-    return 0.25
+function P16(M::Float64, etaB::Float64)
+    η = 0.33#0.25
+    return etaB * η
 end
 
-function null_eff(M::Float64)
+function null_eff(M::Float64, etaB::Float64)
     return 0.0
 end
 
@@ -202,6 +214,8 @@ mutable struct RiemannParameters#{F<:Function}
     γ_cr::Float64
     γ_exp::Float64
     η2::Float64
+    # thetaB::Float64
+    Bangle_eff::Float64
     eff_function#::F
 
     function RiemannParameters(;rhol::Float64=1.0,  rhor::Float64=0.125,
@@ -212,6 +226,8 @@ mutable struct RiemannParameters#{F<:Function}
                                 Pe_ratio::Float64=0.01,
                                 γ_th::Float64=5.0/3.0,
                                 γ_cr::Float64=4.0/3.0,
+                                thetaB::Float64=0.0,
+                                theta_crit::Float64=(π/4.0),
                                 eff_model::Int64=-1)
 
         γ_exp    = ( γ_th - 1.0 )/( 2.0 * γ_th )
@@ -226,8 +242,13 @@ mutable struct RiemannParameters#{F<:Function}
             println("Error! Both Ul and Pl are zero!")
         end
 
+        # calculate B angle dependent efficiency
+        delta_theta = π/18.0
+        thetaB *= (π/180)
+        etaB = 0.5*( tanh( (theta_crit - thetaB)/delta_theta ) + 1.0 )
+
         if eff_model == -1
-            eff_function = null_eff
+            eff_function(M) = null_eff(M, etaB)
         elseif eff_model == 0
             eff_function = KR07
         elseif eff_model == 1
@@ -253,7 +274,7 @@ mutable struct RiemannParameters#{F<:Function}
             error("Ur, Pr and Mach are zero! Can't find solution!")
         else
             println("Both Ur and Pr are zero! Will calculate them depending on Machnumber.")
-            Pr = solvePrfromMach(rhol, rhor, Pl, Mach, γ_th, γ_cr, eff_function)
+            Pr = solvePrfromMach(rhol, rhor, Pl, Mach, γ_th, γ_cr, etaB, eff_function)
             Ur = Pr / ( (γ_th - 1.0) * rhor )
         end
 
@@ -275,6 +296,7 @@ mutable struct RiemannParameters#{F<:Function}
             x_contact,
             Pe_ratio,
             γ_th, γ_cr, γ_exp, η2,
+            etaB,
             eff_function)
     end
 end
@@ -325,7 +347,6 @@ mutable struct RiemannSolution
 end
 
 
-
 """
     Functions to solve individual segments of the shocktube
 """
@@ -362,7 +383,7 @@ function solveP(x::Float64; par::RiemannParameters, sol::RiemannSolution)
     elseif -sol.vt * par.t < x <= sol.v34 * par.t
         return sol.P34, sol.P34, 0.0, 0.0, 0.0
     elseif sol.v34 * par.t < x <= sol.vs * par.t
-        η_cr = par.eff_function(par.M)
+        η_cr = par.eff_function(par.M, par.Bangle_eff)
         return sol.P34,                             # total pressure
                (1.0 - η_cr)*sol.P34,                # thermal pressure
                η_cr*sol.P34,                        # total cr pressure
@@ -399,7 +420,7 @@ end
 
 function solveRho4(;par::RiemannParameters, sol::RiemannSolution)
 
-    η_cr = par.eff_function(par.M)
+    η_cr = par.eff_function(par.M, par.Bangle_eff)
     P_cr = η_cr*sol.P34
 
     rho0 = ( ( par.γ_th + 1.0 ) * par.M^2 ) /
@@ -474,6 +495,11 @@ function solveV(x::Float64; par::RiemannParameters, sol::RiemannSolution)
     end
 end
 
+"""
+    c4
+"""
+function solvec4()
+end
 
 """
     Main function for solver
@@ -519,3 +545,9 @@ function solveHydroShock(x::Array{Float64,1}; par::RiemannParameters)
 
     return sol
 end
+
+
+delta_theta = π/18.0
+theta_crit = π/4.0
+thetaB = 30.0 * (π/180)
+etaB = 0.5*( tanh( (theta_crit - thetaB)/delta_theta ) + 1.0 )

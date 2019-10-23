@@ -3,7 +3,7 @@ using Distributions
 using NLsolve
 #using ForwardDiff
 #using SpecialFunctions
-
+include("cr_sod_shock_main.jl")
 include("beta_inc_functions.jl")
 
 mutable struct SodCRParameters_withCRs
@@ -44,7 +44,7 @@ mutable struct SodCRParameters_withCRs
                                 Pe_ratio::Float64=0.01,
                                 γ_th::Float64=5.0/3.0,
                                 γ_cr::Float64=4.0/3.0,
-                                eff_model::Int64=4)
+                                eff_model::Int64=-1)
 
         γ_exp    = ( γ_th - 1.0 )/( 2.0 * γ_th )
         η2       = (γ_th-1.0)/(γ_th+1.0)
@@ -58,6 +58,11 @@ mutable struct SodCRParameters_withCRs
         else
             error("Both Ul and Pl are zero!")
         end
+
+        # calculate B angle dependent efficiency following Pais+ 2018, MNRAS, 478, 5278
+        delta_theta = π/18.0
+        thetaB *= (π/180)
+        etaB = 0.5*( tanh( (theta_crit - thetaB)/delta_theta ) + 1.0 )
 
         if eff_model == 0
             acc_function = KR07

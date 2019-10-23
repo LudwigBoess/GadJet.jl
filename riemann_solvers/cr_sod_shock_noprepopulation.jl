@@ -1,3 +1,5 @@
+include("cr_sod_shock_main.jl")
+
 using Roots
 
 mutable struct SodCRParameters_noCRs
@@ -29,7 +31,9 @@ mutable struct SodCRParameters_noCRs
                                 Pe_ratio::Float64=0.01,
                                 γ_th::Float64=5.0/3.0,
                                 γ_cr::Float64=4.0/3.0,
-                                dsa_model::Int64=4)
+                                thetaB::Float64=0.0,
+                                theta_crit::Float64=(π/4.0),
+                                dsa_model::Int64=-1)
 
         γ_exp    = ( γ_th - 1.0 )/( 2.0 * γ_th )
         η2       = (γ_th-1.0)/(γ_th+1.0)
@@ -43,14 +47,21 @@ mutable struct SodCRParameters_noCRs
             error("Both Ul and Pl are zero!")
         end
 
+        # calculate B angle dependent efficiency following Pais+ 2018, MNRAS, 478, 5278
+        delta_theta = π/18.0
+        thetaB *= (π/180)
+        etaB = 0.5*( tanh( (theta_crit - thetaB)/delta_theta ) + 1.0 )
+
         if dsa_model == 0
-            acc_function = KR07_acc
+            acc_function(M::Float64) = etaB * KR07_acc(M::Float64)
         elseif dsa_model == 1
-            acc_function = KR13_acc
+            acc_function(M::Float64) =  etaB * KR13_acc(M::Float64)
         elseif dsa_model == 2
-            acc_function = Ryu19_acc
+            acc_function(M::Float64) = etaB * Ryu19_acc(M::Float64)
         elseif dsa_model == 3
-            acc_function = CS14_acc
+            acc_function(M::Float64) = etaB * CS14_acc(M::Float64)
+        elseif dsa_model == 4
+            acc_function(M::Float64) = etaB * P16_acc(M::Float64)
         else
             error("Invalid DSA model selection!\n
                    Pick one of the available models, or solve a pure Hydro shock with:\n
@@ -75,10 +86,10 @@ mutable struct SodCRParameters_noCRs
         end
 
         if Mach == 0.0
-            Mach = solveMachfromPrCR(Pl, Pr,
-                                     rhor, rhol,
-                                     γ_th, γ_cr, γ_exp,
-                                     Mach, acc_function)
+            Mach = solveMachCR(Pl, Pr,
+                               rhor, rhol,
+                               γ_th, γ_cr,
+                               Mach, acc_function)
         end
 
         ξ = acc_function(Mach)/(1.0 - acc_function(Mach))
@@ -107,23 +118,6 @@ end
 
 # Riemann solver for standard hydro shocktube following Pfrommer et al 2006
 # Use left and right state of initial condition to solve shocktube problems
-
-Pl = 63.499
-Pr = 0.1
-rhol = 1.0
-rhor = 0.125
-
-@time par = SodCRParameters_noCRs(Ul=100.0, Mach=20.0, t=1.5, dsa_model=0)
-
-sol = solveSodShockCR_noPrepopulation([0.0], par=par)
-
-sol.P4_cr/sol.P34_tot
-
-par.acc_function(20.0)
-
-println(par.Ur)
-
-(1.0 + 0.125)/2.0
 
 """
     Helper functions to set up Machnumber dependent IC
@@ -169,7 +163,6 @@ function solvePrCR(Pr::Float64,
 
     return M - Mach
 end
-
 
 
 function MachSolver_HelperFunction(Pl::Float64, Pr::Float64,
@@ -240,36 +233,6 @@ end
 """
     Shared functions
 """
-
-
-M = 10.0
-ξ = 0.25/(1.0 - 0.25) #CS14_acc(M)
-
-Pl = 63.499
-Pr = 0.1
-rhol = 1.0
-rhor = 0.125
-γ_th = 5.0/3.0
-γ_cr = 4.0/3.0
-γ_exp    = ( γ_th - 1.0 )/( 2.0 * γ_th )
-cl = sqrt.( γ_th * Pl / rhol)
-cr = sqrt.( γ_th * Pr / rhor)
-
-ys_f(0.4, 0.125, 5.0/3.0, 4.0/3.0, ξ)
-A_f(0.4, 0.125)
-P_inj_f(0.4, 0.125, 0.1, 5.0/3.0, 4.0/3.0, ξ)
-
-f_z(xs) = find_xs(xs, rhor, Pr, Pl, cr, cl,
-                    γ_th, γ_cr, γ_exp, ξ)
-
-f_z(xs-1.e-8)
-
-xs
-xs = find_zero( f_z, 2.0 )
-
-rho4 = xs * rhor
-
-
 function get_ξ(acc_function, M::Float64)
     return ξ = acc_function(M)/(1.0 - acc_function(M))
 end
@@ -290,13 +253,15 @@ function A_f(xs::Float64, γ_th::Float64, γ_cr::Float64, ξ::Float64)
 end
 
 function P_inj_f(xs::Float64, rhor::Float64, Pr::Float64, γ_th::Float64, γ_cr::Float64, ξ::Float64)
-    return ( γ_cr - 1.0)/(γ_th - 1.0) * ξ *
-           ( ys_f(xs, rhor, γ_th, γ_cr, ξ) - xs^γ_th ) * Pr
+    return (( γ_cr - 1.0)/(γ_th - 1.0)) * ξ *
+           ( ys_f(xs, γ_th, γ_cr, ξ) - xs^γ_th ) * Pr
 end
 
 function P4_f(xs::Float64, Pr::Float64, γ_th::Float64, γ_cr::Float64, ξ::Float64)
-    return ( ys_f(xs, γ_th, γ_cr, ξ) + ( γ_cr - 1.0)/(γ_th - 1.0) ) *
-                ξ * ( ys_f(xs, γ_th, γ_cr, ξ) - xs^γ_th ) * Pr
+    ys(xs) = ys_f(xs, γ_th, γ_cr, ξ)
+
+    return ( ys(xs) + ( γ_cr - 1.0)/(γ_th - 1.0) *
+                ξ * ( ys(xs) - xs^γ_th ) )  * Pr
 end
 
 function find_xs(xs::Float64, rhor::Float64,
@@ -305,9 +270,13 @@ function find_xs(xs::Float64, rhor::Float64,
                  γ_th::Float64, γ_cr::Float64, γ_exp::Float64,
                  ξ::Float64)
 
-    return ( P4_f(xs, Pr, γ_th, γ_cr, ξ)/Pr - 1.0 ) * A_f(xs, rhor)/( 1.0 + A_f(xs, rhor) )  -
-              2.0*γ_th/( γ_th - 1.0 )^2 * cl^2 / cr^2 *
-            ( 1.0 - (P4_f(xs, Pr, γ_th, γ_cr, ξ)/Pl)^γ_exp )^2
+    P4(xs) = P4_f(xs, Pr, γ_th, γ_cr, ξ)
+    A(xs) = A_f(xs, γ_th, γ_cr, rhor)
+
+    return ( P4(xs)/Pr - 1.0 ) * A(xs)/( 1.0 + A(xs))  -
+              2.0 * γ_th / ( γ_th - 1.0 )^2 *
+              cl^2 / cr^2 *
+           ( 1.0 - (P4(xs)/Pl)^γ_exp )^2
 end
 
 """
@@ -391,7 +360,7 @@ function solveRho4(par::SodCRParameters_noCRs)
     f_z(xs) = find_xs(xs, par.rhor, par.Pr, par.Pl, par.cr, par.cl,
                         par.γ_th, par.γ_cr, par.γ_exp, par.ξ)
 
-    xs = find_zero( f_z, 4.0 )
+    xs = find_zero( f_z, 4.7 )
 
     rho4 = xs*par.rhor
 

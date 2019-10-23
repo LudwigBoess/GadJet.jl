@@ -53,6 +53,20 @@ function solvePrfromMach(rhol::Float64, rhor::Float64,
     return Pr
 end
 
+function solvePlfromMach(rhol::Float64, rhor::Float64,
+                         Pr::Float64, Mach::Float64,
+                         γ::Float64)
+
+    # first approx without CRs
+    findPlHelper(P) = solvePr(Pr, rhol, rhor,
+                              P, Mach, γ)
+
+    Pl = find_zero(findPlHelper, (1.e-5, 1.e5), Bisection() )
+
+
+    return Pl
+end
+
 function solveMach(Pl::Float64, Pr::Float64,
                    rhol::Float64, rhor::Float64,
                    γ::Float64)
@@ -104,11 +118,11 @@ mutable struct SodParameters#{F<:Function}
     η2::Float64
 
     function SodParameters(;rhol::Float64=1.0,  rhor::Float64=0.125,
-                                Pl::Float64=0.0,    Pr::Float64=0.0,
-                                Ul::Float64=0.0,    Ur::Float64=0.0,
-                                Mach::Float64=0.0,  t::Float64,
-                                x_contact::Float64=70.0,
-                                γ_th::Float64=5.0/3.0)
+                            Pl::Float64=0.0,    Pr::Float64=0.0,
+                            Ul::Float64=0.0,    Ur::Float64=0.0,
+                            Mach::Float64=0.0,  t::Float64,
+                            x_contact::Float64=70.0,
+                            γ_th::Float64=5.0/3.0)
 
         γ_exp    = ( γ_th - 1.0 )/( 2.0 * γ_th )
         η2       = (γ_th-1.0)/(γ_th+1.0)
@@ -118,8 +132,6 @@ mutable struct SodParameters#{F<:Function}
             Pl = ( γ_th - 1.0 ) * rhol * Ul
         elseif (Ul == 0.0) & (Pl != 0.0)
             Ul = Pl / ( (γ_th - 1.0) * rhol )
-        else
-            error("Both Ul and Pl are zero!")
         end
 
         # calculate Ur and Pr depending on input
@@ -127,11 +139,24 @@ mutable struct SodParameters#{F<:Function}
             Pr = ( γ_th - 1.0 ) * rhor * Ur
         elseif (Ur == 0.0) & (Pr != 0.0)
             Ur = Pr / ( (γ_th - 1.0) * rhor )
-        elseif (Ur == 0.0) & (Pr == 0.0) & (Mach == 0.0)
-            error("Ur, Pr and Mach are zero! Can't find solution!")
-        else
+        end
+
+        # error handling
+        if (Pr == 0.0) & (Pl == 0.0)
+            error("No initial Pressure or energy values given!")
+        end
+
+        # solve right or left initial state from target mach number
+        if (Pr == 0.0) & (Mach != 0.0)
             Pr = solvePrfromMach(rhol, rhor, Pl, Mach, γ_th)
             Ur = Pr / ( (γ_th - 1.0) * rhor )
+        elseif (Pl == 0.0) & (Mach != 0.0)
+            Pl = solvePlfromMach(rhol, rhor, Pr, Mach, γ_th)
+            Ul = Pl / ( (γ_th - 1.0) * rhol )
+        elseif (Ur == 0.0) & (Pr == 0.0) & (Mach == 0.0)
+            error("Ur, Pr and Mach are zero! Can't find solution!")
+        elseif (Ul == 0.0) & (Pl == 0.0) & (Mach == 0.0)
+            error("Ul, Pl and Mach are zero! Can't find solution!")
         end
 
         if Mach == 0.0
@@ -152,7 +177,7 @@ mutable struct SodParameters#{F<:Function}
 end
 
 mutable struct SodHydroSolution
-    
+
     x::Array{Float64,1}
     rho::Array{Float64,1}
     rho4::Float64
@@ -183,21 +208,21 @@ mutable struct SodHydroSolution
     end
 
     # multiple dispatch, in case gadget data is passed directly to the constructor
-    function SodHydroSolution(x::Array{Float32,1})
-        N = length(x)
-        new(x,
-            zeros(N),   # rho
-            0.0,        # rho2
-            0.0,        # rho3
-            zeros(N),   # P
-            0.0,        # P34
-            zeros(N),   # U
-            zeros(N),   # v
-            0.0,        # v23
-            0.0,        # vt
-            0.0,        # vs
-            0.0)        # Mach
-    end
+    # function SodHydroSolution(x::Array{Float32,1})
+    #     N = length(x)
+    #     new(x,
+    #         zeros(N),   # rho
+    #         0.0,        # rho2
+    #         0.0,        # rho3
+    #         zeros(N),   # P
+    #         0.0,        # P34
+    #         zeros(N),   # U
+    #         zeros(N),   # v
+    #         0.0,        # v23
+    #         0.0,        # vt
+    #         0.0,        # vs
+    #         0.0)        # Mach
+    # end
 end
 
 
@@ -333,7 +358,7 @@ end
     Main function for solver
 """
 function solveSodShock(x::Array{Float64,1}; par::SodParameters)
-    # solves a standard sod shock
+    # solves a standard sod shock with zero initial velocity
 
     N = length(x)
 
