@@ -1,7 +1,7 @@
 include("sod_shock.jl")
 include("cr_sod_shock_main.jl")
 include("cr_sod_shock_noprepopulation.jl")
-include("cr_sod_shock_withprepopulation.jl")
+#include("cr_sod_shock_withprepopulation.jl")
 
 function RiemannParameters(;rhol::Float64=1.0,        rhor::Float64=0.125,
                             Pl::Float64=0.0,          Pr::Float64=0.0,
@@ -53,14 +53,14 @@ function RiemannParameters(;rhol::Float64=1.0,        rhor::Float64=0.125,
                                          dsa_model=dsa_model)
         else
             println("With seed CRs.")
-            return SodCRParameters_withCRs(rhol=rhol, rhor=rhor,
-                                           Pl=Pl, Pr=Pr, Ul=Ul, Ur=Ur,
-                                           P_cr_l=P_cr_l, P_cr_r=P_cr_r,
-                                           E_cr_l=E_cr_l, E_cr_r=E_cr_r,
-                                           Mach=Mach, t=t, x_contact=x_contact,
-                                           Pe_ratio=Pe_ratio, γ_th=γ_th, γ_cr=γ_cr,
-                                           thetaB=thetaB, theta_crit=theta_crit,
-                                           dsa_model=dsa_model)
+            # return SodCRParameters_withCRs(rhol=rhol, rhor=rhor,
+            #                                Pl=Pl, Pr=Pr, Ul=Ul, Ur=Ur,
+            #                                P_cr_l=P_cr_l, P_cr_r=P_cr_r,
+            #                                E_cr_l=E_cr_l, E_cr_r=E_cr_r,
+            #                                Mach=Mach, t=t, x_contact=x_contact,
+            #                                Pe_ratio=Pe_ratio, γ_th=γ_th, γ_cr=γ_cr,
+            #                                thetaB=thetaB, theta_crit=theta_crit,
+            #                                dsa_model=dsa_model)
         end #
     end # dsa_model != -1
 
@@ -69,12 +69,12 @@ function RiemannParameters(;rhol::Float64=1.0,        rhor::Float64=0.125,
          dsa_model == -1
 
          println("Setting up parameters for multicomponent shock without CR acceleration.")
-         return SodCRParameters_withCRs(rhol=rhol, rhor=rhor, Pl=Pl, Pr=Pr,
-                                         Ul=Ul, Ur=Ur, P_cr_l=P_cr_l, P_cr_r=P_cr_r,
-                                         E_cr_l=E_cr_l, E_cr_r=E_cr_r,
-                                         Mach=Mach, t=t, x_contact=x_contact,
-                                         Pe_ratio=Pe_ratio, γ_th=γ_th, γ_cr=γ_cr,
-                                         dsa_model=dsa_model)
+         # return SodCRParameters_withCRs(rhol=rhol, rhor=rhor, Pl=Pl, Pr=Pr,
+         #                                 Ul=Ul, Ur=Ur, P_cr_l=P_cr_l, P_cr_r=P_cr_r,
+         #                                 E_cr_l=E_cr_l, E_cr_r=E_cr_r,
+         #                                 Mach=Mach, t=t, x_contact=x_contact,
+         #                                 Pe_ratio=Pe_ratio, γ_th=γ_th, γ_cr=γ_cr,
+         #                                 dsa_model=dsa_model)
 
     end # Seed CRs without acc
 
@@ -92,5 +92,5 @@ solve(x::Array{Float32,1}, par::SodParameters) = solveSodShock(Float64.(x), par=
 solve(x::Array{Float64,1}, par::SodCRParameters_noCRs)   = solveSodShockCR_noPrepopulation(x, par=par)
 solve(x::Array{Float64,1}, par::SodCRParameters_noCRs)   = solveSodShockCR_noPrepopulation(Float64.(x), par=par)
 
-solve(x::Array{Float64,1}, par::SodCRParameters_withCRs) = solveSodShockCR_withPrepopulation(x, par=par)
-solve(x::Array{Float32,1}, par::SodCRParameters_withCRs) = solveSodShockCR_withPrepopulation(Float64.(x), par=par)
+# solve(x::Array{Float64,1}, par::SodCRParameters_withCRs) = solveSodShockCR_withPrepopulation(x, par=par)
+# solve(x::Array{Float32,1}, par::SodCRParameters_withCRs) = solveSodShockCR_withPrepopulation(Float64.(x), par=par)

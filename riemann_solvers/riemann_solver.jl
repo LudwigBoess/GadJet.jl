@@ -113,86 +113,86 @@ end
 """
     Kang&Ryu 2007, http://arxiv.org/abs/0704.1521v1
 """
-function KR07(M::Float64, etaB::Float64)
-    if M <= 2.0
-        η = (1.96e-3*(M^2 - 1.))              # eq. A3
-    else
-        b = [5.46, -9.78, 4.17, -0.337, 0.57]   # eq. A4
-        η = 0.
-        for i ∈ 1:length(b)
-            η += b[i] * ((M - 1.)^(i-1))/M^4    # eq. A5
-        end
-    end
-    return η * etaB
-end
-
-"""
-    Kang&Ryu 2013, doi:10.1088/0004-637X/764/1/95
-"""
-function KR13(M::Float64, etaB::Float64)
-
-    if M < 2.0
-        η = 0.0
-    elseif 2.0 <= M <= 5.0
-        param = [-0.0005950569221922047, 1.880258286365841e-5, 5.334076006529829 ]
-        η = param[1] + param[2]*M^param[3]
-    elseif 5.0 < M <= 15.0
-        param = [-2.8696966498579606, 9.667563166507879, -8.877138312318019, 1.938386688261113, 0.1806112438315771]
-        η = (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
-    else
-        η = 0.21152
-    end
-
-    return etaB * η
-
-end
-
-
-"""
-    Ryu et al. 2019, https://arxiv.org/abs/1905.04476
-    values for 2.25 < M <= 5.0 extrapolated to entire range
-"""
-function R_19(M::Float64, etaB::Float64)
-
-    if M < 2.25
-        η = 0.0
-    elseif M <= 34.0
-        param = [-1.5255114554627316, 2.4026049650156693, -1.2534251472776456, 0.22152323784680614, 0.0335800899612107]
-        η = (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
-    else
-        η = 0.0348
-    end
-
-    return etaB * η
-
-    # if 2.25 < M <= 5.0
-    #     param = [1.1006004346467124, -2.923679036380424, 2.599624937871855, -0.9538130179325343, 0.16080793189704362]
-    #     return (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
-    # elseif M > 5.0
-    #     param = [-2.8696966498579606, 9.667563166507879, -8.877138312318019, 1.938386688261113, 0.1806112438315771]
-    #     return (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
-    # else
-    #     return 0.0
-    # end
-end
-
-"""
-    Caprioli&Spitkovsky 2015,
-"""
-function CS15(M::Float64, etaB::Float64)
-    vazza_factor = 0.5
-    η = vazza_factor * KR13(M)
-    return etaB * η
-end
-
-function P16(M::Float64, etaB::Float64)
-    η = 0.33#0.25
-    return etaB * η
-end
-
-function null_eff(M::Float64, etaB::Float64)
-    return 0.0
-end
+# function KR07(M::Float64, etaB::Float64)
+#     if M <= 2.0
+#         η = (1.96e-3*(M^2 - 1.))              # eq. A3
+#     else
+#         b = [5.46, -9.78, 4.17, -0.337, 0.57]   # eq. A4
+#         η = 0.
+#         for i ∈ 1:length(b)
+#             η += b[i] * ((M - 1.)^(i-1))/M^4    # eq. A5
+#         end
+#     end
+#     return η * etaB
+# end
+#
+# """
+#     Kang&Ryu 2013, doi:10.1088/0004-637X/764/1/95
+# """
+# function KR13(M::Float64, etaB::Float64)
+#
+#     if M < 2.0
+#         η = 0.0
+#     elseif 2.0 <= M <= 5.0
+#         param = [-0.0005950569221922047, 1.880258286365841e-5, 5.334076006529829 ]
+#         η = param[1] + param[2]*M^param[3]
+#     elseif 5.0 < M <= 15.0
+#         param = [-2.8696966498579606, 9.667563166507879, -8.877138312318019, 1.938386688261113, 0.1806112438315771]
+#         η = (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
+#     else
+#         η = 0.21152
+#     end
+#
+#     return etaB * η
+#
+# end
+#
+#
+# """
+#     Ryu et al. 2019, https://arxiv.org/abs/1905.04476
+#     values for 2.25 < M <= 5.0 extrapolated to entire range
+# """
+# function R_19(M::Float64, etaB::Float64)
+#
+#     if M < 2.25
+#         η = 0.0
+#     elseif M <= 34.0
+#         param = [-1.5255114554627316, 2.4026049650156693, -1.2534251472776456, 0.22152323784680614, 0.0335800899612107]
+#         η = (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
+#     else
+#         η = 0.0348
+#     end
+#
+#     return etaB * η
+#
+#     # if 2.25 < M <= 5.0
+#     #     param = [1.1006004346467124, -2.923679036380424, 2.599624937871855, -0.9538130179325343, 0.16080793189704362]
+#     #     return (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
+#     # elseif M > 5.0
+#     #     param = [-2.8696966498579606, 9.667563166507879, -8.877138312318019, 1.938386688261113, 0.1806112438315771]
+#     #     return (param[1] + param[2] * (M - 1.0) + param[3] * (M - 1.0)^2 + param[4] * (M - 1.0)^3 + param[5] * (M - 1.0)^4)/M^4
+#     # else
+#     #     return 0.0
+#     # end
+# end
+#
+# """
+#     Caprioli&Spitkovsky 2015,
+# """
+# function CS15(M::Float64, etaB::Float64)
+#     vazza_factor = 0.5
+#     η = vazza_factor * KR13(M)
+#     return etaB * η
+# end
+#
+# function P16(M::Float64, etaB::Float64)
+#     η = 0.33#0.25
+#     return etaB * η
+# end
+#
+# function null_eff(M::Float64, etaB::Float64)
+#     return 0.0
+# end
 
 """
     Datatypes for IC Parameters and Solution

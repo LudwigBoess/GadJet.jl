@@ -1,4 +1,4 @@
-using Roots
+#using Roots
 
 """
     Datatypes for IC Parameters and Solution
@@ -223,7 +223,7 @@ function KR07_acc(M::Float64)
     if M <= 2.0
         return 1.96e-3*(M*M - 1.)             # eq. A3
     else
-        return kr_fitting_function(M, [5.46, -9.78, 4.17, -0.337, 0.57]) 
+        return kr_fitting_function(M, [5.46, -9.78, 4.17, -0.337, 0.57])
     end
 end
 

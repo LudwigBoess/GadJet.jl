@@ -24,9 +24,6 @@ function solvePr(Pr::Float64,
 
     P_m = find_zero(f, (Pr, Pl), Bisection())
 
-    vm = 2.0 * c_l / γ_1 * ( 1.0 - (P_m/Pl)^γ_pow )
-
-
     ρ_mr = rhor * ( ( P_m + η2 * Pr ) / ( Pr + η2 * P_m))
     #ρ_ml = rhol * ( P_m / Pl )^(1.0/γ)
 
@@ -82,7 +79,6 @@ function solveMach(Pl::Float64, Pr::Float64,
            2.0 / γ_1 * c_l / c_r * ( 1.0 - ( x/Pl )^γ_pow )
 
    P_m = find_zero(f, (Pr, Pl), Bisection())
-
 
    ρ_mr = rhor * ( ( P_m + η2 * Pr ) / ( Pr + η2 * P_m))
    ρ_ml = rhol * ( P_m / Pl )^(1.0/γ)
