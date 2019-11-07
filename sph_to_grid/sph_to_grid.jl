@@ -22,31 +22,35 @@ include(joinpath(dirname(@__FILE__), "sph_types.jl"))
 using Statistics
 using ProgressMeter
 using Base.Threads
+using StaticArrays
+using SharedArrays
+
+
 
 function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
                           param::mappingParameters, kernel)
 
     N = length(M)  # number of particles
 
-    #val = SharedArray{Float64}(length(param.x), length(param.y))
-    val = zeros(length(param.x), length(param.y))
+    val = SharedArray{Float64,2}(length(param.x), length(param.y))
+    #val = zeros(length(param.x), length(param.y))
 
     minCoords = [param.x[1], param.y[1], param.z[1]]
 
     @threads for p = 1:N
 
-        @inbounds pos = Pos[p,:]
-        @inbounds hsml = HSML[p]
-        @inbounds mass = M[p]
-        @inbounds rho = ρ[p]
-        @inbounds bin_quant = Bin_Quant[p]
+        pos = Float64.(Pos[p,:])
+        hsml = Float64(HSML[p])
+        mass = M[p]
+        rho = ρ[p]
+        bin_quant = Bin_Quant[p]
 
         pixmin = Vector{Int64}(undef,3)
         pixmax = Vector{Int64}(undef,3)
 
-        for dim = 1:3
+        @inbounds for dim = 1:3
 
-            @inbounds pixmin[dim] = Int64( round((pos[dim] - hsml - minCoords[dim]) / param.pixelSideLength ))
+            pixmin[dim] = Int64( round((pos[dim] - hsml - minCoords[dim]) / param.pixelSideLength ))
 
             if pixmin[dim] < 1
 
@@ -65,7 +69,6 @@ function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
                 max = length(param.z)
             end
 
-
             if pixmax[dim] > max
                 pixmax[dim] = max
             end
@@ -73,15 +76,15 @@ function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
         end
 
 
-        for i = pixmin[1]:pixmax[1]
-            for j = pixmin[2]:pixmax[2]
-                for k = pixmin[3]:pixmax[3]
+        @inbounds for i = pixmin[1]:pixmax[1]
+            @inbounds for j = pixmin[2]:pixmax[2]
+                @inbounds for k = pixmin[3]:pixmax[3]
 
-                    @inbounds distance = sqrt.( (param.x[i] - pos[1])^2 +
-                                                (param.y[j] - pos[2])^2 +
-                                                (param.z[k] - pos[3])^2 )
+                    distance = sqrt( (param.x[j] - pos[1])^2 +
+                                     (param.y[i] - pos[2])^2 +
+                                     (param.z[k] - pos[3])^2 )
 
-                    @inbounds val[i,j] += bin_quant * mass /rho * kernel_value(kernel, distance/hsml, Float64(hsml))
+                    val[j,i] += bin_quant * mass / rho * kernel_value(kernel, distance/hsml, hsml)
 
                 end
             end
