@@ -103,7 +103,8 @@ function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Arra
                                          (param.y[j] - Pos[p,2])^2 +
                                          (param.z[k] - Pos[p,3])^2 )
 
-                        val[i,j] += Bin_Quant[p] * M[p] / ρ[p] * kernel_value(kernel, distance/HSML[p], HSML[p])
+                        val[i,j] += Bin_Quant[p] * M[p] / ρ[p]
+                                  * kernel_value(kernel, distance/HSML[p], HSML[p])
 
                     end # end z-loop
                 end # end y-loop
@@ -113,23 +114,8 @@ function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Arra
 
     end
 
-   # c = zeros(length(param.y), length(param.x))
-   #
-   # cell_count = 1
-   # for i = 1:length(param.x)
-   #     for j = 1:length(param.y)
-   #
-   #         c[i,j] = sum(val[i,j,:])
-   #
-   #     end
-   # end
-
    return val
 end
-
-par = mappingParameters(x_lim=[0.0,6.0], y_lim=[0.0,6.0], z_lim=[2.9,3.1],
-                        pixelSideLength=0.02)
-kernel = WendlandC6(295)
 
 
 function get_bounds(pos::Array{Float32,2}, min::Float64, max::Float64, axis::Int64,
