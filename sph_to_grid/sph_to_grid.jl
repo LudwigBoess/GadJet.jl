@@ -72,9 +72,6 @@ function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Arra
 
     max_pixel = [length(param.x), length(param.y), length(param.z)]
 
-    # count particles in image
-    N_image = 0
-
     @threads for p = 1:N
 
         in_image = false
@@ -115,8 +112,6 @@ function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Arra
         end # end check if in image
 
     end
-
-    println("Particles in image = $N_image \t -> $(N_image/N * 100.0) %")
 
    # c = zeros(length(param.y), length(param.x))
    #
