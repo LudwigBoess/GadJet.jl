@@ -47,6 +47,17 @@ end
     end
 end
 
+@inline function check_in_image(pos::Float64, hsml::Float64,
+                                minCoord::Float64, maxCoord::Float64)
+
+    if ( (minCoord - hsml) <= pos <= (maxCoord + hsml) )
+        return true
+    else
+        return false
+    end
+
+end
+
 function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Array{Float64,2},
                           ρ::Array{Float64,2}, Bin_Quant::Array{Float64,2};
                           param::mappingParameters, kernel)
@@ -57,6 +68,8 @@ function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Arra
     val = zeros(length(param.x), length(param.y))
 
     minCoords = [param.x[1], param.y[1], param.z[1]]
+    maxCoords = [param.x[end], param.y[end], param.z[end]]
+
     max_pixel = [length(param.x), length(param.y), length(param.z)]
 
     # count particles in image
@@ -64,21 +77,26 @@ function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Arra
 
     @threads for p = 1:N
 
-        pixmin = Vector{Int64}(undef,3)
-        pixmax = Vector{Int64}(undef,3)
+        in_image = false
 
         @inbounds for dim = 1:3
-
-            pixmin[dim] = find_min_pixel(Pos[p,dim], HSML[p], minCoords[dim],
-                                         param.pixelSideLength)
-
-            pixmax[dim] = find_max_pixel(Pos[p,dim], HSML[p], minCoords[dim],
-                                         param.pixelSideLength, max_pixel[dim])
+            in_image = check_in_image(Pos[p,dim], HSML[p],
+                                      minCoords[dim], maxCoords[dim])
         end
 
-        if ( pixmin[1] != pixmax[1] &
-             pixmin[2] != pixmax[2] &
-             pixmin[3] != pixmax[3] )
+        if in_image
+
+            pixmin = Vector{Int64}(undef,3)
+            pixmax = Vector{Int64}(undef,3)
+
+            @inbounds for dim = 1:3
+
+                pixmin[dim] = find_min_pixel(Pos[p,dim], HSML[p], minCoords[dim],
+                                             param.pixelSideLength)
+
+                pixmax[dim] = find_max_pixel(Pos[p,dim], HSML[p], minCoords[dim],
+                                             param.pixelSideLength, max_pixel[dim])
+            end
 
             @inbounds for i = pixmin[1]:pixmax[1]
                 @inbounds for j = pixmin[2]:pixmax[2]
@@ -93,9 +111,8 @@ function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Arra
                     end # end z-loop
                 end # end y-loop
             end # end x-loop
-        end # end check if in image
 
-        N_image += 1
+        end # end check if in image
 
     end
 
