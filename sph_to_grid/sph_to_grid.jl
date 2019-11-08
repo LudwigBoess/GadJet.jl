@@ -103,8 +103,7 @@ function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Arra
                                          (param.y[j] - Pos[p,2])^2 +
                                          (param.z[k] - Pos[p,3])^2 )
 
-                        val[i,j] += Bin_Quant[p] * M[p] / ρ[p]
-                                  * kernel_value(kernel, distance/HSML[p], HSML[p])
+                        val[i,j] += Bin_Quant[p] * M[p] / ρ[p] * kernel_value(kernel, distance/HSML[p], HSML[p])
 
                     end # end z-loop
                 end # end y-loop
