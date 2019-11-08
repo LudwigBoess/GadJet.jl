@@ -24,7 +24,7 @@ struct WendlandC6
     ngb::Int64
 end
 
-function kernel_value(kernel::Cubic, u::Float64, h::Float64)
+@inline function kernel_value(kernel::Cubic, u::Float64, h::Float64)
 
     norm = 8.0/π
     n = norm/h^3
@@ -39,7 +39,7 @@ function kernel_value(kernel::Cubic, u::Float64, h::Float64)
 
 end
 
-function kernel_deriv(kernel::Cubic, u::Float64, h::Float64)
+@inline function kernel_deriv(kernel::Cubic, u::Float64, h::Float64)
 
     norm = 8.0/π
     n = norm/h^4
@@ -55,7 +55,7 @@ function kernel_deriv(kernel::Cubic, u::Float64, h::Float64)
 end
 
 
-function kernel_value(kernel::Quintic, u::Float64, h::Float64)
+@inline function kernel_value(kernel::Quintic, u::Float64, h::Float64)
 
     norm = ( 2187.0 / ( 40. * π))
     n = norm/h^3
@@ -72,7 +72,7 @@ function kernel_value(kernel::Quintic, u::Float64, h::Float64)
 
 end
 
-function kernel_deriv(kernel::Quintic, u::Float64, h::Float64)
+@inline function kernel_deriv(kernel::Quintic, u::Float64, h::Float64)
 
     norm = ( 2187.0 / ( 40. * π))
     n = norm/h^4
@@ -90,7 +90,7 @@ function kernel_deriv(kernel::Quintic, u::Float64, h::Float64)
 end
 
 
-function kernel_value(kernel::WendlandC4, u::Float64, h::Float64)
+@inline function kernel_value(kernel::WendlandC4, u::Float64, h::Float64)
 
     norm = 495.0/(32. * π)
     n = norm/h^3
@@ -103,7 +103,7 @@ function kernel_value(kernel::WendlandC4, u::Float64, h::Float64)
 
 end
 
-function kernel_deriv(kernel::WendlandC4, u::Float64, h::Float64)
+@inline function kernel_deriv(kernel::WendlandC4, u::Float64, h::Float64)
 
     norm = 495.0/(32. * π)
     n = norm/h^4
@@ -117,7 +117,7 @@ function kernel_deriv(kernel::WendlandC4, u::Float64, h::Float64)
 end
 
 
-function kernel_value(kernel::WendlandC6, u::Float64, h::Float64)
+@inline function kernel_value(kernel::WendlandC6, u::Float64, h::Float64)
 
     norm = 1365.0/(64.0*π)
     n = norm/h^3
@@ -130,7 +130,7 @@ function kernel_value(kernel::WendlandC6, u::Float64, h::Float64)
 
 end
 
-function kernel_deriv(kernel::WendlandC6, u::Float64, h::Float64)
+@inline function kernel_deriv(kernel::WendlandC6, u::Float64, h::Float64)
 
     norm = 1365.0/(64.0*π)
     n = norm/h^4

@@ -89,8 +89,6 @@ mutable struct mappingParameters
             broadening,
             x, y, z)
 
-
-
     end
 
 end

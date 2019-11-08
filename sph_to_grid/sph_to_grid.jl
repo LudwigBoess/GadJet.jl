@@ -22,76 +22,84 @@ include(joinpath(dirname(@__FILE__), "sph_types.jl"))
 using Statistics
 using ProgressMeter
 using Base.Threads
-using StaticArrays
-using SharedArrays
+#using SharedArrays
 
+@inline function find_min_pixel(pos::Float64, hsml::Float64,
+                                minCoord::Float64, pixSize::Float64)
 
+    pixmin = floor((pos - hsml - minCoord) / pixSize )
+    if pixmin < 1
+        return 1
+    else
+        return pixmin
+    end
+end
 
-function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
+@inline function find_max_pixel(pos::Float64, hsml::Float64,
+                                minCoord::Float64, pixSize::Float64,
+                                max::Int64)
+
+    pixmax = floor((pos + hsml - minCoord) / pixSize )
+    if pixmax > max
+        return max
+    else
+        return pixmax
+    end
+end
+
+function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Array{Float64,2},
+                          ρ::Array{Float64,2}, Bin_Quant::Array{Float64,2};
                           param::mappingParameters, kernel)
 
     N = length(M)  # number of particles
 
-    val = SharedArray{Float64,2}(length(param.x), length(param.y))
-    #val = zeros(length(param.x), length(param.y))
+    #val = SharedArray{Float64,2}(length(param.x), length(param.y))
+    val = zeros(length(param.x), length(param.y))
 
     minCoords = [param.x[1], param.y[1], param.z[1]]
+    max_pixel = [length(param.x), length(param.y), length(param.z)]
+
+    # count particles in image
+    N_image = 0
 
     @threads for p = 1:N
-
-        pos = Float64.(Pos[p,:])
-        hsml = Float64(HSML[p])
-        mass = M[p]
-        rho = ρ[p]
-        bin_quant = Bin_Quant[p]
 
         pixmin = Vector{Int64}(undef,3)
         pixmax = Vector{Int64}(undef,3)
 
         @inbounds for dim = 1:3
 
-            pixmin[dim] = Int64( round((pos[dim] - hsml - minCoords[dim]) / param.pixelSideLength ))
+            pixmin[dim] = find_min_pixel(Pos[p,dim], HSML[p], minCoords[dim],
+                                         param.pixelSideLength)
 
-            if pixmin[dim] < 1
-
-                boundary = true
-                pixmin[dim] = 1
-
-            end
-
-            pixmax[dim] = Int64( round((pos[dim] + hsml - minCoords[dim]) / param.pixelSideLength ))
-
-            if dim == 1
-                max = length(param.x)
-            elseif dim == 2
-                max = length(param.y)
-            else
-                max = length(param.z)
-            end
-
-            if pixmax[dim] > max
-                pixmax[dim] = max
-            end
-
+            pixmax[dim] = find_max_pixel(Pos[p,dim], HSML[p], minCoords[dim],
+                                         param.pixelSideLength, max_pixel[dim])
         end
 
+        if ( pixmin[1] != pixmax[1] &
+             pixmin[2] != pixmax[2] &
+             pixmin[3] != pixmax[3] )
 
-        @inbounds for i = pixmin[1]:pixmax[1]
-            @inbounds for j = pixmin[2]:pixmax[2]
-                @inbounds for k = pixmin[3]:pixmax[3]
+            @inbounds for i = pixmin[1]:pixmax[1]
+                @inbounds for j = pixmin[2]:pixmax[2]
+                    @inbounds for k = pixmin[3]:pixmax[3]
 
-                    distance = sqrt( (param.x[j] - pos[1])^2 +
-                                     (param.y[i] - pos[2])^2 +
-                                     (param.z[k] - pos[3])^2 )
+                        distance = sqrt( (param.x[i] - Pos[p,1])^2 +
+                                         (param.y[j] - Pos[p,2])^2 +
+                                         (param.z[k] - Pos[p,3])^2 )
 
-                    val[j,i] += bin_quant * mass / rho * kernel_value(kernel, distance/hsml, hsml)
+                        val[i,j] += Bin_Quant[p] * M[p] / ρ[p] * kernel_value(kernel, distance/HSML[p], HSML[p])
 
-                end
-            end
-        end
+                    end # end z-loop
+                end # end y-loop
+            end # end x-loop
+        end # end check if in image
+
+        N_image += 1
 
     end
 
+    println("Particles in image = $N_image \t -> $(N_image/N * 100.0) %")
 
    # c = zeros(length(param.y), length(param.x))
    #
@@ -106,6 +114,10 @@ function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
 
    return val
 end
+
+par = mappingParameters(x_lim=[0.0,6.0], y_lim=[0.0,6.0], z_lim=[2.9,3.1],
+                        pixelSideLength=0.02)
+kernel = WendlandC6(295)
 
 
 function get_bounds(pos::Array{Float32,2}, min::Float64, max::Float64, axis::Int64,
