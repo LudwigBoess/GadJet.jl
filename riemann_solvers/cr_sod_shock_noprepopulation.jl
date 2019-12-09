@@ -22,6 +22,7 @@ mutable struct SodCRParameters_noCRs
     η2::Float64
     acc_function
     ξ::Float64
+    first_guess::Float64
 
     function SodCRParameters_noCRs(;rhol::Float64=1.0,  rhor::Float64=0.125,
                                 Pl::Float64=0.0,    Pr::Float64=0.0,
@@ -33,7 +34,8 @@ mutable struct SodCRParameters_noCRs
                                 γ_cr::Float64=4.0/3.0,
                                 thetaB::Float64=0.0,
                                 theta_crit::Float64=(π/4.0),
-                                dsa_model::Int64=-1)
+                                dsa_model::Int64=-1,
+                                xs_first_guess::Float64=4.7)
 
         γ_exp    = ( γ_th - 1.0 )/( 2.0 * γ_th )
         η2       = (γ_th-1.0)/(γ_th+1.0)
@@ -83,11 +85,11 @@ mutable struct SodCRParameters_noCRs
 
         # calculate B angle dependent efficiency following Pais+ 2018, MNRAS, 478, 5278
         delta_theta = π/18.0
-        thetaB *= (π/180)
+        thetaB *= (π/180.0)
         etaB = 0.5*( tanh( (theta_crit - thetaB)/delta_theta ) + 1.0 )
 
-        #ξ = etaB*acc_function(Mach)/(1.0 - etaB*acc_function(Mach))
-        ξ = acc_function(Mach)/(1.0 - acc_function(Mach))
+        ξ = etaB*acc_function(Mach)/(1.0 - etaB*acc_function(Mach))
+        #ξ = acc_function(Mach)/(1.0 - acc_function(Mach))
 
 
         cl = sqrt.( γ_th * Pl / rhol)
@@ -105,7 +107,8 @@ mutable struct SodCRParameters_noCRs
             γ_exp,
             η2,
             acc_function,
-            ξ)
+            ξ,
+            xs_first_guess)
 
     end
 end
@@ -163,14 +166,14 @@ end
 function MachSolver_HelperFunction(Pl::Float64, Pr::Float64,
                                    rhor::Float64, rhol::Float64,
                                    γ_th::Float64, γ_cr::Float64, γ_exp::Float64,
-                                   M::Float64, acc_function)
+                                   M::Float64, acc_function, etaB::Float64)
 
     vs = 0.0
 
     cr = sqrt.( γ_th * Pr / rhor)
     cl = sqrt.( γ_th * Pl / rhol)
 
-    ξ = acc_function(M)/( 1.0 - acc_function(M))
+    ξ = etaB * acc_function(M)/( 1.0 - acc_function(M))
 
     if ξ > 0.0
         # solve Density
@@ -355,7 +358,7 @@ function solveRho4(par::SodCRParameters_noCRs)
     f_z(xs) = find_xs(xs, par.rhor, par.Pr, par.Pl, par.cr, par.cl,
                         par.γ_th, par.γ_cr, par.γ_exp, par.ξ)
 
-    xs = find_zero( f_z, 4.7 )
+    xs = find_zero( f_z, par.first_guess )
 
     rho4 = xs*par.rhor
 
