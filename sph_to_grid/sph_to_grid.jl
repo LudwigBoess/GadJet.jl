@@ -85,6 +85,64 @@ function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Arra
 end
 
 
+function sphCenterMapping_toCube(Pos::Array{Float64,2}, HSML::Array{Float64,2},
+                                 M::Array{Float64,2},
+                                 ρ::Array{Float64,2}, Bin_Quant::Array{Float64,2};
+                                 param::mappingParameters, kernel)
+
+    N = length(M)  # number of particles
+
+    val = zeros(length(param.x), length(param.y), length(param.z))
+
+    minCoords = [param.x[1], param.y[1], param.z[1]]
+    maxCoords = [param.x[end], param.y[end], param.z[end]]
+
+    max_pixel = [length(param.x), length(param.y), length(param.z)]
+
+    @threads for p = 1:N
+
+        in_image = false
+
+        @inbounds for dim = 1:3
+            in_image = check_in_image(Pos[p,dim], HSML[p],
+                                      minCoords[dim], maxCoords[dim])
+        end
+
+        if in_image
+
+            pixmin = Vector{Int64}(undef,3)
+            pixmax = Vector{Int64}(undef,3)
+
+            @inbounds for dim = 1:3
+
+                pixmin[dim] = find_min_pixel(Pos[p,dim], HSML[p], minCoords[dim],
+                                             param.pixelSideLength)
+
+                pixmax[dim] = find_max_pixel(Pos[p,dim], HSML[p], minCoords[dim],
+                                             param.pixelSideLength, max_pixel[dim])
+            end
+
+            @inbounds for i = pixmin[1]:pixmax[1]
+                @inbounds for j = pixmin[2]:pixmax[2]
+                    @inbounds for k = pixmin[3]:pixmax[3]
+
+                        distance = sqrt( (param.x[i] - Pos[p,1])^2 +
+                                         (param.y[j] - Pos[p,2])^2 +
+                                         (param.z[k] - Pos[p,3])^2 )
+
+                        val[i,j,k] += Bin_Quant[p] * M[p] / ρ[p] * kernel_value(kernel, distance/HSML[p], HSML[p])
+
+                    end # end z-loop
+                end # end y-loop
+            end # end x-loop
+
+        end # end check if in image
+
+    end
+
+   return val
+end
+
 function get_bounds(pos::Array{Float32,2}, min::Float64, max::Float64, axis::Int64,
                     range_arr::Vector{Int64})
 
