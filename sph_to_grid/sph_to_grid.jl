@@ -18,45 +18,13 @@
 
 include(joinpath(dirname(@__FILE__), "kernels.jl"))
 include(joinpath(dirname(@__FILE__), "sph_types.jl"))
+include(joinpath(dirname(@__FILE__), "image_utility.jl"))
 
 using Statistics
 using ProgressMeter
 using Base.Threads
 #using SharedArrays
 
-@inline function find_min_pixel(pos::Float64, hsml::Float64,
-                                minCoord::Float64, pixSize::Float64)
-
-    pixmin = floor((pos - hsml - minCoord) / pixSize )
-    if pixmin < 1
-        return 1
-    else
-        return pixmin
-    end
-end
-
-@inline function find_max_pixel(pos::Float64, hsml::Float64,
-                                minCoord::Float64, pixSize::Float64,
-                                max::Int64)
-
-    pixmax = floor((pos + hsml - minCoord) / pixSize )
-    if pixmax > max
-        return max
-    else
-        return pixmax
-    end
-end
-
-@inline function check_in_image(pos::Float64, hsml::Float64,
-                                minCoord::Float64, maxCoord::Float64)
-
-    if ( (minCoord - hsml) <= pos <= (maxCoord + hsml) )
-        return true
-    else
-        return false
-    end
-
-end
 
 function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Array{Float64,2},
                           ρ::Array{Float64,2}, Bin_Quant::Array{Float64,2};
@@ -103,8 +71,7 @@ function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Arra
                                          (param.y[j] - Pos[p,2])^2 +
                                          (param.z[k] - Pos[p,3])^2 )
 
-                        val[i,j] += Bin_Quant[p] * M[p] / ρ[p]
-                                  * kernel_value(kernel, distance/HSML[p], HSML[p])
+                        val[i,j] += Bin_Quant[p] * M[p] / ρ[p] * kernel_value(kernel, distance/HSML[p], HSML[p])
 
                     end # end z-loop
                 end # end y-loop
