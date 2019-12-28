@@ -89,6 +89,12 @@ mutable struct SodCRParameters_noCRs
         etaB = 0.5*( tanh( (theta_crit - thetaB)/delta_theta ) + 1.0 )
 
         ξ = etaB*acc_function(Mach)/(1.0 - etaB*acc_function(Mach))
+
+        # if dsa_model == 4
+        #     ξ = etaB*acc_function(Mach)/(1.0 - etaB*acc_function(Mach))
+        # else
+        #     ξ = etaB*acc_function(Mach)
+        # end
         #ξ = acc_function(Mach)/(1.0 - acc_function(Mach))
 
 
@@ -451,6 +457,7 @@ function solveSodShockCR_noPrepopulation(x::Array{Float64,1}; par::SodCRParamete
 
     # solve pressure
     sol.P4_cr = P_inj_f(sol.xs, par.rhor, par.Pr, par.γ_th, par.γ_cr, par.ξ)
+
     sol.P4_th = sol.P34_tot - sol.P4_cr
     sol.P3_th = sol.P34_tot
 

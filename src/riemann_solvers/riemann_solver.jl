@@ -545,9 +545,3 @@ function solveHydroShock(x::Array{Float64,1}; par::RiemannParameters)
 
     return sol
 end
-
-
-delta_theta = π/18.0
-theta_crit = π/4.0
-thetaB = 30.0 * (π/180)
-etaB = 0.5*( tanh( (theta_crit - thetaB)/delta_theta ) + 1.0 )

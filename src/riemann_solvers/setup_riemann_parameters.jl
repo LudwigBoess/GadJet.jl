@@ -17,7 +17,8 @@ function RiemannParameters(;rhol::Float64=1.0,        rhor::Float64=0.125,
                             γ_cr::Float64=4.0/3.0,
                             thetaB::Float64=0.0,
                             theta_crit::Float64=(π/4.0),
-                            dsa_model::Int64=-1)
+                            dsa_model::Int64=-1,
+                            xs_first_guess::Float64=4.7)
 
 
     # Error handling
@@ -50,7 +51,8 @@ function RiemannParameters(;rhol::Float64=1.0,        rhor::Float64=0.125,
                                          Mach=Mach, t=t, x_contact=x_contact,
                                          Pe_ratio=Pe_ratio, γ_th=γ_th, γ_cr=γ_cr,
                                          thetaB=thetaB, theta_crit=theta_crit,
-                                         dsa_model=dsa_model)
+                                         dsa_model=dsa_model,
+                                         xs_first_guess=xs_first_guess)
         else
             println("With seed CRs.")
             # return SodCRParameters_withCRs(rhol=rhol, rhor=rhor,
@@ -90,7 +92,7 @@ solve(x::Array{Float32,1}, par::SodParameters) = solveSodShock(Float64.(x), par=
 
 # CR Sod shock
 solve(x::Array{Float64,1}, par::SodCRParameters_noCRs)   = solveSodShockCR_noPrepopulation(x, par=par)
-solve(x::Array{Float64,1}, par::SodCRParameters_noCRs)   = solveSodShockCR_noPrepopulation(Float64.(x), par=par)
+solve(x::Array{Float32,1}, par::SodCRParameters_noCRs)   = solveSodShockCR_noPrepopulation(Float64.(x), par=par)
 
 # solve(x::Array{Float64,1}, par::SodCRParameters_withCRs) = solveSodShockCR_withPrepopulation(x, par=par)
 # solve(x::Array{Float32,1}, par::SodCRParameters_withCRs) = solveSodShockCR_withPrepopulation(Float64.(x), par=par)
