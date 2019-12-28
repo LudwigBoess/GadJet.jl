@@ -58,6 +58,12 @@ end
 
 end
 
+@inline function get_distance(Pos::Array{Float64,1}, x::Float64, y::Float64, z::Float64)
+
+    return sqrt( (x - pos[1] )^2 + ( y - pos[2] )^2 + ( z - pos[3])^2 )
+end
+
+
 function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Array{Float64,2},
                           ρ::Array{Float64,2}, Bin_Quant::Array{Float64,2};
                           param::mappingParameters, kernel)
@@ -65,6 +71,7 @@ function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Arra
     N = length(M)  # number of particles
 
     #val = SharedArray{Float64,2}(length(param.x), length(param.y))
+    println("test")
     val = zeros(length(param.x), length(param.y))
 
     minCoords = [param.x[1], param.y[1], param.z[1]]
@@ -72,13 +79,19 @@ function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Arra
 
     max_pixel = [length(param.x), length(param.y), length(param.z)]
 
-    @threads for p = 1:N
+    @showprogress for p = 1:N
 
         in_image = false
 
         @inbounds for dim = 1:3
-            in_image = check_in_image(Pos[p,dim], HSML[p],
-                                      minCoords[dim], maxCoords[dim])
+
+            if ( (minCoords[dim] - HSML[p]) <= Pos[p,dim] <= (maxCoords[dim] + HSML[p]) )
+                in_image = true
+            else
+                in_image = false
+            end
+            # in_image = check_in_image(Pos[p,dim], HSML[p],
+            #                           minCoords[dim], maxCoords[dim])
         end
 
         if in_image
@@ -88,11 +101,25 @@ function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Arra
 
             @inbounds for dim = 1:3
 
-                pixmin[dim] = find_min_pixel(Pos[p,dim], HSML[p], minCoords[dim],
-                                             param.pixelSideLength)
+                pix = floor((Pos[p,dim] - HSML[p] - minCoords[dim]) / param.pixelSideLength )
+                if pix < 1
+                    pixmin[dim] = 1
+                else
+                    pixmin[dim] = pix
+                end
 
-                pixmax[dim] = find_max_pixel(Pos[p,dim], HSML[p], minCoords[dim],
-                                             param.pixelSideLength, max_pixel[dim])
+                # pixmin[dim] = find_min_pixel(Pos[p,dim], HSML[p], minCoords[dim],
+                #                              param.pixelSideLength)
+                #
+
+                pix = floor((Pos[p,dim] + HSML[p] - minCoords[dim]) / param.pixelSideLength )
+                if pix > max_pixel[dim]
+                    pixmax[dim] = max_pixel[dim]
+                else
+                    pixmax[dim] = pix
+                end
+                # pixmax[dim] = find_max_pixel(Pos[p,dim], HSML[p], minCoords[dim],
+                #                              param.pixelSideLength, max_pixel[dim])
             end
 
             @inbounds for i = pixmin[1]:pixmax[1]
