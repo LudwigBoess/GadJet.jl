@@ -2,3 +2,8 @@ name = "GadJet"
 uuid = "1cc33cce-174c-413c-94d0-34de58e4bd4a"
 authors = ["LudwigBoess <lboess@usm.lmu.de>"]
 version = "0.1.0"
+
+[deps]
+ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
+Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
