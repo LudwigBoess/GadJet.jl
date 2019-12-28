@@ -55,8 +55,7 @@ function write_block(f::IOStream, d,
 
         # break if blockname not specified
         if blockname == ""
-            println("Please specify blockname!")
-            return "Please specify blockname!"
+            error("Please specify blockname!")
         end
 
         # write header
