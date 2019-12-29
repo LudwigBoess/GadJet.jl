@@ -1,5 +1,5 @@
 include("sod_shock.jl")
-include("cr_sod_shock_main.jl")
+#include("cr_sod_shock_main.jl")
 include("cr_sod_shock_noprepopulation.jl")
 #include("cr_sod_shock_withprepopulation.jl")
 
@@ -23,7 +23,7 @@ function RiemannParameters(;rhol::Float64=1.0,        rhor::Float64=0.125,
 
     # Error handling
     if (Pl == 0.0 && Ul == 0.0)
-        error("Both Ul and Pl are zero!")
+        error("Both Ul and Pl are zero! Plase supply initital pressure values.")
     end # error handling
 
 
@@ -32,7 +32,7 @@ function RiemannParameters(;rhol::Float64=1.0,        rhor::Float64=0.125,
          (E_cr_l == 0.0 && E_cr_r == 0.0) ) &&
          dsa_model == -1
 
-         println("Setting up parameters for pure hydro Sod-shock.")
+         @info "Setting up parameters for pure hydro Sod-shock."
 
          return SodParameters(rhol=rhol, rhor=rhor, Pl=Pl, Pr=Pr,
                               Ul=Ul, Ur=Ur, Mach=Mach, t=t,
@@ -40,12 +40,12 @@ function RiemannParameters(;rhol::Float64=1.0,        rhor::Float64=0.125,
 
     elseif dsa_model != -1
 
-        println("Setting up parameters for Sod-shock with CR acceleration.")
+        @info "Setting up parameters for Sod-shock with CR acceleration."
 
         if ( (P_cr_l == 0.0 && P_cr_r == 0.0) ||
              (E_cr_l == 0.0 && E_cr_r == 0.0) )
 
-            println("No seed CRs.")
+            @info "No seed CRs."
             return SodCRParameters_noCRs(rhol=rhol, rhor=rhor,
                                          Pl=Pl, Pr=Pr, Ul=Ul, Ur=Ur,
                                          Mach=Mach, t=t, x_contact=x_contact,
@@ -54,7 +54,8 @@ function RiemannParameters(;rhol::Float64=1.0,        rhor::Float64=0.125,
                                          dsa_model=dsa_model,
                                          xs_first_guess=xs_first_guess)
         else
-            println("With seed CRs.")
+            @info "With seed CRs."
+            error("Sod shock with seed CRs not implemented yet!")
             # return SodCRParameters_withCRs(rhol=rhol, rhor=rhor,
             #                                Pl=Pl, Pr=Pr, Ul=Ul, Ur=Ur,
             #                                P_cr_l=P_cr_l, P_cr_r=P_cr_r,
@@ -70,7 +71,9 @@ function RiemannParameters(;rhol::Float64=1.0,        rhor::Float64=0.125,
          (E_cr_l != 0.0 && E_cr_r != 0.0) ) &&
          dsa_model == -1
 
-         println("Setting up parameters for multicomponent shock without CR acceleration.")
+         @info "Setting up parameters for multicomponent shock without CR acceleration."
+
+         error("Multicomponent fluid shock not implemented yet!")
          # return SodCRParameters_withCRs(rhol=rhol, rhor=rhor, Pl=Pl, Pr=Pr,
          #                                 Ul=Ul, Ur=Ur, P_cr_l=P_cr_l, P_cr_r=P_cr_r,
          #                                 E_cr_l=E_cr_l, E_cr_r=E_cr_r,
