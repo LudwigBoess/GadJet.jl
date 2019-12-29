@@ -18,10 +18,18 @@ end
 
 struct WendlandC4
     ngb::Int64
+    norm::Float64
+    function WendlandC4(ngb::Int64=200)
+        new(ngb, 495.0/(32.0 * π))
+    end
 end
 
 struct WendlandC6
     ngb::Int64
+    norm::Float64
+    function WendlandC6(ngb::Int64=295)
+        new(ngb, 1365.0/(64.0*π))
+    end
 end
 
 @inline function kernel_value(kernel::Cubic, u::Float64, h::Float64)
@@ -117,16 +125,17 @@ end
 end
 
 
-@inline function kernel_value(kernel::WendlandC6, u::Float64, h::Float64)
+function kernel_value(kernel::WendlandC6, u::Float64, h::Float64)
 
-    norm = 1365.0/(64.0*π)
-    n = norm/h^3
+    #norm::Float64 = 1365.0/(64.0*π)
+    n::Float64 = kernel.norm/h^3
 
-    if u < 1.0
-        return ( (1.0 - u)^8 * ( 1.0 + 8. * u + 25. * u^2 + 32. * u^3 )) * n
-    else
-        return 0.
-    end
+    #if u < 1.0
+        result::Float64 = ( (1.0 - u)^8 * ( 1.0 + 8. * u + 25. * u^2 + 32. * u^3 )) * n
+        return result
+    #else
+#        return 0.0::Float64
+#    end
 
 end
 
