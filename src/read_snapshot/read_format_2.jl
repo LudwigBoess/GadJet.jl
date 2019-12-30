@@ -24,13 +24,20 @@ function read_block_by_name(filename::String, blockname::String;
             else
                 error("No Info block in snapshot! Supply Info_Line type!")
             end
-        else # info == 1
+        else # info != 1
             for i ∈ 1:length(info)
                 if info[i].block_name == blockname
                     info = info[i]
                     break
                 end # if block found
             end # loop over info
+            if isa(info, Array)
+                if (blockname == "MASS")
+                    info = Info_Line("MASS", Float32, 1, [0, 0, 0, 0, 0, 0])
+                else
+                    error("Block not present!")
+                end
+            end
         end # info == 1
     end
 

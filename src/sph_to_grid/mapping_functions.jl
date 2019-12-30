@@ -16,9 +16,6 @@
 
 """
 
-# include(joinpath(dirname(@__FILE__), "kernels.jl"))
-# include(joinpath(dirname(@__FILE__), "sph_types.jl"))
-
 using Statistics
 using ProgressMeter
 using Base.Threads
@@ -64,92 +61,12 @@ end
 end
 
 
-# function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Array{Float64,2},
-#                           ρ::Array{Float64,2}, Bin_Quant::Array{Float64,2};
-#                           param::mappingParameters, kernel)
-#
-#     N = length(M)  # number of particles
-#
-#     #val = SharedArray{Float64,2}(length(param.x), length(param.y))
-#     println("test")
-#     val = zeros(length(param.x), length(param.y))
-#
-#     minCoords = [param.x[1], param.y[1], param.z[1]]
-#     maxCoords = [param.x[end], param.y[end], param.z[end]]
-#
-#     max_pixel = [length(param.x), length(param.y), length(param.z)]
-#
-#     @inbounds for p = 1:N
-#
-#         in_image = false
-#
-#         @inbounds for dim = 1:3
-#
-#             if ( (minCoords[dim] - HSML[p]) <= Pos[p,dim] <= (maxCoords[dim] + HSML[p]) )
-#                 in_image = true
-#             else
-#                 in_image = false
-#             end
-#             # in_image = check_in_image(Pos[p,dim], HSML[p],
-#             #                           minCoords[dim], maxCoords[dim])
-#         end
-#
-#         if in_image
-#
-#             pixmin = Vector{Int64}(undef,3)
-#             pixmax = Vector{Int64}(undef,3)
-#
-#             @inbounds for dim = 1:3
-#
-#                 pix = floor((Pos[p,dim] - HSML[p] - minCoords[dim]) / param.pixelSideLength )
-#                 if pix < 1
-#                     pixmin[dim] = 1
-#                 else
-#                     pixmin[dim] = pix
-#                 end
-#
-#                 # pixmin[dim] = find_min_pixel(Pos[p,dim], HSML[p], minCoords[dim],
-#                 #                              param.pixelSideLength)
-#                 #
-#
-#                 pix = floor((Pos[p,dim] + HSML[p] - minCoords[dim]) / param.pixelSideLength )
-#                 if pix > max_pixel[dim]
-#                     pixmax[dim] = max_pixel[dim]
-#                 else
-#                     pixmax[dim] = pix
-#                 end
-#                 # pixmax[dim] = find_max_pixel(Pos[p,dim], HSML[p], minCoords[dim],
-#                 #                              param.pixelSideLength, max_pixel[dim])
-#             end
-#
-#             @inbounds for i = pixmin[1]:pixmax[1]
-#                 @inbounds for j = pixmin[2]:pixmax[2]
-#                     @inbounds for k = pixmin[3]:pixmax[3]
-#
-#                         distance = sqrt( (param.x[i] - Pos[p,1])^2 +
-#                                          (param.y[j] - Pos[p,2])^2 +
-#                                          (param.z[k] - Pos[p,3])^2 )
-#
-#                         val[i,j] += Bin_Quant[p] * M[p] / ρ[p] * kernel_value(kernel, distance/HSML[p], HSML[p])
-#
-#                     end # end z-loop
-#                 end # end y-loop
-#             end # end x-loop
-#
-#         end # end check if in image
-#
-#     end
-#
-#    return val
-# end
-
 @inline function get_d_hsml(dx::Float64, dy::Float64, dz::Float64, hsml::Float64)
     result::Float64 = sqrt( dx*dx + dy*dy + dz*dz ) / hsml
     return result
 end
 
-function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Array{Float64,2},
-                          ρ::Array{Float64,2}, Bin_Quant::Array{Float64,2};
+function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
                           param::mappingParameters, kernel,
                           show_progress::Bool=true)
 
@@ -180,7 +97,7 @@ function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Arra
         rho     = ρ[p]
 
 
-        in_image::Bool = false
+        in_image = false
 
 
         @inbounds for dim = 1:3
@@ -226,12 +143,14 @@ function sphCenterMapping(Pos::Array{Float64,2}, HSML::Array{Float64,2}, M::Arra
 
             @inbounds for i = pixmin[1]:pixmax[1]
                 dx::Float64 = param.x[i] - pos[1]
+
                 @inbounds for j = pixmin[2]:pixmax[2]
                     dy::Float64 = param.y[j] - pos[2]
+
                     @inbounds for k = pixmin[3]:pixmax[3]
                         dz::Float64 = param.z[k] - pos[3]
 
-                        distance_hsml::Float64 = get_d_hsml(dx, dy, dz, hsml)#sqrt( dx*dx + dy*dy + dz*dz ) / hsml
+                        distance_hsml::Float64 = get_d_hsml(dx, dy, dz, hsml)
 
                         if distance_hsml < 1.0
                             val[i,j] += bin_prefac * kernel_value(kernel, distance_hsml, hsml)

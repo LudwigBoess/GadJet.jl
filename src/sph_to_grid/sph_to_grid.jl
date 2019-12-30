@@ -1,4 +1,5 @@
 import GR
+using Base.Threads
 
 """
 glimpse(filename, blockname[, ... ])
@@ -8,12 +9,13 @@ glimpse(filename, blockname[, ... ])
 function glimpse(filename::String, blockname::String,
                  center_pos::Array{Float64,1}=[123456.7, 123456.7, 123456.7],
                  dx::Float64=0.0, dy::Float64=0.0, dz::Float64=0.0;
-		     kernel_name::String="WC6",
+			     kernel_name::String="WC6",
                  resolution::Int64=200, run_dummy::Bool=true,
-		     verbose::Bool=true, plot::Bool=true)
+			     verbose::Bool=true, plot::Bool=true)
 
     if verbose
-    	  @info "Reading data."
+		@info "Running on $(nthreads()) threads..."
+		@info "Reading data..."
     end
     # read header of snapshot
     h = head_to_obj(filename)
@@ -23,14 +25,14 @@ function glimpse(filename::String, blockname::String,
         error("Glimpse only works for snapshots with info block, sorry!")
     end
 
-    # read block of particle date
+    # read blocks of particle data
     bin_quantity = read_block_by_name(filename, blockname,
                                       info=info[getfield.(info, :block_name) .== blockname][1],
-          					  parttype=0)
+          					  		  parttype=0)
 
     x = read_block_by_name(filename, "POS",
-			         info=info[getfield.(info, :block_name) .== "POS"][1],
-				   parttype=0)
+			         	   info=info[getfield.(info, :block_name) .== "POS"][1],
+				   		   parttype=0)
 
     rho = read_block_by_name(filename, "RHO",
     				   info=info[getfield.(info, :block_name) .== "RHO"][1],
@@ -53,16 +55,16 @@ function glimpse(filename::String, blockname::String,
     end
 
     if center_pos == [123456.7, 123456.7, 123456.7]
-	  if verbose
-        	  @info "Calculating COM"
-        end
+		if verbose
+        	@info "Calculating COM..."
+    	end
         center_pos = calculate_center_of_mass(x, m)
     end
 
     if [dx, dy, dz] == [0.0, 0.0, 0.0]
         dx = h.boxsize
-	  dy = h.boxsize
-	  dz = h.boxsize
+	  	dy = h.boxsize
+	  	dz = h.boxsize
     end
 
     max_size = maximum([dx, dy, dz])
@@ -73,7 +75,7 @@ function glimpse(filename::String, blockname::String,
     				    pixelSideLength=(max_size/2.0))
 
     if verbose
-    	  @info "Running initial compiler run."
+    	@info "Initial compilation run..."
     end
     d = sphCenterMapping(Float64.(x), Float64.(hsml),
     					  Float64.(m), Float64.(rho), Float64.(bin_quantity);
@@ -86,7 +88,7 @@ function glimpse(filename::String, blockname::String,
     				    pixelSideLength=(max_size/resolution))
 
     if verbose
-    	  @info "Starting mapping:"
+		@info "Mapping..."
     end
     d = sphCenterMapping(Float64.(x), Float64.(hsml),
 				    Float64.(m), Float64.(rho), Float64.(bin_quantity);
@@ -94,7 +96,7 @@ function glimpse(filename::String, blockname::String,
 				    show_progress=verbose)
 
     if plot
-	 GR.imshow(d)
+		GR.imshow(d)
     end
 
     return d
