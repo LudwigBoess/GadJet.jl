@@ -4,7 +4,7 @@ Quickstart
 Reading Data
 ------------
 
-If you want to read a simulation snapshot into memory with $project, it's as easy as this:
+If you want to read a simulation snapshot into memory with GadJet.jl, it's as easy as this:
 
 ```julia
     data = read_snap(filename)
