@@ -27,9 +27,9 @@ end
 
     sol = solve([86.0], par)
 
-    @test sol.rho3 == 0.37667409437005994
-    @test sol.rho4 == 0.4854368932038835
-    @test sol.P34  == 13.097397114653086
+    @test sol.rho3 ≈ 0.37667409437005994
+    @test sol.rho4 ≈ 0.4854368932038835
+    @test sol.P34  ≈ 13.097397114653086
 
 end
 
@@ -42,10 +42,10 @@ end
 
     sol = solve([86.0], par)
 
-    @test sol.rho3    == 0.36998823036529227
-    @test sol.rho4    == 0.5925766595991485
-    @test sol.P34_tot == 12.089335761741005
-    @test sol.P4_cr   == 3.583255961157783
+    @test sol.rho3    ≈ 0.36998823036529227
+    @test sol.rho4    ≈ 0.5925766595991485
+    @test sol.P34_tot ≈ 12.089335761741005
+    @test sol.P4_cr   ≈ 3.583255961157783
 
 end
 
