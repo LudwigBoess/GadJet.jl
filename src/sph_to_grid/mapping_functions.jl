@@ -113,17 +113,17 @@ function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
 
                 @inbounds for j = pixmin[2]:pixmax[2]
                     dy::Float64 = param.y[j] - pos[2]
+                    
+                        @inbounds for k = pixmin[3]:pixmax[3]
+                            dz::Float64 = param.z[k] - pos[3]
 
-                    @inbounds for k = pixmin[3]:pixmax[3]
-                        dz::Float64 = param.z[k] - pos[3]
+                            distance_hsml::Float64 = get_d_hsml(dx, dy, dz, hsml)
 
-                        distance_hsml::Float64 = get_d_hsml(dx, dy, dz, hsml)
+                            if distance_hsml < 1.0
+                                val[i,j] += bin_prefac * kernel_value(kernel, distance_hsml, hsml)
+                            end
 
-                        if distance_hsml < 1.0
-                            val[i,j] += bin_prefac * kernel_value(kernel, distance_hsml, hsml)
-                        end
-
-                    end # end z-loop
+                        end # end z-loop
                 end # end y-loop
             end # end x-loop
 
