@@ -1,6 +1,10 @@
-# GadJet
+| Status | Coverage |
+| :----: | :----: |
+| [![Build Status](https://travis-ci.org/LudwigBoess/GadJet.svg?branch=master)](https://travis-ci.org/LudwigBoess/GadJet) |
 
-# This is not an official release! 
+# GadJet.jl
+
+# This is not an official release!
 
 If you stumbled on this repository by chance: <br>
 Feel free to use any function you find useful and/or working. <br>
