@@ -42,7 +42,7 @@ end
 
     sol = solve([86.0], par)
 
-    @test sol.rho3    ≈ 0.36998823036529227
+    @test sol.rho3    ≈ 0.3699882303652922
     @test sol.rho4    ≈ 0.5925766595991485
     @test sol.P34_tot ≈ 12.089335761741005
     @test sol.P4_cr   ≈ 3.583255961157783
