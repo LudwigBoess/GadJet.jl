@@ -96,22 +96,22 @@ end
 """
     Datatypes for IC Parameters and Solution
 """
-mutable struct SodParameters#{F<:Function}
+mutable struct SodParameters
 
-    rhol::Float64
-    rhor::Float64
-    Pl::Float64
-    Pr::Float64
-    Ul::Float64
-    Ur::Float64
-    cl::Float64
-    cr::Float64
-    M::Float64
-    t::Float64
-    x_contact::Float64
-    γ_th::Float64
-    γ_exp::Float64
-    η2::Float64
+    rhol::Float64           # denisty left
+    rhor::Float64           # density right
+    Pl::Float64             # pressure left
+    Pr::Float64             # pressure right
+    Ul::Float64             # internal energy left
+    Ur::Float64             # internal energy right
+    cl::Float64             # soundspeed left
+    cr::Float64             # soundspeed right
+    M::Float64              # Mach number
+    t::Float64              # time
+    x_contact::Float64      # position of the contact discontinuity along the tube
+    γ_th::Float64           # adiabatic index of the gas
+    γ_exp::Float64          # helper variable
+    η2::Float64             # helper variable
 
     function SodParameters(;rhol::Float64=1.0,  rhor::Float64=0.125,
                             Pl::Float64=0.0,    Pr::Float64=0.0,
@@ -173,19 +173,18 @@ mutable struct SodParameters#{F<:Function}
 end
 
 mutable struct SodHydroSolution
-
-    x::Array{Float64,1}
-    rho::Array{Float64,1}
-    rho4::Float64
-    rho3::Float64
-    P::Array{Float64,1}
-    P34::Float64
-    U::Array{Float64,1}
-    v::Array{Float64,1}
-    v34::Float64
-    vt::Float64
-    vs::Float64
-    Mach::Float64
+    x::Array{Float64,1}         # array of given positions
+    rho::Array{Float64,1}       # array of densities along the tube
+    rho4::Float64               # density in postshock region
+    rho3::Float64               # density between contact disc. and rarefaction wave
+    P::Array{Float64,1}         # array of pressures along the tube
+    P34::Float64                # pressure between shock and rarefaction wave
+    U::Array{Float64,1}         # array of internal energies along the tube
+    v::Array{Float64,1}         # array of velocities along the tube
+    v34::Float64                # velocity between shock and rarefaction wave
+    vt::Float64                 # velocity of rarefaction wave
+    vs::Float64                 # shock velocity
+    Mach::Float64               # Mach number
 
     function SodHydroSolution(x::Array{Float64,1})
         N = length(x)

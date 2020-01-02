@@ -18,7 +18,7 @@ As an example, this is how you would access the positions of the gas particles:
     data["Parttype0"]["POS"]
 ```
 
-If you only want to read a specific block for a sincle particle type, e.g. positions of gas particles you can use the function with a specified blockname and particle type like so:
+If you only want to read a specific block for a single particle type, e.g. positions of gas particles you can use the function with a specified blockname and particle type like so:
 
 ```julia
     pos = read_snap(filename, "POS", parttype=0)

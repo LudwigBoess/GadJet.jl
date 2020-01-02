@@ -3,22 +3,23 @@ include("sod_shock.jl")
 include("cr_sod_shock_noprepopulation.jl")
 #include("cr_sod_shock_withprepopulation.jl")
 
-function RiemannParameters(;rhol::Float64=1.0,        rhor::Float64=0.125,
-                            Pl::Float64=0.0,          Pr::Float64=0.0,
-                            Ul::Float64=0.0,          Ur::Float64=0.0,
-                            P_cr_l::Float64=0.0,      P_cr_r::Float64=0.0,
-                            E_cr_l::Float64=0.0,      E_cr_r::Float64=0.0,
-                            Bl::Array{Float64,1} = zeros(3),
-                            Br::Array{Float64,1} = zeros(3),
-                            Mach::Float64=0.0,        t::Float64,
-                            x_contact::Float64=70.0,
-                            γ_th::Float64=5.0/3.0,
-                            Pe_ratio::Float64=0.01,
-                            γ_cr::Float64=4.0/3.0,
-                            thetaB::Float64=0.0,
-                            theta_crit::Float64=(π/4.0),
-                            dsa_model::Int64=-1,
-                            xs_first_guess::Float64=4.7)
+function RiemannParameters(;rhol::Float64=1.0, rhor::Float64=0.125,      # density left and right (L&R)
+                            Pl::Float64=0.0,   Pr::Float64=0.0,          # pressure L&R
+                            Ul::Float64=0.0,   Ur::Float64=0.0,          # internal energy L&R
+                            P_cr_l::Float64=0.0, P_cr_r::Float64=0.0,    # CR pressure L&R
+                            E_cr_l::Float64=0.0, E_cr_r::Float64=0.0,    # CR energy L&R
+                            Bl::Array{Float64,1} = zeros(3),             # B-field left
+                            Br::Array{Float64,1} = zeros(3),             # B-field right
+                            Mach::Float64=0.0,                           # target Mach number
+                            t::Float64,                                  # time of the solution
+                            x_contact::Float64=70.0,                     # position of the contact discontinuity along the tube
+                            γ_th::Float64=5.0/3.0,                       # adiabatic index of the gas
+                            γ_cr::Float64=4.0/3.0,                       # adiabatic index of CRs
+                            Pe_ratio::Float64=0.01,                      # ratio of proton to electron energy in acceleration
+                            thetaB::Float64=0.0,                         # angle between magnetic field and shock normal
+                            theta_crit::Float64=(π/4.0),                 # critical angle for B/Shock angle efficiency
+                            dsa_model::Int64=-1,                         # diffuse shock acceleration model
+                            xs_first_guess::Float64=4.7)                 # first guess of the resulting shock compression
 
 
     # Error handling

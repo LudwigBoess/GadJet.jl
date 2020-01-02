@@ -58,7 +58,7 @@ function read_info(filename; verbose::Bool=false)
         skipsize = read(f, Int32)
 
         if blockname == "INFO"
-            n_blocks = Int(skipsize/40)
+            n_blocks = Int(skipsize/40) # one info line is 40 bytes
             arr_info = Array{Info_Line,1}(undef,n_blocks)
 
             for i = 1:n_blocks

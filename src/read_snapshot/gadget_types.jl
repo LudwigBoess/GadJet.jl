@@ -8,27 +8,27 @@
 """
 
 mutable struct Header
-    npart::Vector{Int32}
-    massarr::Vector{Float64}
-    time::Float64
-    z::Float64
-    flag_sfr::Int32
-    flag_feedback::Int32
-    nall::Vector{UInt32}
-    flag_cooling::Int32
-    num_files::Int32
-    boxsize::Float64
-    omega_0::Float64
-    omega_l::Float64
-    h0::Float64
-    flag_stellarage::Int32
-    flag_metals::Int32
-    npartTotalHighWord::Vector{UInt32}
-    flag_entropy_instead_u::Int32
-    flag_doubleprecision::Int32
+    npart::Vector{Int32}                # an array of particle numbers per type in this snapshot
+    massarr::Vector{Float64}            # an array of particle masses per type in this snapshot - if zero: MASS block present
+    time::Float64                       # time / scale factor of the simulation
+    z::Float64                          # redshift of the simulation
+    flag_sfr::Int32                     # 1 if simulation was run with star formation, else 0
+    flag_feedback::Int32                # 1 if simulation was run with stellar feedback, else 0
+    nall::Vector{UInt32}                # total number of particles in the simulation
+    flag_cooling::Int32                 # 1 if simulation was run with cooling, else 0
+    num_files::Int32                    # number of snapshots over which the simulation is distributed
+    boxsize::Float64                    # total size of the simulation box
+    omega_0::Float64                    # Omega matter
+    omega_l::Float64                    # Omega dark enery
+    h0::Float64                         # little h
+    flag_stellarage::Int32              # 1 if simulation was run with stellar age, else 0
+    flag_metals::Int32                  # 1 if simulation was run with metals, else 0
+    npartTotalHighWord::Vector{UInt32}  # weird
+    flag_entropy_instead_u::Int32       # 1 if snapshot U field contains entropy instead of internal energy, else 0
+    flag_doubleprecision::Int32         # 1 if snapshot is in double precision, else 0
     flag_ic_info::Int32
     lpt_scalingfactor::Float32
-    fill::Vector{Int32}
+    fill::Vector{Int32}                 # the HEAD block needs to be filled with zeros to have a size of 256 bytes
 
     function Header(npart::Vector{Int32}=Int32.([0,0,0,0,0,0]),
            massarr::Vector{Float64}=zeros(6),
@@ -77,10 +77,12 @@ mutable struct Header
 end
 
 mutable struct Info_Line
-    block_name::String
-    data_type::DataType
-    n_dim::Int32
-    is_present::Vector{Int32}
+    block_name::String              # name of the data block, e.g. "POS"
+    data_type::DataType             # datatype of the block, e.g. Float32 for single precision, Float64 for double
+    n_dim::Int32                    # number of dimensions of the block, usually 1 or 3
+    is_present::Vector{Int32}       # array of flags for which particle type this block is present,
+                                    # e.g. gas only:  [ 1, 0, 0, 0, 0, 0 ]
+                                    # e.g. gas + BHs: [ 1, 0, 0, 0, 0, 1 ]
 
     function Info_Line(block_name="", data_type=Float32, n_dim=Int32(0),
                         is_present=Int32.(zeros(6)))
