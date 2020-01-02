@@ -1,6 +1,6 @@
 [![The MIT License](https://img.shields.io/badge/license-MIT-orange.svg)](LICENSE.md)
 [![Documentation Status](https://readthedocs.org/projects/gadjetjl/badge/?version=latest)](https://gadjetjl.readthedocs.io/en/latest/?badge=latest)
-[![Build Status](https://travis-ci.org/LudwigBoess/GadJet.svg?branch=master)](https://travis-ci.org/LudwigBoess/GadJet)
+[![Build Status](https://travis-ci.org/LudwigBoess/GadJet.jl.svg?branch=master)](https://travis-ci.org/LudwigBoess/GadJet.jl)
 [![codecov.io](https://codecov.io/gh/LudwigBoess/GadJet.jl/coverage.svg?branch=master)](https://codecov.io/gh/LudwigBoess/GadJet.jl?branch=master)
 
 # GadJet.jl
