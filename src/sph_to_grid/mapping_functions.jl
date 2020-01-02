@@ -22,15 +22,47 @@ using Base.Threads
 using SharedArrays
 
 
-@inline function get_distance(Pos::Array{Float64,1}, x::Float64, y::Float64, z::Float64)
 
-    return sqrt( (x - pos[1] )^2 + ( y - pos[2] )^2 + ( z - pos[3])^2 )
+
+@inline function get_d_hsml_2D(dx, dy, hsml)
+    result::Float64 = sqrt( dx*dx + dy*dy ) / hsml
+    return result
 end
 
-
-@inline function get_d_hsml(dx::Float64, dy::Float64, dz::Float64, hsml::Float64)
+@inline function get_d_hsml_3D(dx, dy, dz, hsml)
     result::Float64 = sqrt( dx*dx + dy*dy + dz*dz ) / hsml
     return result
+end
+
+@inline function check_in_image(pos, hsml, minCoords, maxCoords)
+
+    if ( (minCoords - hsml) <= pos <= (maxCoords + hsml) )
+        return true
+    else
+        return false
+    end
+end
+
+@inline function find_min_pixel(pos, hsml, minCoords, pixelSideLength)
+
+    pix = floor(Int64, (pos - hsml - minCoords) / pixelSideLength )
+    if pix < 1
+        return 1
+    else
+        return pix
+    end
+
+end
+
+@inline function find_max_pixel(pos, hsml, minCoords, pixelSideLength, max_pixel)
+
+    pix = floor(Int64, (pos + hsml - minCoords) / pixelSideLength )
+    if pix > max_pixel
+        return max_pixel
+    else
+        return pix
+    end
+
 end
 
 function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
@@ -39,7 +71,87 @@ function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
 
     N = length(M)  # number of particles
 
-    val = SharedArray{Float64,2}(length(param.x), length(param.y))
+    val = zeros(Float64, length(param.x), length(param.y))
+
+    minCoords = [param.x[1], param.y[1], param.z[1]]
+    maxCoords = [param.x[end], param.y[end], param.z[end]]
+
+    max_pixel = [length(param.x), length(param.y), length(param.z)]
+
+    if show_progress
+        P = Progress(N)
+        idx = 0
+        P_lock = SpinLock()
+    end
+
+    @inbounds for p = 1:N
+
+        # save stuff from array to single variables
+        pos     = Pos[p,:]
+        hsml    = HSML[p]
+        bin_q   = Bin_Quant[p]
+        m       = M[p]
+        rho     = ρ[p]
+
+        in_image = false
+
+        @inbounds for dim = 1:3
+
+            in_image = check_in_image(pos[dim], hsml,
+                                      minCoords[dim], maxCoords[dim])
+        end
+
+        if in_image
+
+            pixmin = Vector{Int64}(undef,3)
+            pixmax = Vector{Int64}(undef,3)
+
+            @inbounds for dim = 1:3
+
+                pixmin[dim] = find_min_pixel(Pos[p,dim], HSML[p], minCoords[dim],
+                                             param.pixelSideLength)
+
+                pixmax[dim] = find_max_pixel(Pos[p,dim], HSML[p], minCoords[dim],
+                                             param.pixelSideLength, max_pixel[dim])
+
+            end
+
+            bin_prefac::Float64 = bin_q * m / rho
+
+            @inbounds for i = pixmin[1]:pixmax[1]
+                dx::Float64 = param.x[i] - pos[1]
+
+                @inbounds for j = pixmin[2]:pixmax[2]
+                    dy::Float64 = param.y[j] - pos[2]
+
+                        distance_hsml::Float64 = get_d_hsml_2D(dx, dy, hsml)
+
+                        val[i,j] += bin_prefac * kernel_value_2D(kernel, distance_hsml, hsml)
+
+                end # end y-loop
+            end # end x-loop
+
+        end # end check if in image
+
+        if show_progress
+            lock(P_lock)
+            idx += 1
+            ProgressMeter.update!(P, idx)
+            unlock(P_lock)
+        end
+    end
+
+   return val
+end
+
+
+function sphCenterMapping_toCube(Pos, HSML, M, ρ, Bin_Quant;
+                          param::mappingParameters, kernel,
+                          show_progress::Bool=true)
+
+    N = length(M)  # number of particles
+
+    val = SharedArray{Float64,2}(length(param.x), length(param.y), length(param.z))
 
     #val = zeros(Float64, length(param.x), length(param.y))
 
@@ -54,7 +166,7 @@ function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
         P_lock = SpinLock()
     end
 
-    @threads for p = 1:N
+    @inbounds for p = 1:N
 
         # save stuff from array to single variables
         pos     = Pos[p,:]
@@ -113,14 +225,14 @@ function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
 
                 @inbounds for j = pixmin[2]:pixmax[2]
                     dy::Float64 = param.y[j] - pos[2]
-                    
+
                         @inbounds for k = pixmin[3]:pixmax[3]
                             dz::Float64 = param.z[k] - pos[3]
 
                             distance_hsml::Float64 = get_d_hsml(dx, dy, dz, hsml)
 
                             if distance_hsml < 1.0
-                                val[i,j] += bin_prefac * kernel_value(kernel, distance_hsml, hsml)
+                                val[i,j,k] += bin_prefac * kernel_value_3D(kernel, distance_hsml, hsml)
                             end
 
                         end # end z-loop
@@ -140,64 +252,6 @@ function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
    return val
 end
 
-
-function sphCenterMapping_toCube(Pos::Array{Float64,2}, HSML::Array{Float64,2},
-                                 M::Array{Float64,2},
-                                 ρ::Array{Float64,2}, Bin_Quant::Array{Float64,2};
-                                 param::mappingParameters, kernel)
-
-    N = length(M)  # number of particles
-
-    val = zeros(length(param.x), length(param.y), length(param.z))
-
-    minCoords = [param.x[1], param.y[1], param.z[1]]
-    maxCoords = [param.x[end], param.y[end], param.z[end]]
-
-    max_pixel = [length(param.x), length(param.y), length(param.z)]
-
-    @threads for p = 1:N
-
-        in_image = false
-
-        @inbounds for dim = 1:3
-            in_image = check_in_image(Pos[p,dim], HSML[p],
-                                      minCoords[dim], maxCoords[dim])
-        end
-
-        if in_image
-
-            pixmin = Vector{Int64}(undef,3)
-            pixmax = Vector{Int64}(undef,3)
-
-            @inbounds for dim = 1:3
-
-                pixmin[dim] = find_min_pixel(Pos[p,dim], HSML[p], minCoords[dim],
-                                             param.pixelSideLength)
-
-                pixmax[dim] = find_max_pixel(Pos[p,dim], HSML[p], minCoords[dim],
-                                             param.pixelSideLength, max_pixel[dim])
-            end
-
-            @inbounds for i = pixmin[1]:pixmax[1]
-                @inbounds for j = pixmin[2]:pixmax[2]
-                    @inbounds for k = pixmin[3]:pixmax[3]
-
-                        distance = sqrt( (param.x[i] - Pos[p,1])^2 +
-                                         (param.y[j] - Pos[p,2])^2 +
-                                         (param.z[k] - Pos[p,3])^2 )
-
-                        val[i,j,k] += Bin_Quant[p] * M[p] / ρ[p] * kernel_value(kernel, distance/HSML[p], HSML[p])
-
-                    end # end z-loop
-                end # end y-loop
-            end # end x-loop
-
-        end # end check if in image
-
-    end
-
-   return val
-end
 
 function get_bounds(pos::Array{Float32,2}, min::Float64, max::Float64, axis::Int64,
                     range_arr::Vector{Int64})
@@ -295,7 +349,7 @@ function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameter
                         #     closestDistance = distance          # ?
                         # end
 
-                        norm += kernel_value(kernel, distance/hsml, Float64.(hsml))
+                        norm += kernel_value_3D(kernel, distance/hsml, Float64.(hsml))
 
                     end
                 end
@@ -330,7 +384,7 @@ function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameter
                             closestDistance = distance
                         end
 
-                        val[i,j,k] += bin_quant * mass / rho * kernel_value(kernel, distance/hsml, Float64.(hsml))  * norm
+                        val[i,j,k] += bin_quant * mass / rho * kernel_value_3D(kernel, distance/hsml, Float64.(hsml))  * norm
 
                     end
                 end
@@ -371,9 +425,3 @@ function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameter
     return c
 
 end
-
-# """
-#     Mapping similar to that of of SPLASH by
-# """
-# function splash2Dmapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameters, kernel)
-# end

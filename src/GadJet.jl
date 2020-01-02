@@ -68,7 +68,7 @@ module GadJet
            sphAdaptiveMapping,
            sphCenterMapping,
            glimpse,
-           
+
            # helper functions and datatypes for Smac
            Smac1ImageInfo,
            read_smac1_binary_image,
