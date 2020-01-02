@@ -13,6 +13,7 @@ Welcome to GadJet.jl's documentation!
    usage/installation
    usage/quickstart
    usage/read_data
+   usage/unit_conversion
    usage/riemann_solvers
    usage/sph_mapping
 
