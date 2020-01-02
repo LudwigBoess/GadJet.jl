@@ -7,9 +7,6 @@
             (private conversations). A similar implementation is used in Pygad.
             Publication: https://arxiv.org/abs/1803.03652
 
-            !!!! Not done yet !!!!
-
-
     Author: Ludwig Böss
     Contact: lboess@usm.lmu.de
     Created: 2018-12-12
@@ -20,8 +17,6 @@ using Statistics
 using ProgressMeter
 using Base.Threads
 using SharedArrays
-
-
 
 
 @inline function get_d_hsml_2D(dx, dy, hsml)
@@ -229,7 +224,7 @@ function sphCenterMapping_toCube(Pos, HSML, M, ρ, Bin_Quant;
                         @inbounds for k = pixmin[3]:pixmax[3]
                             dz::Float64 = param.z[k] - pos[3]
 
-                            distance_hsml::Float64 = get_d_hsml(dx, dy, dz, hsml)
+                            distance_hsml::Float64 = get_d_hsml_3D(dx, dy, dz, hsml)
 
                             if distance_hsml < 1.0
                                 val[i,j,k] += bin_prefac * kernel_value_3D(kernel, distance_hsml, hsml)

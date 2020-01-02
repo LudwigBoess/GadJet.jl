@@ -45,13 +45,13 @@ function glimpse(filename::String, blockname::String,
     m = read_block_by_name(filename, "MASS", parttype=0)
 
     if kernel_name == "WC6"
-        kernel = WendlandC6(295)
+        kernel = WendlandC6()
     elseif kernel_name == "WC4"
-	  kernel = WendlandC4(200)
+	  kernel = WendlandC4()
     elseif kernel_name == "Quntic"
-	  kernel = Quintic(200)
+	  kernel = Quintic()
     elseif kernel_name == "Cubic"
-	  kernel = Cubic(64)
+	  kernel = Cubic()
     end
 
     if center_pos == [123456.7, 123456.7, 123456.7]
@@ -100,5 +100,31 @@ function glimpse(filename::String, blockname::String,
     end
 
     return d
+
+end
+
+
+
+"""
+
+"""
+
+function sphMapping(Pos, HSML, M, ρ, Bin_Quant;
+                    param::mappingParameters, kernel,
+                    show_progress::Bool=true,
+					# conserve_quantities::Bool=false,  # not used yet
+					dimensions::Int=2)
+
+	if (dimensions == 2)
+		return sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
+		                          param=param, kernel=kernel,
+		                          show_progress=show_progress)
+	elseif (dimensions == 3 )
+		return sphCenterMapping_toCube(Pos, HSML, M, ρ, Bin_Quant;
+		                          param=param, kernel=kernel,
+		                          show_progress=show_progress)
+	end
+
+
 
 end
