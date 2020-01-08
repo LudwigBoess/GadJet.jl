@@ -7,11 +7,13 @@
 
 This package provides some basic functionality to work with the SPH code "Gadget" by Volker Springel (doi:10.1111/j.1365-2966.2005.09655.x).
 
-These functionalities are: reading data in snapshot format 1+2, reading the subfind output, basic mapping of sph data to a grid.
+These functionalities are: reading and writing data in snapshot format 1+2, reading the subfind output, basic mapping of sph data to a grid.
 Additionally I provide some exact riemann solvers for shocktube tests, unit conversion and other utility.
 This list will extend over time.
 
 Please note that I am not affiliated with Volker Springel. This project was started because I needed to work with Gadget for university and couldn't find any Julia implementations to work with the data.
+
+Any help and contribution is greatly appreciated, as this is still a work in progress. Please see the section on contributing.
 
 Quickstart
 ==========
