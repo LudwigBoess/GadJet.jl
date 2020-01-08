@@ -75,7 +75,7 @@ function snap_1_d(filename::String, data::Dict{Any,Any})
         if data["Header"]["npart"][i] != 0
 
             N = Int64(data["Header"]["npart"][i])
-            data[data["Header"]["PartTypes"][i]]["ID"] = copy(transpose(read!(f, Array{UInt32,1}(undef,N))))
+            data[data["Header"]["PartTypes"][i]]["ID"] = copy(transpose(read!(f, Array{UInt32,2}(undef,(1,N)))))
 
         end
 
@@ -96,9 +96,9 @@ function snap_1_d(filename::String, data::Dict{Any,Any})
                 N = Int64(data["Header"]["npart"][i])
 
                 if Int(bit_size) == 4
-                    data[data["Header"]["PartTypes"][i]]["MASS"] = copy(transpose(read!(f, Array{Float32,1}(undef,N))))
+                    data[data["Header"]["PartTypes"][i]]["MASS"] = copy(transpose(read!(f, Array{Float32,2}(undef,(1,N)))))
                 else
-                    data[data["Header"]["PartTypes"][i]]["MASS"] = copy(transpose(read!(f, Array{Float64,1}(undef,N))))
+                    data[data["Header"]["PartTypes"][i]]["MASS"] = copy(transpose(read!(f, Array{Float64,2}(undef,(1,N)))))
                 end
 
             else
@@ -113,45 +113,45 @@ function snap_1_d(filename::String, data::Dict{Any,Any})
 
     end
 
-    # if data["Header"]["npart"][1] != 0
-    #
-    #     # skip identifiers
-    #     p = position(f)
-    #     seek(f, p+8)
-    #
-    #     N = Int64(data["Header"]["npart"][0])
-    #
-    #     # read U
-    #     if Int(bit_size) == 4
-    #         data["PartType0"]["InternalEnergy"] = read(f, Float32, N)
-    #     else
-    #         data["PartType0"]["InternalEnergy"] = read(f, Float64, N)
-    #     end
-    #
-    #
-    #     # skip identifiers
-    #     p = position(f)
-    #     seek(f, p+8)
-    #
-    #     # Read Density
-    #     if Int(bit_size) == 4
-    #         data["PartType0"]["Density"] = read(f, Float32, N)
-    #     else
-    #         data["PartType0"]["Density"] = read(f, Float64, N)
-    #     end
-    #
-    #     # skip identifiers
-    #     p = position(f)
-    #     seek(f, p+8)
-    #
-    #     # Read SmoothingLength
-    #     if Int(bit_size) == 4
-    #         data["PartType0"]["SmoothingLength"] = read(f, Float32, N)
-    #     else
-    #         data["PartType0"]["SmoothingLength"] = read(f, Float64, N)
-    #     end
-    #
-    # end
+    if data["Header"]["npart"][1] != 0
+
+        # skip identifiers
+        p = position(f)
+        seek(f, p+8)
+
+        N = Int64(data["Header"]["npart"][1])
+
+        # read U
+        if Int(bit_size) == 4
+            data["PartType0"]["InternalEnergy"] = copy(transpose(read!(f, Array{Float32,2}(undef,(1,N)))))
+        else
+            data["PartType0"]["InternalEnergy"] = copy(transpose(read!(f, Array{Float64,2}(undef,(1,N)))))
+        end
+
+
+        # skip identifiers
+        p = position(f)
+        seek(f, p+8)
+
+        # Read Density
+        if Int(bit_size) == 4
+            data["PartType0"]["Density"] = copy(transpose(read!(f, Array{Float32,2}(undef,(1,N)))))
+        else
+            data["PartType0"]["Density"] = copy(transpose(read!(f, Array{Float64,2}(undef,(1,N)))))
+        end
+
+        # skip identifiers
+        p = position(f)
+        seek(f, p+8)
+
+        # Read SmoothingLength
+        if Int(bit_size) == 4
+            data["PartType0"]["SmoothingLength"] = copy(transpose(read!(f, Array{Float32,2}(undef,(1,N)))))
+        else
+            data["PartType0"]["SmoothingLength"] = copy(transpose(read!(f, Array{Float64,2}(undef,(1,N)))))
+        end
+
+    end
 
     close(f)
 

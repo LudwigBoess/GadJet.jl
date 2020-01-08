@@ -28,7 +28,7 @@ function snap_to_dict(filename::String, try_info::Bool=true)
             end
         else
 
-            data = snap_1_d_old(filename, data)
+            data = snap_1_d(filename, data)
 
         end
 
