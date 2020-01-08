@@ -19,7 +19,7 @@ struct Cubic
     end
 end
 
-@inline function kernel_value_3D(kernel::Cubic, u::Float64, h::Float64)
+@inline function kernel_value_2D(kernel::Cubic, u::Float64, h::Float64)
 
     n = kernel.norm_3D/h^2
 
