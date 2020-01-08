@@ -35,20 +35,20 @@ function write_format2_block_header(f::IOStream, blockname::String)
 
 end
 
-function write_block(f::IOStream, d,
-                     snap_format::Int64=1,
-                     blockname::String="")
+function write_block(f::IOStream, data,
+                     blockname::String="";
+                     snap_format::Int64=2)
 
 
     # turn array of arrays d into one large array
     #data = reduce(vcat, d)     # OLD! Keep for later, maybe
 
     # get total number of particles to write
-    N = length(d[:,1])
+    N = length(data[:,1])
 
     # write blocksize
-    dtype = typeof(d[1,1])
-    dims = length(d[1,:])
+    dtype = typeof(data[1,1])
+    dims = length(data[1,:])
     blocksize = Int32(N * sizeof(dtype) * dims)
 
     if snap_format == 2
@@ -73,7 +73,7 @@ function write_block(f::IOStream, d,
 
     # write the block. Since Julia stores the arrays differently in memory
     # they have to be transposed before the can be written.
-    write(f, copy(transpose(d)))
+    write(f, copy(transpose(data)))
 
     println("Writing block done.")
 
@@ -82,7 +82,7 @@ function write_block(f::IOStream, d,
 
 end
 
-function write_header(f::IOStream, h::Header, snap_format::Int64)
+function write_header(f::IOStream, h::Header; snap_format::Int64=2)
 
     if snap_format == 2
         f = write_format2_block_header(f, "HEAD")
