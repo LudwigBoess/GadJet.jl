@@ -16,7 +16,7 @@
 using Statistics
 using ProgressMeter
 using Base.Threads
-using SharedArrays
+#using SharedArrays
 
 
 @inline function get_d_hsml_2D(dx, dy, hsml)
@@ -146,9 +146,9 @@ function sphCenterMapping_toCube(Pos, HSML, M, ρ, Bin_Quant;
 
     N = length(M)  # number of particles
 
-    val = SharedArray{Float64,2}(length(param.x), length(param.y), length(param.z))
+    #val = SharedArray{Float64,2}(length(param.x), length(param.y), length(param.z))
 
-    #val = zeros(Float64, length(param.x), length(param.y))
+    val = zeros(Float64, length(param.x), length(param.y))
 
     minCoords = [param.x[1], param.y[1], param.z[1]]
     maxCoords = [param.x[end], param.y[end], param.z[end]]
