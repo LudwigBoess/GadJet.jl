@@ -18,6 +18,16 @@ using GadJet, Test, DelimitedFiles
     @test d == d_ideal
 end
 
+@testset "Unit Conversion" begin
+
+    @info "Testing unit conversion."
+
+    GU = GadgetPhysicalUnits()
+
+    @test GU.t_s ≈ 3.085678e16
+    @test GU.E_cgs ≈ 1.989e53
+end
+
 
 @testset "Riemann Sod-Shock" begin
 
