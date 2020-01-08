@@ -179,7 +179,7 @@ function energy_integral(bound_low, bound_up, norm, slope, ρ)
 end
 
 
-function calculateCREnergyInCGS(CR_N, CR_S, CR_Cut, ρ; pmin=10.0, pmax=1.e7, mc=0.0, SelectBin=-1, units::GadgetUnitFactors=GadgetUnitFactors(), verbose=true)
+function calculateCREnergyInCGS(CR_N, CR_S, CR_Cut, ρ; pmin=10.0, pmax=1.e7, mc=0.0, SelectBin=-1, units::GadgetPhysicalUnits=GadgetPhysicalUnits(), verbose=true)
     # calculates engergy per bin in cgs units.
 
     if mc == 0.0
@@ -240,7 +240,7 @@ function density_integral(bound_low, bound_up, norm, slope, ρ)
 end
 
 
-function calculateCRNumber(CR_N, CR_S, CR_Cut, ρ; pmin=10.0, pmax=1.e7, mc, SelectBin=-1, units::GadgetUnitFactors=GadgetUnitFactors(), verbose=true)
+function calculateCRNumber(CR_N, CR_S, CR_Cut, ρ; pmin=10.0, pmax=1.e7, mc, SelectBin=-1, units::GadgetPhysicalUnits=GadgetPhysicalUnits(), verbose=true)
     # calculates engergy per bin in cgs units.
 
     CR_Num = 0.0

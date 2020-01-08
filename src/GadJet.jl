@@ -76,7 +76,7 @@ module GadJet
            # helper function for P-Smac2
            write_smac2_par,
 
-           GadgetUnitFactors,
+           GadgetPhysicalUnits,
            # old riemann solver
            #RiemannParameters,   # datatype for riemann parameters
            #RiemannSolution,     # datatype for riemann solution
