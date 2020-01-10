@@ -8,10 +8,10 @@ You can map SPH data to a grid using the function:
 
 ```julia
 function sphMapping(Pos, HSML, M, ρ, Bin_Quant;
-		            param::mappingParameters, kernel,
-		            show_progress::Bool=true,
-				    # conserve_quantities::Bool=false,  # not used yet
-				    dimensions::Int=2)
+		    param::mappingParameters, kernel,
+		    show_progress::Bool=true,
+		    # conserve_quantities::Bool=false,  # not used yet
+		    dimensions::Int=2)
 
 	[...]
 
@@ -25,7 +25,7 @@ To map the data you need to define the mapping parameters via the `mappingParame
 
 ```julia
 par = mappingParameters(xlim=[xmin, xmax], ylim=[ymin, ymax], zlim=[zmin, zmax],
-						Npixels=200)
+			Npixels=200)
 ```
 Instead of Npixels you can also give the keyword argument `pixelSideLength` if you prefer to define your image that way.
 
@@ -71,16 +71,16 @@ write_smac2_par(x, y, z,
 ```
 
 ### Smac
+
+Smac is a SPH mapping Code by Klaus Dolag and others. The implementation is described in Dolag et al. 2005 (https://ui.adsabs.harvard.edu/link_gateway/2005MNRAS.363...29D/doi:10.1111/j.1365-2966.2005.09452.x)
+
 Smac isn't public unfortunately. So these functions are mainly for my personal use.
 If you do have access to Smac, here's a reference to what you can do.
-
-Reading images
---------------
 
 GadJet.jl provides some functions to read the binary output of Smac, as I personally prefer that over the FITS output.
 To get the binary format you need to set `FILE_FORMAT = 1` in the parameter file.
 
-### Reading image information
+#### Reading image information
 
 If you set `FILE_HEADER = 1` you can read the information of the image into a `Smac1ImageInfo` object like so:
 
@@ -114,7 +114,7 @@ end
 
 ```
 
-### Reading the image
+#### Reading the image
 
 The image itself can be read with
 
