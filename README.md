@@ -11,6 +11,8 @@ These functionalities are: reading and writing data in snapshot format 1+2, read
 Additionally I provide some exact riemann solvers for shocktube tests, unit conversion and other utility.
 This list will extend over time.
 
+Documentation can be found [here](https://gadjetjl.readthedocs.io/en/latest/index.html)
+
 Please note that I am not affiliated with Volker Springel. This project was started because I needed to work with Gadget for university and couldn't find any Julia implementations to work with the data.
 
 Any help and contribution is greatly appreciated, as this is still a work in progress. Please see the section on contributing.
