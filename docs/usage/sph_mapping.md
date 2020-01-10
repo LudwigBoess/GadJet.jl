@@ -71,4 +71,56 @@ write_smac2_par(x, y, z,
 ```
 
 ### Smac
-Smac isn't public unfortunately. So these functions are just for my personal use.
+Smac isn't public unfortunately. So these functions are mainly for my personal use.
+If you do have access to Smac, here's a reference to what you can do.
+
+Reading images
+--------------
+
+GadJet.jl provides some functions to read the binary output of Smac, as I personally prefer that over the FITS output.
+To get the binary format you need to set `FILE_FORMAT = 1` in the parameter file.
+
+### Reading image information
+
+If you set `FILE_HEADER = 1` you can read the information of the image into a `Smac1ImageInfo` object like so:
+
+```julia
+info = read_smac1_binary_info(filename)
+```
+
+The `Smac1ImageInfo` object contains the following information
+
+```julia
+
+struct Smac1ImageInfo
+
+    snap::Int32                 # number of input snapshot
+    z::Float32                  # redshift of snapshot
+    m_vir::Float32              # virial mass of halo
+    r_vir::Float32              # virial radius of halo
+    xcm::Float32                # x coordinate of image center
+    ycm::Float32                # y coordinate of image center
+    zcm::Float32                # z coordinate of image center
+    z_slice_kpc::Float32        # depth of the image in kpc
+    boxsize_kpc::Float32        # xy-size of the image in kpc
+    boxsize_pix::Float32        # xy-size of the image in pixels
+    pixsize_kpc::Float32        # size of one pixel in kpc
+    xlim::Array{Float64,1}      # x limits of image
+    ylim::Array{Float64,1}      # y limits of image
+    zlim::Array{Float64,1}      # z limits of image
+    units::String               # unitstring of image
+    
+end
+
+```
+
+### Reading the image
+
+The image itself can be read with
+
+```julia
+image = read_smac1_binary_image(filename)
+```
+
+This will return an `Array{Float32,2}` with the pixel values. You can pass this to any imshow function of your favorite plotting package. 
+
