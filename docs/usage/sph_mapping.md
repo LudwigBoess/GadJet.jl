@@ -82,7 +82,7 @@ To get the binary format you need to set `FILE_FORMAT = 1` in the parameter file
 
 #### Reading image information
 
-If you set `FILE_HEADER = 1` you can read the information of the image into a `Smac1ImageInfo` object like so:
+If you set `FILE_HEADER = 1` in the Smac parameter file you can read the information of the image header into a `Smac1ImageInfo` object like so:
 
 ```julia
 info = read_smac1_binary_info(filename)
