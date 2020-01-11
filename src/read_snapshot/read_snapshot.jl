@@ -46,7 +46,7 @@ read_snap(filename[, blockname, parttype])
     blockname: Returns only that block. If parttype specified only for that
     particle type.
 """
-function read_snap(filename::String, blockname::String=""; parttype::Int64=-1)
+function read_snap(filename::String, blockname::String="", parttype::Int64=-1)
 
     # default: return entire snapshot as dictionary
     if (parttype == -1) & (blockname == "")
