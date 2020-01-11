@@ -40,7 +40,7 @@ As an example, this is how you would access the positions of the gas particles:
 If you only want to read a specific block for a single particle type (e.g. positions of gas particles) you can use the function with a specified blockname and particle type like so:
 
 ```julia
-    pos = read_snap(filename, "POS", parttype=0)
+    pos = read_snap(filename, "POS", 0)
 ```
 
 This will return an array of the datatype of your simulation, usually Float32.
