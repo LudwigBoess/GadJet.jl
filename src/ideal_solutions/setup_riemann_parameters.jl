@@ -88,6 +88,40 @@ end # RiemannParameters
 
 
 """
+    Helper functions
+"""
+function find_xs_first_guess(Ul::Float64, Mach::Float64;
+                             xs_start::Float64=3.8, delta_xs::Float64=1.e-4,
+                             eff_model::Int64=2, thetaB::Float64=0.0)
+
+    xs_first_guess = xs_start
+    p = RiemannParameters(Ul=Ul, Mach=Mach,
+                          t=1.5)
+
+    while true
+        println(xs_first_guess)
+
+        try
+
+            par = RiemannParameters(Pl=p.Pl, Pr=p.Pr,
+                                    thetaB = thetaB,
+                                    Mach = Mach,
+                                    xs_first_guess = xs_first_guess,
+                                    t=1.5, dsa_model = eff_model)
+
+            solve([86.0], par)
+
+            break
+        catch
+            xs_first_guess += delta_xs
+        end
+
+    end
+    return xs_first_guess
+end
+
+
+"""
     Multiple dispatch for solve function
 """
 # Pure hydro Sod-shock
