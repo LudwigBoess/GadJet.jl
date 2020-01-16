@@ -14,7 +14,6 @@ function glimpse(filename::String, blockname::String,
 			     verbose::Bool=true, plot::Bool=true)
 
     if verbose
-		@info "Running on $(nthreads()) threads..."
 		@info "Reading data..."
     end
     # read header of snapshot
@@ -59,6 +58,7 @@ function glimpse(filename::String, blockname::String,
         	@info "Calculating COM..."
     	end
         center_pos = calculate_center_of_mass(x, m)
+		println("COM: $center_pos")
     end
 
     if [dx, dy, dz] == [0.0, 0.0, 0.0]
@@ -78,9 +78,9 @@ function glimpse(filename::String, blockname::String,
     	@info "Initial compilation run..."
     end
     d = sphCenterMapping(Float64.(x), Float64.(hsml),
-    					  Float64.(m), Float64.(rho), Float64.(bin_quantity);
-					  param=par, kernel=kernel,
-					  show_progress=verbose)
+    					 Float64.(m), Float64.(rho), Float64.(bin_quantity);
+					     param=par, kernel=kernel,
+					     show_progress=verbose)
 
     par = mappingParameters(x_lim=[center_pos[1] - dx/2.0, center_pos[1] + dx/2.0],
     				    y_lim=[center_pos[2] - dx/2.0, center_pos[2] + dx/2.0],
