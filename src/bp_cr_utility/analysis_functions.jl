@@ -58,31 +58,31 @@ function getCRMomentumDistributionFromPartID(snap_file::String, ID::Int64;
 
     id = read_block_by_name(snap_file, "ID",
                             info=info[getfield.(info, :block_name) .== "ID"][1],
-                            npart=h.npart, parttype=0)
+                            parttype=0)
 
     part = findfirst( id .== UInt32(ID) )[1]
 
     # protons
     CRpN = read_block_by_name(snap_file, "CRpN",
                             info=info[getfield.(info, :block_name) .== "CRpN"][1],
-                            npart=h.npart, parttype=0)[part,:]
+                            parttype=0)[part,:]
     CRpS = read_block_by_name(snap_file, "CRpS",
                             info=info[getfield.(info, :block_name) .== "CRpS"][1],
-                            npart=h.npart, parttype=0)[part,:]
+                            parttype=0)[part,:]
     CRpC = read_block_by_name(snap_file, "CRpC",
                             info=info[getfield.(info, :block_name) .== "CRpC"][1],
-                            npart=h.npart, parttype=0)[part]
+                            parttype=0)[part]
 
     # electrons
     CReN = read_block_by_name(snap_file, "CReN",
                             info=info[getfield.(info, :block_name) .== "CReN"][1],
-                            npart=h.npart, parttype=0)[part,:]
+                            parttype=0)[part,:]
     CReS = read_block_by_name(snap_file, "CReS",
                             info=info[getfield.(info, :block_name) .== "CReS"][1],
-                            npart=h.npart, parttype=0)[part,:]
+                            parttype=0)[part,:]
     CReC = read_block_by_name(snap_file, "CReC",
                             info=info[getfield.(info, :block_name) .== "CReC"][1],
-                            npart=h.npart, parttype=0)[part]
+                            parttype=0)[part]
 
     Nbins = length(CRpS)
 
