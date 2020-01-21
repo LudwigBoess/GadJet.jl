@@ -1,4 +1,6 @@
-
+using SpecialFunctions: gamma
+using Interpolations: LinearInterpolation
+using ProgressMeter
 
 struct SedovData
 
@@ -12,8 +14,11 @@ struct SedovData
      Pth::Vector{Float32}
      Pcr::Vector{Float32}
      E::Float64
+     r_shock_rho::Float64
+     r_shock_P::Float64
      rho_out::Float64
      rho_s::Float64
+     cs_out::Float64
      gamma::Float64
      ndim::Int64
 
@@ -33,11 +38,21 @@ struct SedovData
 
         firstbin = Int(floor(length(rho) * 0.99)-1)
 
-        rho_out = mean( rho[ firstbin:end-1 ])
+        rho_out = mean( rho[ firstbin:end ])
+        P_out   = mean( P[ firstbin:end ] )
+
+        cs_out  = sqrt( 5.0/3.0 * P_out/rho_out)
 
         rho_s = rho_out * ( γ + 1.0 )/( γ - 1.0 )
 
-        new(t, m, r, vr, rho, U, P, Pth, Pcr, E, rho_out, rho_s, γ, ndim)
+        k = findmax(rho)[2]
+        r_shock_rho = r[k]
+
+        k = findmax(P)[2]
+        r_shock_P   = r[k]
+
+        new(t, m, r, vr, rho, U, P, Pth, Pcr, E, r_shock_rho, r_shock_P,
+            rho_out, rho_s, cs_out, γ, ndim)
     end
 
 end
@@ -59,6 +74,10 @@ struct SedovSolution
     rho::Vector{Float64}
     P::Vector{Float64}
     U::Vector{Float64}
+    r_shock::Float64
+    v_shock::Float64
+    xs::Float64
+    mach::Float64
 
 end
 
@@ -360,25 +379,25 @@ function get_ideal_sedov_fit(rho_s::Float64; ndim::Int64=3, γ::Float64=5.0/3.0)
 
     # println("w = $w\nw1 = $w1\nw2 = $w2")
     if w == w1
-        println("w1!")
+        # println("w1!")
         c = w1Data(ndim, γ,
                    w, w1, w2, w3,
                    b0, b1, b2, b3, b4, b5, b6, b7, b8,
                    C0, C1, C2, C3, C4, C5, C6)
     elseif w == w2
-        println("w2!")
+        # println("w2!")
         c = w2Data(ndim, γ,
                    w, w1, w2, w3,
                    b0, b1, b2, b3, b4, b5, b6, b7, b8,
                    C0, C1, C2, C3, C4, C5, C6)
     elseif w == w3
-        println("w3!")
+        # println("w3!")
         c = w3Data(ndim, γ,
                    w, w1, w2, w3,
                    b0, b1, b2, b3, b4, b5, b6, b7, b8,
                    C0, C1, C2, C3, C4, C5, C6)
     else
-        println("none!")
+        # println("none!")
         c = elseData(ndim, γ,
                    w, w1, w2, w3,
                    b0, b1, b2, b3, b4, b5, b6, b7, b8,
@@ -425,8 +444,6 @@ function get_ideal_sedov_fit(rho_s::Float64; ndim::Int64=3, γ::Float64=5.0/3.0)
     # Finally, get alpha
     alpha = ((8 * C0) / ((γ^2 - 1)*(ndim + 2 - w)^2)) * integral
 
-    println("alpha = ", alpha)
-
     return SedovFit(alpha, w, D_interpolated, P_interpolated, V_interpolated)
 end
 
@@ -445,11 +462,19 @@ function get_ideal_sedov_data(data::SedovData, fit::SedovFit)
 
     U = @. P / ( (data.gamma - 1.0 ) * rho )
 
-    return SedovSolution(data.r, v, rho, P, U)
+    k = findmax(rho)[2]
+
+    r_shock = data.r[k]
+    xs = rho[k]/rho[end]
+    v_shock = v[k]#/(1.0 - 1.0/xs)
+    mach = v_shock/data.cs_out
+
+    return SedovSolution(data.r, v, rho, P, U, r_shock, v_shock, xs, mach)
 end
 
 
-function get_sedov_data_from_snapshot(fi::String; CRs=false, Nbins::Int64=0)
+function get_sedov_data_from_snapshot(fi::String, blast_center::Vector{Float64}=[3.0, 3.0, 3.0];
+                                      CRs=false, Nbins::Int64=0)
 
     h = head_to_obj(fi)
 
@@ -457,8 +482,6 @@ function get_sedov_data_from_snapshot(fi::String; CRs=false, Nbins::Int64=0)
     t = h.time
     m = h.massarr[1]
 
-    #blast_center = [ 0.5, 0.5, 0.0 ]
-    blast_center = [ 3.0, 3.0, 3.0 ]
     x = read_block_by_name(fi, "POS", parttype=0)
 
     r = @. sqrt( (x[:,1] - blast_center[1])^2 +
@@ -474,8 +497,6 @@ function get_sedov_data_from_snapshot(fi::String; CRs=false, Nbins::Int64=0)
     vr = @. sqrt( v[:,1]^2 + v[:,2]^2 + v[:,3]^2 )
 
     rho = read_block_by_name(fi, "RHO", parttype=0)[k, 1]
-
-    println("rho readin = ", rho[end])
 
     U = read_block_by_name(fi, "U", parttype=0)[k, 1]
 
@@ -541,10 +562,10 @@ function get_sedov_data_from_snapshot(fi::String; CRs=false, Nbins::Int64=0)
 
 end
 
-function get_sedov_solution(filename::String; CRs::Bool=false, Nbins::Int64=0,
-                                              Ndim::Int64=3)
+function get_sedov_solution(filename::String, blast_center::Vector{Float64}=[3.0, 3.0, 3.0];
+                            CRs::Bool=false, Nbins::Int64=0, Ndim::Int64=3)
 
-    sedov_data = get_sedov_data_from_snapshot(fi, CRs=CRs, Nbins=Nbins)
+    sedov_data = get_sedov_data_from_snapshot(filename, blast_center, CRs=CRs, Nbins=Nbins)
 
     if CRs
         γ=7.0/5.0
@@ -552,7 +573,7 @@ function get_sedov_solution(filename::String; CRs::Bool=false, Nbins::Int64=0,
         γ=5.0/3.0
     end
 
-    sedov_fit  = get_ideal_sedov_fit(sedov_data.rho_s, ndim=3, γ=γ)
+    sedov_fit  = get_ideal_sedov_fit(sedov_data.rho_s, ndim=Ndim, γ=γ)
 
     sedov_ideal = get_ideal_sedov_data(sedov_data, sedov_fit)
 
