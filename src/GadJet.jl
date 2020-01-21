@@ -40,6 +40,7 @@ module GadJet
 
     include(joinpath(dirname(@__FILE__), "bp_cr_utility", "cr_datatypes.jl"))
     include(joinpath(dirname(@__FILE__), "bp_cr_utility", "analysis_functions.jl"))
+    include(joinpath(dirname(@__FILE__), "bp_cr_utility", "get_detailled_data.jl"))
 
 
     export Header, Info_Line,       # types
@@ -64,6 +65,8 @@ module GadJet
            Quintic,
            WendlandC4,
            WendlandC6,
+           kernel_value_2D,
+           kernel_value_3D,
            # internal sph mapping
            mappingParameters,
            sphAdaptiveMapping,
@@ -97,7 +100,8 @@ module GadJet
            CRMomentumDistribution,
            getCRMomentumDistributionFromPartID, # function to get distribution function
            calculateCREnergyInCGS,
-           calculateCRNumber
+           calculateCRNumber,
+           get_detailled_shock_data
 
 
 
