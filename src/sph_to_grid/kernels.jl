@@ -12,10 +12,11 @@
             Cubic
 """
 struct Cubic
+    n_neighbours::Int64
     norm_2D::Float64
     norm_3D::Float64
-    function Cubic()
-        new(8.0/π, 8.0/π)
+    function Cubic(n_neighbours::Int64=64)
+        new(n_neighbours, 8.0/π, 8.0/π)
     end
 end
 
@@ -52,10 +53,11 @@ end
             Quintic
 """
 struct Quintic
+    n_neighbours::Int64
     norm_2D::Float64
     norm_3D::Float64
-    function Quintic()
-        new(15309.0/(478.0*π), 2187.0/(40.0*pi))
+    function Quintic(n_neighbours::Int64=200)
+        new(n_neighbours, 15309.0/(478.0*π), 2187.0/(40.0*pi))
     end
 end
 
@@ -96,10 +98,11 @@ end
             Wendland C4
 """
 struct WendlandC4
+    n_neighbours::Int64
     norm_2D::Float64
     norm_3D::Float64
-    function WendlandC4()
-        new(9.0/π, 495.0/(32.0 * π))
+    function WendlandC4(n_neighbours::Int64=200)
+        new(n_neighbours,9.0/π, 495.0/(32.0 * π))
     end
 end
 
@@ -130,10 +133,11 @@ end
             Wendland C6
 """
 struct WendlandC6
+    n_neighbours::Int64
     norm_2D::Float64
     norm_3D::Float64
-    function WendlandC6()
-        new(78.0/(7.0*π), 1365.0/(64.0*π))
+    function WendlandC6(n_neighbours::Int64=295)
+        new(n_neighbours, 78.0/(7.0*π), 1365.0/(64.0*π))
     end
 end
 
