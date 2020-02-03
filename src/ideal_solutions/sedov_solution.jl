@@ -14,6 +14,8 @@ struct SedovData
      Pth::Vector{Float32}
      Pcr::Vector{Float32}
      E::Float64
+     hsml::Vector{Float32}
+     mach::Vector{Float32}
      r_shock_rho::Float64
      r_shock_P::Float64
      rho_out::Float64
@@ -22,11 +24,12 @@ struct SedovData
      gamma::Float64
      ndim::Int64
 
-     function SedovData(t::Float64, m::Float64,
-                        r::Vector{Float32}, vr::Vector{Float32},
-                        rho::Vector{Float32}, U::Vector{Float32},
-                        Pcr::Vector{Float32}, E::Float64;
-                        γ::Float64=5.0/3.0, ndim::Int64=3)
+     function SedovData(t::Float64,             m::Float64,
+                        r::Vector{Float32},     vr::Vector{Float32},
+                        rho::Vector{Float32},   U::Vector{Float32},
+                        Pcr::Vector{Float32},   E::Float64,
+                        hsml::Vector{Float32},  mach::Vector{Float32};
+                        γ::Float64=5.0/3.0,     ndim::Int64=3)
 
         P = @. (γ - 1.0 ) * rho * U
         Pth = P
@@ -51,7 +54,7 @@ struct SedovData
         k = findmax(P)[2]
         r_shock_P   = r[k]
 
-        new(t, m, r, vr, rho, U, P, Pth, Pcr, E, r_shock_rho, r_shock_P,
+        new(t, m, r, vr, rho, U, P, Pth, Pcr, E, hsml, mach, r_shock_rho, r_shock_P,
             rho_out, rho_s, cs_out, γ, ndim)
     end
 
@@ -466,7 +469,8 @@ function get_ideal_sedov_data(data::SedovData, fit::SedovFit)
 
     r_shock = data.r[k]
     xs = rho[k]/rho[end]
-    v_shock = v[k]#/(1.0 - 1.0/xs)
+    v_shock = v[k]/(1.0 - 1.0/xs)
+#    v_shock = v[k] + data.cs_out * sqrt( 1 + (data.gamma + 1.0)/data.gamma * (P[k]/data.P[end] - 1.0))
     mach = v_shock/data.cs_out
 
     return SedovSolution(data.r, v, rho, P, U, r_shock, v_shock, xs, mach)
@@ -478,7 +482,6 @@ function get_sedov_data_from_snapshot(fi::String, blast_center::Vector{Float64}=
 
     h = head_to_obj(fi)
 
-    #info = read_info(fi)
     t = h.time
     m = h.massarr[1]
 
@@ -499,6 +502,14 @@ function get_sedov_data_from_snapshot(fi::String, blast_center::Vector{Float64}=
     rho = read_block_by_name(fi, "RHO", parttype=0)[k, 1]
 
     U = read_block_by_name(fi, "U", parttype=0)[k, 1]
+
+    hsml = read_block_by_name(fi, "HSML", parttype=0)[k, 1]
+
+    try
+        mach = read_block_by_name(fi, "MACH", parttype=0)[k, 1]
+    catch
+        mach = zeros(Float32, length(U))
+    end
 
     if CRs
         CRpP = read_block_by_name(fi, "CRpP", parttype=0)[k, 1]
@@ -521,12 +532,16 @@ function get_sedov_data_from_snapshot(fi::String, blast_center::Vector{Float64}=
         rho_raw  = rho
         U_raw    = U
         CRpP_raw = CRpP
+        hsml_raw  = hsml
+        mach_raw  = mach
 
         r     = zeros(Float32, Nbins+1)
         vr    = zeros(Float32, Nbins+1)
         rho   = zeros(Float32, Nbins+1)
         U     = zeros(Float32, Nbins+1)
         CRpP  = zeros(Float32, Nbins+1)
+        hsml  = zeros(Float32, Nbins+1)
+        mach  = zeros(Float32, Nbins+1)
         Npart = zeros(Float32, Nbins+1)
 
         @showprogress "Binning..." for i = 1:N
@@ -536,6 +551,8 @@ function get_sedov_data_from_snapshot(fi::String, blast_center::Vector{Float64}=
             rho[bin]    += rho_raw[i]
             U[bin]      += U_raw[i]
             CRpP[bin]   += CRpP_raw[i]
+            hsml[bin]  += hsml_raw[i]
+            mach[bin]  += mach_raw[i]
             Npart[bin]  += 1
         end
 
@@ -545,6 +562,8 @@ function get_sedov_data_from_snapshot(fi::String, blast_center::Vector{Float64}=
             rho[i]  /= Npart[i]
             U[i]    /= Npart[i]
             CRpP[i] /= Npart[i]
+            mach[i] /= Npart[i]
+            hsml[i] /= Npart[i]
         end
 
     end
@@ -556,9 +575,11 @@ function get_sedov_data_from_snapshot(fi::String, blast_center::Vector{Float64}=
     deleteat!(rho, k)
     deleteat!(U, k)
     deleteat!(CRpP, k)
+    deleteat!(hsml, k)
+    deleteat!(mach, k)
 
 
-    return SedovData(t, m, r, vr, rho, U, CRpP, E, γ=γ)
+    return SedovData(t, m, r, vr, rho, U, CRpP, E, hsml, mach, γ=γ)
 
 end
 
