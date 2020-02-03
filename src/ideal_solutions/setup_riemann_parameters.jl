@@ -19,7 +19,8 @@ function RiemannParameters(;rhol::Float64=1.0, rhor::Float64=0.125,      # densi
                             thetaB::Float64=0.0,                         # angle between magnetic field and shock normal
                             theta_crit::Float64=(π/4.0),                 # critical angle for B/Shock angle efficiency
                             dsa_model::Int64=-1,                         # diffuse shock acceleration model
-                            xs_first_guess::Float64=4.7)                 # first guess of the resulting shock compression
+                            xs_first_guess::Float64=4.7,                 # first guess of the resulting shock compression
+                            verbose::Bool=true)
 
 
     # Error handling
@@ -33,7 +34,9 @@ function RiemannParameters(;rhol::Float64=1.0, rhor::Float64=0.125,      # densi
          (E_cr_l == 0.0 && E_cr_r == 0.0) ) &&
          dsa_model == -1
 
-         @info "Setting up parameters for pure hydro Sod-shock."
+         if verbose
+             @info "Setting up parameters for pure hydro Sod-shock."
+         end
 
          return SodParameters(rhol=rhol, rhor=rhor, Pl=Pl, Pr=Pr,
                               Ul=Ul, Ur=Ur, Mach=Mach, t=t,
@@ -41,12 +44,17 @@ function RiemannParameters(;rhol::Float64=1.0, rhor::Float64=0.125,      # densi
 
     elseif dsa_model != -1
 
-        @info "Setting up parameters for Sod-shock with CR acceleration."
+        if verbose
+            @info "Setting up parameters for Sod-shock with CR acceleration."
+        end
 
         if ( (P_cr_l == 0.0 && P_cr_r == 0.0) ||
              (E_cr_l == 0.0 && E_cr_r == 0.0) )
 
-            @info "No seed CRs."
+            if verbose
+                @info "No seed CRs."
+            end
+
             return SodCRParameters_noCRs(rhol=rhol, rhor=rhor,
                                          Pl=Pl, Pr=Pr, Ul=Ul, Ur=Ur,
                                          Mach=Mach, t=t, x_contact=x_contact,
@@ -92,14 +100,17 @@ end # RiemannParameters
 """
 function find_xs_first_guess(Ul::Float64, Mach::Float64;
                              xs_start::Float64=3.8, delta_xs::Float64=1.e-4,
-                             eff_model::Int64=2, thetaB::Float64=0.0)
+                             eff_model::Int64=2, thetaB::Float64=0.0,
+                             verbose::Bool=false)
 
     xs_first_guess = xs_start
     p = RiemannParameters(Ul=Ul, Mach=Mach,
                           t=1.5)
 
     while true
-        println(xs_first_guess)
+        if verbose
+            println(xs_first_guess)
+        end
 
         try
 
@@ -107,7 +118,8 @@ function find_xs_first_guess(Ul::Float64, Mach::Float64;
                                     thetaB = thetaB,
                                     Mach = Mach,
                                     xs_first_guess = xs_first_guess,
-                                    t=1.5, dsa_model = eff_model)
+                                    t=1.5, dsa_model = eff_model,
+                                    verbose = verbose)
 
             solve([86.0], par)
 
