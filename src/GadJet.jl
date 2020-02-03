@@ -1,4 +1,4 @@
-#__precompile__()
+__precompile__()
 
 module GadJet
 
@@ -101,8 +101,8 @@ module GadJet
            getCRMomentumDistributionFromPartID, # function to get distribution function
            calculateCREnergyInCGS,
            calculateCRNumber,
-           get_detailled_shock_data
-
-
-
+           get_detailled_shock_data,
+           get_detailled_Dpp_data,
+           get_detailled_radiative_data,
+           get_detailled_adiabatic_data
 end
