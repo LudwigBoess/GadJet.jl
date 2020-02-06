@@ -1,7 +1,7 @@
 include("sod_shock.jl")
 #include("cr_sod_shock_main.jl")
 include("cr_sod_shock_noprepopulation.jl")
-#include("cr_sod_shock_withprepopulation.jl")
+include("cr_sod_shock_withprepopulation.jl")
 
 function RiemannParameters(;rhol::Float64=1.0, rhor::Float64=0.125,      # density left and right (L&R)
                             Pl::Float64=0.0,   Pr::Float64=0.0,          # pressure L&R
@@ -42,13 +42,15 @@ function RiemannParameters(;rhol::Float64=1.0, rhor::Float64=0.125,      # densi
                               Ul=Ul, Ur=Ur, Mach=Mach, t=t,
                               x_contact=x_contact, γ_th=γ_th)
 
-    elseif dsa_model != -1
+    end
+
+    if dsa_model != -1
 
         if verbose
             @info "Setting up parameters for Sod-shock with CR acceleration."
         end
 
-        if ( (P_cr_l == 0.0 && P_cr_r == 0.0) ||
+        if ( (P_cr_l == 0.0 && P_cr_r == 0.0) &&
              (E_cr_l == 0.0 && E_cr_r == 0.0) )
 
             if verbose
@@ -64,15 +66,15 @@ function RiemannParameters(;rhol::Float64=1.0, rhor::Float64=0.125,      # densi
                                          xs_first_guess=xs_first_guess)
         else
             @info "With seed CRs."
-            error("Sod shock with seed CRs not implemented yet!")
-            # return SodCRParameters_withCRs(rhol=rhol, rhor=rhor,
-            #                                Pl=Pl, Pr=Pr, Ul=Ul, Ur=Ur,
-            #                                P_cr_l=P_cr_l, P_cr_r=P_cr_r,
-            #                                E_cr_l=E_cr_l, E_cr_r=E_cr_r,
-            #                                Mach=Mach, t=t, x_contact=x_contact,
-            #                                Pe_ratio=Pe_ratio, γ_th=γ_th, γ_cr=γ_cr,
-            #                                thetaB=thetaB, theta_crit=theta_crit,
-            #                                dsa_model=dsa_model)
+            #error("Sod shock with seed CRs not implemented yet!")
+            return SodCRParameters_withCRs(rhol=rhol, rhor=rhor,
+                                           Pl=Pl, Pr=Pr, Ul=Ul, Ur=Ur,
+                                           P_cr_l=P_cr_l, P_cr_r=P_cr_r,
+                                           E_cr_l=E_cr_l, E_cr_r=E_cr_r,
+                                           Mach=Mach, t=t, x_contact=x_contact,
+                                           Pe_ratio=Pe_ratio, γ_th=γ_th, γ_cr=γ_cr,
+                                           thetaB=thetaB, theta_crit=theta_crit,
+                                           dsa_model=dsa_model)
         end #
     end # dsa_model != -1
 
@@ -82,13 +84,13 @@ function RiemannParameters(;rhol::Float64=1.0, rhor::Float64=0.125,      # densi
 
          @info "Setting up parameters for multicomponent shock without CR acceleration."
 
-         error("Multicomponent fluid shock not implemented yet!")
-         # return SodCRParameters_withCRs(rhol=rhol, rhor=rhor, Pl=Pl, Pr=Pr,
-         #                                 Ul=Ul, Ur=Ur, P_cr_l=P_cr_l, P_cr_r=P_cr_r,
-         #                                 E_cr_l=E_cr_l, E_cr_r=E_cr_r,
-         #                                 Mach=Mach, t=t, x_contact=x_contact,
-         #                                 Pe_ratio=Pe_ratio, γ_th=γ_th, γ_cr=γ_cr,
-         #                                 dsa_model=dsa_model)
+         #error("Multicomponent fluid shock not implemented yet!")
+         return SodCRParameters_withCRs(rhol=rhol, rhor=rhor, Pl=Pl, Pr=Pr,
+                                         Ul=Ul, Ur=Ur, P_cr_l=P_cr_l, P_cr_r=P_cr_r,
+                                         E_cr_l=E_cr_l, E_cr_r=E_cr_r,
+                                         Mach=Mach, t=t, x_contact=x_contact,
+                                         Pe_ratio=Pe_ratio, γ_th=γ_th, γ_cr=γ_cr,
+                                         dsa_model=dsa_model)
 
     end # Seed CRs without acc
 
@@ -98,7 +100,7 @@ end # RiemannParameters
 """
     Helper functions
 """
-function find_xs_first_guess(Ul::Float64, Mach::Float64;
+function find_xs_first_guess(Ul::Float64, Mach::Float64, CR_seed::Float64=0.0;
                              xs_start::Float64=3.8, delta_xs::Float64=1.e-4,
                              eff_model::Int64=2, thetaB::Float64=0.0,
                              verbose::Bool=false)
@@ -113,10 +115,12 @@ function find_xs_first_guess(Ul::Float64, Mach::Float64;
         end
 
         try
+            P_cr_l = CR_seed * p.Pl
+            P_cr_r = CR_seed * p.Pr
 
             par = RiemannParameters(Pl=p.Pl, Pr=p.Pr,
-                                    thetaB = thetaB,
-                                    Mach = Mach,
+                                    P_cr_l=P_cr_l, P_cr_r=P_cr_r,
+                                    thetaB = thetaB, Mach = Mach,
                                     xs_first_guess = xs_first_guess,
                                     t=1.5, dsa_model = eff_model,
                                     verbose = verbose)
@@ -144,5 +148,5 @@ solve(x::Array{Float32,1}, par::SodParameters) = solveSodShock(Float64.(x), par=
 solve(x::Array{Float64,1}, par::SodCRParameters_noCRs)   = solveSodShockCR_noPrepopulation(x, par=par)
 solve(x::Array{Float32,1}, par::SodCRParameters_noCRs)   = solveSodShockCR_noPrepopulation(Float64.(x), par=par)
 
-# solve(x::Array{Float64,1}, par::SodCRParameters_withCRs) = solveSodShockCR_withPrepopulation(x, par=par)
-# solve(x::Array{Float32,1}, par::SodCRParameters_withCRs) = solveSodShockCR_withPrepopulation(Float64.(x), par=par)
+solve(x::Array{Float64,1}, par::SodCRParameters_withCRs) = solveSodShockCR_withPrepopulation(x, par=par)
+solve(x::Array{Float32,1}, par::SodCRParameters_withCRs) = solveSodShockCR_withPrepopulation(Float64.(x), par=par)
