@@ -77,6 +77,7 @@ module GadJet
            Smac1ImageInfo,
            read_smac1_binary_image,
            read_smac1_binary_info,
+           write_smac1_par,
            # helper function for P-Smac2
            write_smac2_par,
 
@@ -105,4 +106,5 @@ module GadJet
            get_detailled_Dpp_data,
            get_detailled_radiative_data,
            get_detailled_adiabatic_data
+
 end
