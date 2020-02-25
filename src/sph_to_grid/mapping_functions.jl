@@ -20,13 +20,11 @@ using Base.Threads
 
 
 @inline function get_d_hsml_2D(dx, dy, hsml)
-    result::Float64 = sqrt( dx*dx + dy*dy ) / hsml
-    return result
+    sqrt( dx*dx + dy*dy ) / hsml
 end
 
 @inline function get_d_hsml_3D(dx, dy, dz, hsml)
-    result::Float64 = sqrt( dx*dx + dy*dy + dz*dz ) / hsml
-    return result
+    sqrt( dx*dx + dy*dy + dz*dz ) / hsml
 end
 
 @inline function check_in_image(pos, hsml, minCoords, maxCoords)
@@ -62,7 +60,7 @@ end
 
 function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
                           param::mappingParameters, kernel,
-                          show_progress::Bool=true)
+                          show_progress::Bool=false)
 
     N = length(M)  # number of particles
 
@@ -119,7 +117,7 @@ function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
                 @inbounds for j = pixmin[2]:pixmax[2]
                     dy::Float64 = param.y[j] - pos[2]
 
-                        distance_hsml::Float64 = get_d_hsml_2D(dx, dy, hsml)
+                        distance_hsml = get_d_hsml_2D(dx, dy, hsml)
 
                         val[i,j] += bin_prefac * kernel_value_2D(kernel, distance_hsml, hsml)
 
