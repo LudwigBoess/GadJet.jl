@@ -98,3 +98,135 @@ function read_smac1_binary_info(fi)
 
     return img
 end
+
+
+function write_smac1_par(path, use_keys, out_dir, snap_base, snap_file, image_prefix,
+                         halo_id, snap_start, snap_end, file_format, kernel,
+                         xy_size, z_size, out_effect, out_subeffect,
+                         cr_bins, cr_pmin, cr_pmax, cr_subsamples,
+                         projection, x0, y0, z0)
+
+    open(path * "smac1.par", "w") do f
+        write(f,
+        """#=============================================================
+        # Input file
+        #=============================================================
+
+        SIM_FORMAT = 4
+
+        #**** Input file
+        USE_KEYS = $use_keys
+        OUTPUT_DIR = $out_dir
+        SNAP_BASE = $snap_base
+
+        SNAP_FILE = $snap_file
+
+        #**** Prefix of the output files:
+        PREFIX_OUT = $image_prefix
+
+
+        #**** Halo ID
+        HALO_ID = $halo_id
+
+        SNAP_START = $snap_start
+        SNAP_END   = $snap_end
+
+        INITIAL_Z = 0.0
+        IMAGE_Z   = 0.0
+
+        FILE_FORMAT = $file_format
+
+        FILE_HEADER = 1
+
+        KERNEL_TYPE = $kernel
+
+        PART_DISTR = 1
+
+        IMG_XY_UNITS = 2
+        IMG_XY_SIZE  = $xy_size
+
+        IMG_Z_UNITS = 2
+        IMG_Z_SIZE  = $z_size
+        FILL_CARROT = 0.
+
+        IMG_SIZE = 1024
+
+        SMOOTH_UNITS = 0
+        SMOOTH_FWHM  = 5.
+
+        NSIDE = 8
+
+        MIN_DIST =   5000.
+        MAX_DIST = 420000.
+
+        OUTPUT_MAP = $out_effect
+        OUTPUT_SUB = $out_subeffect
+
+        METAL_SPECIES = 0
+
+        TEMP_UNIT = 1
+
+        TEMP_CUT = 0.5
+
+        XRAY_E0 = 0.5
+        XRAY_E1 = 2.
+
+        X_TABLES =
+
+        FRQ_ZS = 300.
+
+        #**** Input for Radio Maps
+        #XCRP_TABLE_PATH gives the change of XCRP over radius.
+        ECRP_MIN = 1e9
+        FRQ_Pnu = 1.4e9
+        XCRP = 0.01
+        XCRP_TABLE_PATH = ~/
+        B_TABLE_PATH = ~/
+        KERNEL_TABLE_PATH =
+        GAM_nu = 1.25
+        #XCRP_TABLE_FILE_FMT = (1F8.6,2X,1F14.6)
+
+        #energies in GeV
+        E_gam = 1e1
+        E_gam_min = 1e-2
+        E_gam_max = 30e3
+
+        # Number of momentum bins for CR model
+        CR_nbins = $cr_bins
+        CR_pmin = $cr_pmin
+        CR_pmax = $cr_pmax
+        CR_subsamples = $cr_subsamples
+        CR_DSlope = 1.0e-6
+
+        GIVE_MORE_INFO = 0
+
+        PROJECT       = $projection
+
+        CENTER_MOTION = 0
+
+        REMOVE_LOCAL_GROUP_VEL = 0
+
+        CENTER = 1
+
+        CENTER_X = $x0
+        CENTER_Y = $y0
+        CENTER_Z = $z0
+
+        PERIODIC = 1
+
+        LIGHTCONE = 0
+        X_ORIGIN = 0.
+        Y_ORIGIN = 0.
+        Z_ORIGIN = 0.
+        OPEN_ANGLE = 1.0
+
+        MAIN_PROG = /afs/mpa/project/hydrosims/Hutt/g676/csf/Post/main_prog.a_gas.gv
+
+        HUBBLE = 0.7
+        OMEGA  = 0.3
+        LAMBDA = 0.7
+
+        """
+        )
+    end
+end
