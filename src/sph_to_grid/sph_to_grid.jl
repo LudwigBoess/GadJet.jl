@@ -10,7 +10,7 @@ function glimpse(filename::String, blockname::String,
                  center_pos::Array{Float64,1}=[123456.7, 123456.7, 123456.7],
                  dx::Float64=0.0, dy::Float64=0.0, dz::Float64=0.0;
 			     kernel_name::String="WC6",
-                 resolution::Int64=200, run_dummy::Bool=true,
+                 resolution::Int64=500, run_dummy::Bool=true,
 			     verbose::Bool=true, plot::Bool=true)
 
     if verbose
@@ -80,7 +80,7 @@ function glimpse(filename::String, blockname::String,
     d = sphCenterMapping(Float64.(x), Float64.(hsml),
     					 Float64.(m), Float64.(rho), Float64.(bin_quantity);
 					     param=par, kernel=kernel,
-					     show_progress=verbose)
+					     show_progress=false)
 
     par = mappingParameters(x_lim=[center_pos[1] - dx/2.0, center_pos[1] + dx/2.0],
     				    y_lim=[center_pos[2] - dx/2.0, center_pos[2] + dx/2.0],
@@ -110,7 +110,7 @@ end
 """
 
 function sphMapping(Pos, HSML, M, ρ, Bin_Quant;
-                    param::mappingParameters, kernel,
+                    param::mappingParameters, kernel::SPHKernel,
                     show_progress::Bool=true,
 					# conserve_quantities::Bool=false,  # not used yet
 					dimensions::Int=2)

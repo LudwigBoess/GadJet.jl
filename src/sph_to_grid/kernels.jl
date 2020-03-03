@@ -8,10 +8,12 @@
 
 """
 
+abstract type SPHKernel end
+
 """
             Cubic
 """
-struct Cubic
+struct Cubic <: SPHKernel
     n_neighbours::Int64
     norm_2D::Float64
     norm_3D::Float64
@@ -20,9 +22,9 @@ struct Cubic
     end
 end
 
-@inline function kernel_value_2D(kernel::Cubic, u::Float64, h::Float64)
+@inline function kernel_value_2D(kernel::Cubic, u::AbstractFloat, h_inv::AbstractFloat)
 
-    n = kernel.norm_3D/h^2
+    n = kernel.norm_3D * h_inv^2
 
     if u < 0.5
         return ( 1.0 - 6.0 * (1.0 - u) * u^2) * n
@@ -34,9 +36,9 @@ end
 
 end
 
-@inline function kernel_value_3D(kernel::Cubic, u::Float64, h::Float64)
+@inline function kernel_value_3D(kernel::Cubic, u::AbstractFloat, h_inv::AbstractFloat)
 
-    n = kernel.norm_3D/h^3
+    n = kernel.norm_3D * h_inv^3
 
     if u < 0.5
         return ( 1.0 + 6.0 * (u - 1.0) * u^2) * n
@@ -52,7 +54,7 @@ end
 """
             Quintic
 """
-struct Quintic
+struct Quintic <: SPHKernel
     n_neighbours::Int64
     norm_2D::Float64
     norm_3D::Float64
@@ -61,32 +63,44 @@ struct Quintic
     end
 end
 
-@inline function kernel_value_2D(kernel::Quintic, u, h)
+@inline function kernel_value_2D(kernel::Quintic, u::AbstractFloat, h_inv::AbstractFloat)
 
-    n = kernel.norm_2D/h^2
+    n = kernel.norm_2D * h_inv^2
 
     if u < 1.0/3.0
-        return ( ( 1.0 - u )^5 - 6.0 * ( 2.0/3.0 - u )^5  + 15.0 * ( 1.0/3.0 - u )^5 ) * n
+        u_m1  = ( 1.0 - u )
+        u_m23 = ( 2.0/3.0 - u )
+        u_m13 = ( 1.0/3.0 - u )
+        return ( u_m1*u_m1*u_m1*u_m1*u_m1 - 6.0 * u_m23*u_m23*u_m23*u_m23*u_m23 + 15.0 * u_m13*u_m13*u_m13*u_m13*u_m13 ) * n
     elseif u < 2.0/3.0
-        return ( ( 1.0 - u )^5 - 6.0 * ( 2.0/3.0 - u )^5 ) * n
+        u_m1  = ( 1.0 - u )
+        u_m23 = ( 2.0/3.0 - u )
+        return ( u_m1*u_m1*u_m1*u_m1*u_m1 - 6.0 * u_m23*u_m23*u_m23*u_m23*u_m23 ) * n
     elseif u < 1.0
-        return ( ( 1.0 - u )^5 ) * n
+        u_m1  = ( 1.0 - u )
+        return ( u_m1*u_m1*u_m1*u_m1*u_m1 ) * n
     else
         return 0.
     end
 
 end
 
-@inline function kernel_value_3D(kernel::Quintic, u, h)
+@inline function kernel_value_3D(kernel::Quintic, u::AbstractFloat, h_inv::AbstractFloat)
 
-    n = kernel.norm_3D/h^3
+    n = kernel.norm_3D * h_inv^3
 
     if u < 1.0/3.0
-        return ( ( 1.0 - u )^5 - 6.0 * ( 2.0/3.0 - u )^5  + 15.0 * ( 1.0/3.0 - u )^5 ) * n
+        u_m1  = ( 1.0 - u )
+        u_m23 = ( 2.0/3.0 - u )
+        u_m13 = ( 1.0/3.0 - u )
+        return ( u_m1*u_m1*u_m1*u_m1*u_m1 - 6.0 * u_m23*u_m23*u_m23*u_m23*u_m23 + 15.0 * u_m13*u_m13*u_m13*u_m13*u_m13 ) * n
     elseif u < 2.0/3.0
-        return ( ( 1.0 - u )^5 - 6.0 * ( 2.0/3.0 - u )^5 ) * n
+        u_m1  = ( 1.0 - u )
+        u_m23 = ( 2.0/3.0 - u )
+        return ( u_m1*u_m1*u_m1*u_m1*u_m1 - 6.0 * u_m23*u_m23*u_m23*u_m23*u_m23 ) * n
     elseif u < 1.0
-        return ( ( 1.0 - u )^5 ) * n
+        u_m1  = ( 1.0 - u )
+        return ( u_m1*u_m1*u_m1*u_m1*u_m1 ) * n
     else
         return 0.
     end
@@ -97,7 +111,7 @@ end
 """
             Wendland C4
 """
-struct WendlandC4
+struct WendlandC4 <: SPHKernel
     n_neighbours::Int64
     norm_2D::Float64
     norm_3D::Float64
@@ -106,22 +120,28 @@ struct WendlandC4
     end
 end
 
-@inline function kernel_value_2D(kernel::WendlandC4, u, h)
+@inline function kernel_value_2D(kernel::WendlandC4, u::AbstractFloat, h_inv::AbstractFloat)
 
     if u < 1.0
-        n = kernel.norm_2D/h^2
-        return ( ( 1. - u )^6 * ( 1.0 + 6.0 * u + 35.0/3.0 * u^2 ) ) * n
+        n = kernel.norm_2D * h_inv^2
+        u_m1 = 1.0 - u
+        u_m1_2 = u_m1 * u_m1  # (1.0 - u)^2
+        u_m1_4 = u_m1 * u_m1  # (1.0 - u)^4
+        return ( u_m1_2*u_m1_4 * ( 1.0 + 6u + 35.0/3.0 * u^2 ) ) * n
     else
         return 0.
     end
 
 end
 
-@inline function kernel_value_3D(kernel::WendlandC4, u, h)
+@inline function kernel_value_3D(kernel::WendlandC4, u::AbstractFloat, h_inv::AbstractFloat)
 
     if u < 1.0
-        n = kernel.norm_3D/h^3
-        return ( ( 1. - u )^6 * ( 1.0 + 6.0 * u + 35.0/3.0 * u^2 ) ) * n
+        n = kernel.norm_3D * h_inv^3
+        u_m1 = 1.0 - u
+        u_m1_2 = u_m1 * u_m1  # (1.0 - u)^2
+        u_m1_4 = u_m1 * u_m1  # (1.0 - u)^4
+        return ( u_m1_2*u_m1_4 * ( 1.0 + 6u + 35.0/3.0 * u^2 ) ) * n
     else
         return 0.
     end
@@ -132,7 +152,7 @@ end
 """
             Wendland C6
 """
-struct WendlandC6
+struct WendlandC6 <: SPHKernel
     n_neighbours::Int64
     norm_2D::Float64
     norm_3D::Float64
@@ -142,22 +162,32 @@ struct WendlandC6
 end
 
 
-@inline function kernel_value_2D(kernel::WendlandC6, u, h)
+@inline function kernel_value_2D(kernel::WendlandC6, u::AbstractFloat, h_inv::AbstractFloat)
 
     if u < 1.0
-        n = kernel.norm_2D/h^2
-        return ( (1.0 - u)^8 * ( 1.0 + 8. * u + 25. * u^2 + 32. * u^3 )) * n
+        n = kernel.norm_2D * h_inv^2
+        u_m1 = 1.0 - u
+        u_m1 = u_m1 * u_m1  # (1.0 - u)^2
+        u_m1 = u_m1 * u_m1  # (1.0 - u)^4
+        u_m1 = u_m1 * u_m1  # (1.0 - u)^8
+        u2 = u*u
+        return ( u_m1 * ( 1.0 + 8u + 25u2 + 32u2*u )) * n
     else
        return 0.0
    end
 
 end
 
-@inline function kernel_value_3D(kernel::WendlandC6, u, h)
+@inline function kernel_value_3D(kernel::WendlandC6, u::AbstractFloat, h_inv::AbstractFloat)
 
     if u < 1.0
-        n = kernel.norm_3D/h^3
-        return ( (1.0 - u)^8 * ( 1.0 + 8. * u + 25. * u^2 + 32. * u^3 )) * n
+        n = kernel.norm_3D * h_inv^3
+        u_m1 = 1.0 - u
+        u_m1 = u_m1 * u_m1  # (1.0 - u)^2
+        u_m1 = u_m1 * u_m1  # (1.0 - u)^4
+        u_m1 = u_m1 * u_m1  # (1.0 - u)^8
+        u2 = u*u
+        return ( u_m1 * ( 1.0 + 8u + 25u2 + 32u2*u )) * n
     else
        return 0.0
    end
