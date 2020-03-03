@@ -1,18 +1,26 @@
 name = "GadJet"
 uuid = "1cc33cce-174c-413c-94d0-34de58e4bd4a"
 authors = ["LudwigBoess <lboess@usm.lmu.de>"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
+Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
+NLsolve = "2774e3e8-f4cf-5e23-947b-6d7e65073b56"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
+QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-GR = "0.44.0"
+GR = "0.44"
+Interpolations = "0.12"
 ProgressMeter = "1.2.0"
-Roots = "0.8.3"
+Roots = "0.8"
+SpecialFunctions = "0.9"
 julia = "1.0"

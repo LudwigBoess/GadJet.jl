@@ -104,3 +104,19 @@ mutable struct SodHydroSolution
     Mach::Float64               # Mach number
 end
 ```
+
+Utility
+-------
+
+A common issue is running into the error DomainError when solving a CR Sod shock.
+This is due to the definition of the incomplete beta function. You can avoid this by supplying a value for `xs_first_guess`, which is a first guess for the value of the shock compression ratio.
+In case you don't know the target `xs` (which is the usual case) and are tired of trying different values there's a helper function for that:
+
+```julia
+function find_xs_first_guess(Ul::Float64, Mach::Float64;
+                             xs_start::Float64=3.8, delta_xs::Float64=1.e-4,
+                             eff_model::Int64=2, thetaB::Float64=0.0)
+
+    [...]
+end
+```

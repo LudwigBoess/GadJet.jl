@@ -1,4 +1,4 @@
-#__precompile__()
+__precompile__()
 
 module GadJet
 
@@ -28,17 +28,19 @@ module GadJet
     include(joinpath(dirname(@__FILE__), "sph_to_grid", "smac2_utility.jl"))
     # unit conversion
     include(joinpath(dirname(@__FILE__), "unit_conversion", "unit_types.jl"))
-    # old riemann solver
-    #include(joinpath(dirname(@__FILE__), "riemann_solvers", "riemann_solver.jl"))
 
-    # test for new riemann solvers
-    include(joinpath(dirname(@__FILE__), "riemann_solvers", "cr_dsa_models.jl"))
-    include(joinpath(dirname(@__FILE__), "riemann_solvers", "cr_sod_shock_main.jl"))
-    include(joinpath(dirname(@__FILE__), "riemann_solvers", "setup_riemann_parameters.jl"))
-    #include(joinpath(dirname(@__FILE__), "riemann_solvers", "cr_sod_shock.jl"))
+    # riemann solvers
+    include(joinpath(dirname(@__FILE__), "ideal_solutions", "cr_dsa_models.jl"))
+    include(joinpath(dirname(@__FILE__), "ideal_solutions", "cr_sod_shock_main.jl"))
+    include(joinpath(dirname(@__FILE__), "ideal_solutions", "setup_riemann_parameters.jl"))
+    #include(joinpath(dirname(@__FILE__), "ideal_solutions", "cr_sod_shock.jl"))
+
+    # sedov solution
+    include(joinpath(dirname(@__FILE__), "ideal_solutions", "sedov_solution.jl"))
 
     include(joinpath(dirname(@__FILE__), "bp_cr_utility", "cr_datatypes.jl"))
     include(joinpath(dirname(@__FILE__), "bp_cr_utility", "analysis_functions.jl"))
+    include(joinpath(dirname(@__FILE__), "bp_cr_utility", "get_detailled_data.jl"))
 
 
     export Header, Info_Line,       # types
@@ -63,6 +65,8 @@ module GadJet
            Quintic,
            WendlandC4,
            WendlandC6,
+           kernel_value_2D,
+           kernel_value_3D,
            # internal sph mapping
            mappingParameters,
            sphAdaptiveMapping,
@@ -73,6 +77,7 @@ module GadJet
            Smac1ImageInfo,
            read_smac1_binary_image,
            read_smac1_binary_info,
+           write_smac1_par,
            # helper function for P-Smac2
            write_smac2_par,
 
@@ -85,6 +90,9 @@ module GadJet
            # Test for different riemann solvers
            RiemannParameters,    # helper function to set up solution
            solve,                # overloaded function to solve riemann problems
+           find_xs_first_guess,  # helper function to find initial guess for shock compression
+
+           get_sedov_solution,   # wrapper function to get sedov data and ideal solution from snapshot
 
            # datatypes and helper functions for BP_REAL_CRs
            CRShockData,          # datatype to analyse single shocked particle
@@ -93,8 +101,10 @@ module GadJet
            CRMomentumDistribution,
            getCRMomentumDistributionFromPartID, # function to get distribution function
            calculateCREnergyInCGS,
-           calculateCRNumber
-
-
+           calculateCRNumber,
+           get_detailled_shock_data,
+           get_detailled_Dpp_data,
+           get_detailled_radiative_data,
+           get_detailled_adiabatic_data
 
 end
