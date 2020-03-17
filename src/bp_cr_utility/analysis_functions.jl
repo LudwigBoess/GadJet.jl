@@ -1,5 +1,5 @@
 
-function readSingleCRShockDataFromOutputFile(file)
+function readSingleCRShockDataFromOutputFile(file::String)
 
         # read file into memory
         f = open(file)
@@ -31,9 +31,9 @@ function readSingleCRShockDataFromOutputFile(file)
         return cr
 end
 
-function getCRMomentumDistributionFromPartID(snap_file::String, ID::Int64;
-                                             pmin::Float64=10.0, pmax::Float64=1.0e7,
-                                             Nbins::Int64=0)
+function getCRMomentumDistributionFromPartID(snap_file::String, ID::Int;
+                                             pmin::AbstractFloat=10.0, pmax::AbstractFloat=1.0e7,
+                                             Nbins::Int=0)
 
 
     ymin = 1.e-20
@@ -156,7 +156,8 @@ function getCRMomentumDistributionFromPartID(snap_file::String, ID::Int64;
 end
 
 
-function energy_integral(bound_low, bound_up, norm, slope, ρ)
+function energy_integral(bound_low::AbstractFloat, bound_up::AbstractFloat,
+                         norm::AbstractFloat, slope::AbstractFloat, ρ::AbstractFloat)
     # energy integral (eq.21 M01)
 
     cnst_c = 2.9979e10
@@ -178,12 +179,15 @@ function energy_integral(bound_low, bound_up, norm, slope, ρ)
     return energy
 end
 
-
-function calculateCREnergyInCGS(CR_N, CR_S, CR_Cut, ρ; pmin=10.0, pmax=1.e7, mc=0.0, SelectBin=-1, units::GadgetPhysicalUnits=GadgetPhysicalUnits(), verbose=true)
+function calculateCREnergyInCGS(CR_N, CR_S, CR_Cut, ρ;
+                                pmin::AbstractFloat=10.0, pmax::AbstractFloat=1.e7,
+                                mc::AbstractFloat=0.0, SelectBin::Int=-1,
+                                units::GadgetPhysicalUnits=GadgetPhysicalUnits(),
+                                verbose=true)
     # calculates engergy per bin in cgs units.
 
     if mc == 0.0
-        println("Error! No mc specified! Please provide m_particle * c_light to continue!")
+        error("Error! No mc specified! Please provide m_particle * c_light to continue!")
         return 1
     end
 
@@ -218,7 +222,8 @@ function calculateCREnergyInCGS(CR_N, CR_S, CR_Cut, ρ; pmin=10.0, pmax=1.e7, mc
 end
 
 
-function density_integral(bound_low, bound_up, norm, slope, ρ)
+function density_integral(bound_low::AbstractFloat, bound_up::AbstractFloat,
+                         norm::AbstractFloat, slope::AbstractFloat, ρ::AbstractFloat)
     # density integral (eq. 9 M01)
 
     slope_soft = 1.e-6
@@ -240,7 +245,9 @@ function density_integral(bound_low, bound_up, norm, slope, ρ)
 end
 
 
-function calculateCRNumber(CR_N, CR_S, CR_Cut, ρ; pmin=10.0, pmax=1.e7, mc, SelectBin=-1, units::GadgetPhysicalUnits=GadgetPhysicalUnits(), verbose=true)
+function calculateCRNumber(CR_N, CR_S, CR_Cut, ρ;pmin::AbstractFloat=10.0, pmax::AbstractFloat=1.e7,
+                           mc::AbstractFloat=0.0, SelectBin::Int=-1,
+                           units::GadgetPhysicalUnits=GadgetPhysicalUnits(), verbose=true)
     # calculates engergy per bin in cgs units.
 
     CR_Num = 0.0

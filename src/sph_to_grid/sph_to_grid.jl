@@ -11,6 +11,7 @@ function glimpse(filename::String, blockname::String,
                  dx::Float64=0.0, dy::Float64=0.0, dz::Float64=0.0;
 			     kernel_name::String="WC6",
                  resolution::Int64=500, run_dummy::Bool=true,
+				 conserve_quantities::Bool=false,
 			     verbose::Bool=true, plot::Bool=true)
 
     if verbose
@@ -77,10 +78,10 @@ function glimpse(filename::String, blockname::String,
     if verbose
     	@info "Initial compilation run..."
     end
-    d = sphCenterMapping(Float64.(x), Float64.(hsml),
-    					 Float64.(m), Float64.(rho), Float64.(bin_quantity);
-					     param=par, kernel=kernel,
-					     show_progress=false)
+    d = sphMapping_2D(x, hsml, m, rho, bin_quantity,
+					  param=par, kernel=kernel,
+					  conserve_quantities=conserve_quantities,
+					  show_progress=false)
 
     par = mappingParameters(x_lim=[center_pos[1] - dx/2.0, center_pos[1] + dx/2.0],
     				    y_lim=[center_pos[2] - dx/2.0, center_pos[2] + dx/2.0],
@@ -90,10 +91,10 @@ function glimpse(filename::String, blockname::String,
     if verbose
 		@info "Mapping..."
     end
-    d = sphCenterMapping(Float64.(x), Float64.(hsml),
-				    Float64.(m), Float64.(rho), Float64.(bin_quantity);
-				    param=par, kernel=kernel,
-				    show_progress=verbose)
+    d = sphMapping_2D(x, hsml, m, rho, bin_quantity,
+					  param=par, kernel=kernel,
+					  conserve_quantities=conserve_quantities,
+					  show_progress=false)
 
     if plot
 		GR.imshow(d)
@@ -112,15 +113,16 @@ end
 function sphMapping(Pos, HSML, M, ρ, Bin_Quant;
                     param::mappingParameters, kernel::SPHKernel,
                     show_progress::Bool=true,
-					# conserve_quantities::Bool=false,  # not used yet
+					conserve_quantities::Bool=false,  # not used yet
 					dimensions::Int=2)
 
 	if (dimensions == 2)
-		return sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
+		return sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
 		                          param=param, kernel=kernel,
+								  conserve_quantities=conserve_quantities,
 		                          show_progress=show_progress)
 	elseif (dimensions == 3 )
-		return sphCenterMapping_toCube(Pos, HSML, M, ρ, Bin_Quant;
+		return sphCenterMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
 		                          param=param, kernel=kernel,
 		                          show_progress=show_progress)
 	end
