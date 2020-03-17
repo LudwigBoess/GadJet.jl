@@ -94,7 +94,7 @@ function glimpse(filename::String, blockname::String,
     d = sphMapping_2D(x, hsml, m, rho, bin_quantity,
 					  param=par, kernel=kernel,
 					  conserve_quantities=conserve_quantities,
-					  show_progress=false)
+					  show_progress=true)
 
     if plot
 		GR.imshow(d)
