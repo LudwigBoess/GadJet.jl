@@ -55,9 +55,11 @@ end
     return min(pix, max_pixel)
 end
 
-function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
-                          param::mappingParameters, kernel::SPHKernel,
-                          show_progress::Bool=false)
+
+function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
+                             param::mappingParameters, kernel::SPHKernel,
+                             conserve_quantities::Bool=false,
+                             show_progress::Bool=false)
 
     N = length(M)  # number of particles
 
@@ -86,15 +88,21 @@ function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
 
             in_image = check_in_image(pos[dim], hsml,
                                       minCoords[dim], maxCoords[dim])
+
+            # exit the loop if the particle is not in the image frame
+            if !in_image
+                break
+            end
         end
 
+        # only calculate the properties if the particle is in the image
         if in_image
 
             # save rest of variables
-            hsml_inv = 1.0/hsml
-            bin_q    = Bin_Quant[p]
-            m        = M[p]
-            rho_inv  = 1.0/ρ[p]
+            hsml_inv    = 1.0/hsml
+            bin_q       = Bin_Quant[p]
+            m           = M[p]
+            rho_inv     = 1.0/ρ[p]
 
             pixmin = Vector{Int}(undef,2)
             pixmax = Vector{Int}(undef,2)
@@ -109,19 +117,86 @@ function sphCenterMapping(Pos, HSML, M, ρ, Bin_Quant;
 
             end
 
+            if conserve_quantities
+
+                # calculate pixel area
+                pixsize_inv = 1.0/param.pixelSideLength
+
+                xp1 = (pos[1] - hsml) * pixsize_inv
+                xp2 = (pos[1] + hsml) * pixsize_inv
+                yp1 = (pos[2] - hsml) * pixsize_inv
+                yp2 = (pos[2] + hsml) * pixsize_inv
+
+                pix_area = (xp2 - xp1) * (yp2 - yp1) * param.pixelSideLength^2
+
+                d3 = (m * rho_inv) / ( pix_area * param.pixelSideLength)
+
+                # number of pixels over which the particle is distributed
+                N_distr = Int64((pixmax[1] - pixmin[1] + 1 ) * (pixmax[2] - pixmin[2] + 1))
+
+                # allocate arrays for weights
+                kernel_tab = zeros(N_distr)
+                d1_tab     = zeros(N_distr)
+                d2_tab     = zeros(N_distr)
+                dx_tab     = zeros(N_distr)
+
+                # pixel count for attributing weights to pixels
+                N_count = 1
+
+                # first loop to calculate weights
+                @inbounds for i = pixmin[2]:pixmax[2]
+                    dy = param.y[i] - pos[2]
+                    djmin = max(yp1, i - 1.0)
+                    djmax = min(yp2, i)
+
+                    @inbounds for j = pixmin[1]:pixmax[1]
+
+                        dx = param.x[j] - pos[1]
+                        dimin = max(xp1, j - 1.0)
+                        dimax = min(xp2, j)
+
+                        d1_tab[N_count] = dimax - dimin
+                        d2_tab[N_count] = djmax - djmin
+
+                        # compute distance to pixel center in units of hsml
+                        dx_tab[N_count] = get_d_hsml_2D(dx, dy, hsml_inv)
+                        # update pixel value
+                        kernel_tab[N_count] = kernel_value_2D(kernel, dx_tab[N_count], hsml_inv)
+
+                        N_count += 1
+
+                    end # end x-loop
+                end # end y-loop
+
+                # reset the counter
+                N_count = 1
+
+            end # conserve_quantities
+
+
+            # second loop to calculate value
             bin_prefac = bin_q * m * rho_inv
 
             @inbounds for i = pixmin[2]:pixmax[2]
-                dy = param.y[i] - pos[2]
 
                 @inbounds for j = pixmin[1]:pixmax[1]
-                    dx = param.x[j] - pos[1]
 
-                        # compute distance to pixel center in units of hsml
+
+                    if !conserve_quantities
+
+                        # calculate simple distance to pixel center
+                        dx = param.x[j] - pos[1]
+                        dy = param.y[i] - pos[2]
                         distance_hsml = get_d_hsml_2D(dx, dy, hsml_inv)
 
                         # update pixel value
                         image[j, i] += bin_prefac * kernel_value_2D(kernel, distance_hsml, hsml_inv)
+                    else
+
+                        # update pixel value with weights
+                        image[j, i] += bin_prefac * d1_tab[N_count] * d2_tab[N_count] * d3 * kernel_tab[N_count]
+                        N_count += 1
+                    end
 
                 end # end x-loop
             end # end y-loop
@@ -172,6 +247,11 @@ function sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
 
             in_image = check_in_image(pos[dim], hsml,
                                       minCoords[dim], maxCoords[dim])
+
+            # exit the loop if the particle is not in the image frame
+            if !in_image
+                break
+            end
         end
 
         if in_image
@@ -402,163 +482,4 @@ function sphAdaptiveMapping(Pos, HSML, M, ρ, Bin_Quant; param::mappingParameter
 
     return c
 
-end
-
-
-function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
-                             param::mappingParameters, kernel::SPHKernel,
-                             conserve_quantities::Bool=false,
-                             show_progress::Bool=false)
-
-    N = length(M)  # number of particles
-
-    image = zeros(length(param.x), length(param.y))
-
-    minCoords = [param.x[1], param.y[1], param.z[1]]
-    maxCoords = [param.x[end], param.y[end], param.z[end]]
-
-    max_pixel = [length(param.x), length(param.y)]
-
-    if show_progress
-        P = Progress(N)
-        idx = 0
-        #P_lock = SpinLock()  # uncomment to make thread-safe if needed in the future
-    end
-
-    @inbounds for p = 1:N
-
-        # save stuff from array to single variables
-        pos      = Pos[p,:]
-        hsml     = HSML[p]
-
-        in_image = false
-
-        @inbounds for dim = 1:3
-
-            in_image = check_in_image(pos[dim], hsml,
-                                      minCoords[dim], maxCoords[dim])
-
-            # exit the loop if the particle is not in the image frame
-            if !in_image
-                break
-            end
-        end
-
-        # only calculate the properties if the particle is in the image
-        if in_image
-
-            # save rest of variables
-            hsml_inv    = 1.0/hsml
-            bin_q       = Bin_Quant[p]
-            m           = M[p]
-            rho_inv     = 1.0/ρ[p]
-
-            pixmin = Vector{Int}(undef,2)
-            pixmax = Vector{Int}(undef,2)
-
-            @inbounds for dim = 1:2
-
-                pixmin[dim] = find_min_pixel(pos[dim], hsml, minCoords[dim],
-                                             param.pixelSideLength)
-
-                pixmax[dim] = find_max_pixel(pos[dim], hsml, minCoords[dim],
-                                             param.pixelSideLength, max_pixel[dim])
-
-            end
-
-            if conserve_quantities
-
-                # calculate pixel area
-                pixsize_inv = 1.0/param.pixelSideLength
-
-                xp1 = (pos[1] - hsml) * pixsize_inv
-                xp2 = (pos[1] + hsml) * pixsize_inv
-                yp1 = (pos[2] - hsml) * pixsize_inv
-                yp2 = (pos[2] + hsml) * pixsize_inv
-
-                pix_area = (xp2 - xp1) * (yp2 - yp1) * param.pixelSideLength^2
-
-                d3 = (m * rho_inv) / ( pix_area * param.pixelSideLength)
-
-                # number of pixels over which the particle is distributed
-                N_distr = Int64((pixmax[1] - pixmin[1] + 1 ) * (pixmax[2] - pixmin[2] + 1))
-
-                # allocate arrays for weights
-                kernel_tab = zeros(N_distr)
-                d1_tab     = zeros(N_distr)
-                d2_tab     = zeros(N_distr)
-                dx_tab     = zeros(N_distr)
-
-                # pixel count for attributing weights to pixels
-                N_count = 1
-
-                # first loop to calculate weights
-                @inbounds for i = pixmin[2]:pixmax[2]
-                    dy = param.y[i] - pos[2]
-                    djmin = max(yp1, i - 1.0)
-                    djmax = min(yp2, i)
-
-                    @inbounds for j = pixmin[1]:pixmax[1]
-
-                        dx = param.x[j] - pos[1]
-                        dimin = max(xp1, j - 1.0)
-                        dimax = min(xp2, j)
-
-                        d1_tab[N_count] = dimax - dimin
-                        d2_tab[N_count] = djmax - djmin
-
-                        # compute distance to pixel center in units of hsml
-                        dx_tab[N_count] = get_d_hsml_2D(dx, dy, hsml_inv)
-                        # update pixel value
-                        kernel_tab[N_count] = kernel_value_2D(kernel, dx_tab[N_count], hsml_inv)
-
-                        N_count += 1
-
-                    end # end x-loop
-                end # end y-loop
-
-                N_count = 1
-
-            end # conserve_quantities
-
-
-            # second loop to calculate value
-            bin_prefac = bin_q * m * rho_inv
-
-            @inbounds for i = pixmin[2]:pixmax[2]
-
-                @inbounds for j = pixmin[1]:pixmax[1]
-
-
-                    if !conserve_quantities
-
-                        # calculate simple distance to pixel center
-                        dx = param.x[j] - pos[1]
-                        dy = param.y[i] - pos[2]
-                        distance_hsml = get_d_hsml_2D(dx, dy, hsml_inv)
-
-                        # update pixel value
-                        image[j, i] += bin_prefac * kernel_value_2D(kernel, distance_hsml, hsml_inv)
-                    else
-
-                        # update pixel value with weights
-                        image[j, i] += bin_prefac * d1_tab[N_count] * d2_tab[N_count] * d3 * kernel_tab[N_count]
-                        N_count += 1
-                    end
-
-                end # end x-loop
-            end # end y-loop
-
-        end # end check if in image
-
-        # update for ProgressMeter
-        if show_progress
-            #lock(P_lock)  # uncomment to make thread-safe if needed in the future
-            idx += 1
-            ProgressMeter.update!(P, idx)
-            #unlock(P_lock)
-        end
-    end
-
-   return image
 end

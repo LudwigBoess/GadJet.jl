@@ -67,10 +67,12 @@ module GadJet
            WendlandC6,
            kernel_value_2D,
            kernel_value_3D,
+           
            # internal sph mapping
            mappingParameters,
-           sphAdaptiveMapping,
-           sphCenterMapping,
+           sphMapping,
+           sphMapping_2D,
+           sphMapping_3D,
            glimpse,
 
            # helper functions and datatypes for Smac

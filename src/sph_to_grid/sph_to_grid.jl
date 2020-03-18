@@ -113,18 +113,18 @@ end
 function sphMapping(Pos, HSML, M, ρ, Bin_Quant;
                     param::mappingParameters, kernel::SPHKernel,
                     show_progress::Bool=true,
-					conserve_quantities::Bool=false,  # not used yet
+					conserve_quantities::Bool=true,
 					dimensions::Int=2)
 
 	if (dimensions == 2)
 		return sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
-		                          param=param, kernel=kernel,
-								  conserve_quantities=conserve_quantities,
-		                          show_progress=show_progress)
+		                     param=param, kernel=kernel,
+							 conserve_quantities=conserve_quantities,
+		                     show_progress=show_progress)
 	elseif (dimensions == 3 )
-		return sphCenterMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
-		                          param=param, kernel=kernel,
-		                          show_progress=show_progress)
+		return sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
+		                     param=param, kernel=kernel,
+		                     show_progress=show_progress)
 	end
 
 
