@@ -1,4 +1,4 @@
-Read Data
+Read Snapshot Data
 =========
 
 
@@ -124,3 +124,10 @@ If your simulation contains an INFO block you can read the info lines into `Info
 ```
 
 This will return an Array of `Info_Line` objects. The optional keyword `verbose` additionally gives the same functionality as `print_blocks` and prints the names to the console.
+
+
+Read Subfind Data
+=========
+
+Reading the header
+------------------

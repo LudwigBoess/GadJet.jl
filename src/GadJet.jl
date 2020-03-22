@@ -14,6 +14,8 @@ module GadJet
     include(joinpath(dirname(@__FILE__), "read_snapshot", "read_format_1.jl"))
     include(joinpath(dirname(@__FILE__), "read_snapshot", "read_format_2.jl"))
     include(joinpath(dirname(@__FILE__), "read_snapshot", "read_snapshot.jl"))
+    include(joinpath(dirname(@__FILE__), "read_snapshot", "read_subfind.jl"))
+
     # functions to write snapshots
     include(joinpath(dirname(@__FILE__), "write_snapshot", "write_snap.jl"))
     # sph to grid mapping internal module
@@ -49,9 +51,13 @@ module GadJet
            head_to_obj,
            print_blocks,
            read_info,
+           block_present,
            read_snap,
            read_block_by_name,      # similar to readnew.pro by Klaus Dolag
            read_header,
+           # subfind read
+           read_subfind_header,
+           read_subfind,
 
            # write snapshot functions
            write_header,
@@ -67,7 +73,7 @@ module GadJet
            WendlandC6,
            kernel_value_2D,
            kernel_value_3D,
-           
+
            # internal sph mapping
            mappingParameters,
            sphMapping,

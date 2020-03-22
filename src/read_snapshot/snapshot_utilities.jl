@@ -1,12 +1,12 @@
 
 
-function print_blocks(filename)
+function print_blocks(filename::String; verbose::Bool=true)
 
     f = open(filename)
     blocksize = read(f, Int32)
 
     if blocksize != 8
-        return "Not possible - use snap_format 2!"
+        error("Block search not possible - use snap_format 2!")
     end
 
     p = position(f)
@@ -33,13 +33,16 @@ function print_blocks(filename)
 
     end
 
-    println("Found blocks: ")
-    for block ∈ blocks
-        println(block)
+    if verbose
+        println("Found blocks: ")
+        for block ∈ blocks
+            println(block)
+        end
     end
 
-    return blocks
+    close(f)
 
+    return String.(blocks)
 end
 
 function read_info(filename; verbose::Bool=false)
@@ -86,7 +89,6 @@ function read_info(filename; verbose::Bool=false)
     println("No info block present!")
 
     return 1
-
 end
 
 function read_info_line(f)
@@ -126,4 +128,19 @@ function read_info_line(f)
     in_l = Info_Line(block_name, dt, n_dim, is_present)
 
     return in_l
+end
+
+function block_present(filename::String, blockname::String, blocks::Vector{String}=[""])
+
+    if blocks == [""]
+        blocks = print_blocks(filename, verbose=false)
+    end
+
+    for block ∈ blocks
+        if block == blockname
+            return true
+        end
+    end
+
+    return false
 end
