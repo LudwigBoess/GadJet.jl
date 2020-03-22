@@ -1,4 +1,4 @@
-import CSV.read
+import CSV
 
 function get_detailled_crs_data(path::String, filebase::String, mpi_ranks::Int, selected_id::Int)
 
