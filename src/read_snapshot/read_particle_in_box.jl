@@ -674,9 +674,16 @@ function read_particles_in_box(filename::String, blocks::Vector{String},
                                           info = key_info[getfield.(key_info, :block_name) .== "KEY"][1],
                                           parttype = parttype)
 
+        if verbose
+            @info "Calculating index list..."
+            t1 = Dates.now()
+        end
+
         index_list = get_index_list(keylist, keys_in_file)
 
         if verbose
+            t2 = Dates.now()
+            @info "Index list done. Took: $(t2 - t1)"
             @info "Reading $(length(index_list)) key segments..."
         end
 
@@ -722,6 +729,11 @@ function read_particles_in_box(filename::String, blocks::Vector{String},
             end
         end
 
+        if verbose
+            @info "Reading Blocks..."
+            t1 = Dates.now()
+        end
+
         # read blocks in parallel
         @threads for j = 1:length(blocks)
 
@@ -742,6 +754,11 @@ function read_particles_in_box(filename::String, blocks::Vector{String},
 
         if no_mass_block
             d["MASS"] = [d["MASS"]; h.massarr[parttype+1] .* ones(Float32, n_to_read, 1)]
+        end
+
+        if verbose
+            t2 = Dates.now()
+            @info "Blocks read. Took: $(t2 - t1)"
         end
 
     end # for i = 1:length(files)
