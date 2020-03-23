@@ -2,7 +2,6 @@
     Functions in this file read the subfind output.
 
 """
-using ProgressMeter
 
 struct SubfindHeader
     nhalos::Int32                # an array of particle numbers per type in this snapshot
@@ -118,7 +117,7 @@ function read_subfind(filename::String, blockname::String)
 end
 
 
-
+using ProgressMeter
 
 function find_most_massive_halo(filebase::String, nfiles::Int=1)
 

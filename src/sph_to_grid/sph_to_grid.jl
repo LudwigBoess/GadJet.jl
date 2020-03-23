@@ -125,18 +125,20 @@ function glimpse(filename::String, blockname::String,
 
     max_size = maximum([dx, dy, dz])
 
-    par = mappingParameters(x_lim=[center_pos[1] - dx/2.0, center_pos[1] + dx/2.0],
-    				    y_lim=[center_pos[2] - dx/2.0, center_pos[2] + dx/2.0],
-    				    z_lim=[center_pos[3] - dx/2.0, center_pos[3] + dx/2.0],
-    				    pixelSideLength=(max_size/2.0))
+    if run_dummy
+	    par = mappingParameters(x_lim=[center_pos[1] - dx/2.0, center_pos[1] + dx/2.0],
+	    				    y_lim=[center_pos[2] - dx/2.0, center_pos[2] + dx/2.0],
+	    				    z_lim=[center_pos[3] - dx/2.0, center_pos[3] + dx/2.0],
+	    				    pixelSideLength=(max_size/2.0))
 
-    if verbose
-    	@info "Initial compilation run..."
-    end
-    d = sphMapping_2D(x, hsml, m, rho, bin_quantity,
-					  param=par, kernel=kernel,
-					  conserve_quantities=conserve_quantities,
-					  show_progress=false)
+	    if verbose
+	    	@info "Initial compilation run..."
+	    end
+	    d = sphMapping_2D(x, hsml, m, rho, bin_quantity,
+						  param=par, kernel=kernel,
+						  conserve_quantities=conserve_quantities,
+						  show_progress=false)
+	end
 
     par = mappingParameters(x_lim=[center_pos[1] - dx/2.0, center_pos[1] + dx/2.0],
     				    y_lim=[center_pos[2] - dx/2.0, center_pos[2] + dx/2.0],
