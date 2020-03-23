@@ -15,6 +15,7 @@ module GadJet
     include(joinpath(dirname(@__FILE__), "read_snapshot", "read_format_2.jl"))
     include(joinpath(dirname(@__FILE__), "read_snapshot", "read_snapshot.jl"))
     include(joinpath(dirname(@__FILE__), "read_snapshot", "read_subfind.jl"))
+    include(joinpath(dirname(@__FILE__), "read_snapshot", "read_particle_in_box.jl"))
 
     # functions to write snapshots
     include(joinpath(dirname(@__FILE__), "write_snapshot", "write_snap.jl"))
@@ -55,9 +56,13 @@ module GadJet
            read_snap,
            read_block_by_name,      # similar to readnew.pro by Klaus Dolag
            read_header,
+           read_particles_in_box,
+           read_particles_in_volume,
+
            # subfind read
            read_subfind_header,
            read_subfind,
+           find_most_massive_halo,
 
            # write snapshot functions
            write_header,

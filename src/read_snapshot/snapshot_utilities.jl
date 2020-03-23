@@ -1,4 +1,4 @@
-
+import Base.read
 
 function print_blocks(filename::String; verbose::Bool=true)
 
@@ -143,4 +143,49 @@ function block_present(filename::String, blockname::String, blocks::Vector{Strin
     end
 
     return false
+end
+
+function get_block_positions(filename::String)
+
+    f = open(filename)
+    blocksize = read(f, Int32)
+
+    if blocksize != 8
+        error("Block search not possible - use snap_format 2!")
+    end
+
+    p = position(f)
+    seek(f,4)
+
+    blocks = Vector{String}(undef, 0)
+    pos    = Vector{Int64}(undef, 0)
+
+
+    while eof(f) != true
+
+        name = Char.(read!(f, Array{Int8,1}(undef,4)))
+        blockname = String(name)
+
+        blockname = strip(blockname)
+
+        push!(blocks, blockname)
+
+        read(f, Int32)
+        read(f, Int32)
+
+        skipsize = read(f, Int32)
+
+        p = position(f)
+
+        push!(pos, p)
+
+        seek(f,p+skipsize+8)
+
+    end
+
+    close(f)
+
+    d = Dict( blocks[i] => pos[i] for i = 1:length(blocks))
+
+    return d
 end

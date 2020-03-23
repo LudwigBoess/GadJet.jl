@@ -365,3 +365,44 @@ function read_block(p::Int64, data::Dict{Any,Any}, dtype::DataType, blockname::S
 
     return p, data
 end
+
+
+function read_block_with_offset(filename::String, data_old, pos0::Int64, info::Info_Line,
+                                offset::Int, offset_key, n_to_read, part_per_key )
+
+    # open the file
+    f = open(filename)
+
+    # number of bits in data_type
+    len = sizeof(info.data_type) * info.n_dim
+
+    # jump to position of particle type in relevant block
+    seek(f, pos0+offset*len)
+
+    # store position in file
+    p = position(f)
+
+    # allocate array to store data
+    data =  Array{info.data_type,2}(undef, (n_to_read, info.n_dim))
+
+    n_read = 1
+    n_this_key = 0
+
+    for i = 1:length(offset_key)
+
+        # jump to start of key
+        seek(f, p + len*offset_key[i])
+        n_this_key += part_per_key[i]
+
+        data[n_read:n_this_key, :] = copy(transpose(read!(f,
+                    Array{info.data_type,2}(undef,(info.n_dim,part_per_key[i])))))
+
+        n_read += part_per_key[i]
+
+    end # for
+
+    # close the file
+    close(f)
+
+    return [data_old; data]
+end
