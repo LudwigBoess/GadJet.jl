@@ -4,16 +4,16 @@
 """
 
 struct SubfindHeader
-    nhalos::Int32                # an array of particle numbers per type in this snapshot
-    nsubhalos::Int32
-    nfof::Int32
-    ngroups::Int32
+    nhalos::Int32                       # number of halos in the output file
+    nsubhalos::Int32                    # number of subhalos in the output file
+    nfof::Int32                         # number of particles in the FoF
+    ngroups::Int32                      # number of large groups in the output file
     time::Float64                       # time / scale factor of the simulation
     z::Float64                          # redshift of the simulation
-    tothalos::UInt32
-    totsubhalos::UInt32
-    totfof::UInt32
-    totgroups::UInt32
+    tothalos::UInt32                    # total number of halos over all output files
+    totsubhalos::UInt32                 # total number of subhalos over all output files
+    totfof::UInt32                      # total number of particles in the FoF
+    totgroups::UInt32                   # total number of large groups over all output files
     num_colors::Int32                   # number of colors
     boxsize::Float64                    # total size of the simulation box
     omega_0::Float64                    # Omega matter
