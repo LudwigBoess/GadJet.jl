@@ -115,3 +115,29 @@ function read_subfind(filename::String, blockname::String)
     return read_snap(filename, blockname, parttype)
 
 end
+
+
+function find_most_massive_halo(filebase::String, nfiles::Int=1)
+
+    Mmax = 0.0
+
+    for i = 0:nfiles-1
+
+        if nfiles > 1
+            sub_input = filebase * ".$i"
+        else
+            sub_input = filebase
+        end
+
+        M = read_subfind(sub_input, "MVIR")
+        max_test = findmax(M)
+
+        if max_test[1] > Mmax
+            max_id = max_test[2][1]
+            POS  = read_subfind(sub_input, "GPOS")[max_id,:]
+            RVIR = read_subfind(sub_input, "RVIR")[max_id]
+        end
+    end # for
+
+    return POS, RVIR
+end
