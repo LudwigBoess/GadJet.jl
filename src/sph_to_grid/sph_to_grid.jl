@@ -17,6 +17,35 @@ function glimpse(filename::String, blockname::String,
     if verbose
 		@info "Reading data..."
     end
+
+	filebase = filename
+
+	# if the snapshot does not exist it may be split into multiple files
+    if !isfile(filebase)
+
+        if verbose
+            @info "File: $filebase not found, looking for sub-files."
+        end
+
+        # try reading the first of the distributed snapshots
+        filename = filebase * ".0"
+
+        # throw error if file does not exist
+        if !isfile(filename)
+            error("File: $filename not found!")
+        end
+
+        h = head_to_obj(filename)
+
+        if verbose
+            @info "$(h.num_files) sub-files found."
+        end
+
+        nfiles = h.num_files
+    else
+        nfiles = 1
+    end
+
     # read header of snapshot
     h = head_to_obj(filename)
     info = read_info(filename, verbose=false)
@@ -25,24 +54,50 @@ function glimpse(filename::String, blockname::String,
         error("Glimpse only works for snapshots with info block, sorry!")
     end
 
-    # read blocks of particle data
-    bin_quantity = read_block_by_name(filename, blockname,
-                                      info=info[getfield.(info, :block_name) .== blockname][1],
-          					  		  parttype=0)
+	if nfiles == 1
+	    # read blocks of particle data
+	    bin_quantity = read_block_by_name(filename, blockname,
+	                                      info=info[getfield.(info, :block_name) .== blockname][1],
+	          					  		  parttype=0)
 
-    x = read_block_by_name(filename, "POS",
-			         	   info=info[getfield.(info, :block_name) .== "POS"][1],
-				   		   parttype=0)
+	    x = read_block_by_name(filename, "POS",
+				         	   info=info[getfield.(info, :block_name) .== "POS"][1],
+					   		   parttype=0)
 
-    rho = read_block_by_name(filename, "RHO",
-    				   info=info[getfield.(info, :block_name) .== "RHO"][1],
-    				   parttype=0)
+	    rho = read_block_by_name(filename, "RHO",
+	    				   info=info[getfield.(info, :block_name) .== "RHO"][1],
+	    				   parttype=0)
 
-    hsml = read_block_by_name(filename, "HSML",
-    				      info=info[getfield.(info, :block_name) .== "HSML"][1],
-    					parttype=0)
+	    hsml = read_block_by_name(filename, "HSML",
+	    				      info=info[getfield.(info, :block_name) .== "HSML"][1],
+	    					parttype=0)
 
-    m = read_block_by_name(filename, "MASS", parttype=0)
+	    m = read_block_by_name(filename, "MASS", parttype=0)
+	else
+
+		if center_pos == [123456.7, 123456.7, 123456.7]
+			error("glimpse for multiple files works only with a given central position!")
+		end
+
+		if dx == 0.0 || dy == 0.0 || dz == 0.0
+			error("glimpse for multiple files works only with a given extent!")
+		end
+
+		blocks = [blockname, "POS", "RHO", "HSML", "MASS"]
+		unique!(blocks)
+
+		x0 = center_pos - 0.5 .* [dx, dy, dz]
+		x1 = center_pos + 0.5 .* [dx, dy, dz]
+
+		d = read_particles_in_box(filebase, blocks, x0, x1, verbose=verbose)
+
+		bin_quantity = d[blockname]
+		x 	 = d["POS"]
+		rho  = d["RHO"]
+		hsml = d["HSML"]
+		m 	 = d["MASS"]
+
+	end
 
     if kernel_name == "WC6"
         kernel = WendlandC6()
