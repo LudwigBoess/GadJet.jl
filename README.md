@@ -11,6 +11,8 @@ These functionalities are: reading and writing data in snapshot format 1+2, read
 Additionally I provide some exact riemann solvers for shocktube tests, unit conversion and other utility.
 This list will extend over time.
 
+Documentation can be found [here](https://gadjetjl.readthedocs.io/en/latest/index.html)
+
 Please note that I am not affiliated with Volker Springel. This project was started because I needed to work with Gadget for university and couldn't find any Julia implementations to work with the data.
 
 Any help and contribution is greatly appreciated, as this is still a work in progress. Please see the section on contributing.
@@ -38,7 +40,7 @@ As an example, this is how you would access the positions of the gas particles:
 If you only want to read a specific block for a single particle type (e.g. positions of gas particles) you can use the function with a specified blockname and particle type like so:
 
 ```julia
-    pos = read_snap(filename, "POS", parttype=0)
+    pos = read_snap(filename, "POS", 0)
 ```
 
 This will return an array of the datatype of your simulation, usually Float32.
@@ -52,7 +54,7 @@ For a quick glimpse at your data you can use the glimpse function (yes, I though
     image = glimpse(filename)
 ```
 
-This will return a 200x200 pixel image of the whole box, centered on the center of mass.
+This will return a 500x500 pixel image of the whole box, centered on the center of mass.
 
 If you want to look at a specific range you can provide an array with the center coordinates as `center_pos = [x, y, z]` and the extent in x, y and z direction with `dx, dy, dz`.
 

@@ -77,7 +77,7 @@ Reading specific blocks only works with Format 2 at the moment.
 If you only want to read a specific block for a single particle type, e.g. positions of gas particles, you can use the function with a specified blockname and particle type like so:
 
 ```julia
-    pos = read_snap(filename, "POS", parttype=0)
+    pos = read_snap(filename, "POS", 0)
 ```
 
 This will return an array of the datatype of your simulation, usually Float32.
@@ -97,13 +97,15 @@ mutable struct Info_Line
 end
 ```
 
-and passing that to the function:
+and passing that to the function `read_block_by_name`:
 
 ```julia
     pos = read_block_by_name(filename, "POS", info=pos_info, parttype=0)
 ```
 
 where `pos_info` is a `Info_Line` object.
+
+`read_snap` is used mainly as a wrapper function to call `read_block_by_name`, in case you were wondering about the function name change.
 
 I will collect some example `Info_Line` objects in a later release to be able to read some common blocks even without a info block.
 
