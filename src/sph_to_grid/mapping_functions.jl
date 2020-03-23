@@ -70,6 +70,8 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
 
     max_pixel = [length(param.x), length(param.y)]
 
+    particles_in_image = 0
+
     if show_progress
         P = Progress(N)
         idx = 0
@@ -97,6 +99,8 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
 
         # only calculate the properties if the particle is in the image
         if in_image
+
+            particles_in_image += 1
 
             # save rest of variables
             hsml_inv    = 1.0/hsml
@@ -210,6 +214,10 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
             ProgressMeter.update!(P, idx)
             #unlock(P_lock)
         end
+    end
+
+    if show_progress
+        @info "Mapped $particles_in_image particles."
     end
 
    return image
