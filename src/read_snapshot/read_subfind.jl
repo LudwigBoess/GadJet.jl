@@ -2,6 +2,7 @@
     Functions in this file read the subfind output.
 
 """
+using ProgressMeter
 
 struct SubfindHeader
     nhalos::Int32                # an array of particle numbers per type in this snapshot
@@ -117,11 +118,17 @@ function read_subfind(filename::String, blockname::String)
 end
 
 
+
+
 function find_most_massive_halo(filebase::String, nfiles::Int=1)
 
-    Mmax = 0.0
+    Mmax     = 0.0
+    POS      = zeros(Float32, 3)
+    RVIR     = 0.0
+    max_file = 0
+    max_id   = 0
 
-    for i = 0:nfiles-1
+    @showprogress "Reading files..." for i = 0:nfiles-1
 
         if nfiles > 1
             sub_input = filebase * ".$i"
@@ -133,11 +140,19 @@ function find_most_massive_halo(filebase::String, nfiles::Int=1)
         max_test = findmax(M)
 
         if max_test[1] > Mmax
-            max_id = max_test[2][1]
+
+            max_file = i
+            max_id   = max_test[2][1]
+
+            # store position and virial radius of most massive halo
             POS  = read_subfind(sub_input, "GPOS")[max_id,:]
             RVIR = read_subfind(sub_input, "RVIR")[max_id]
+
+            # store new maximum mass
+            Mmax = max_test[1]
         end
+
     end # for
 
-    return POS, RVIR
+    return POS, RVIR, (file=max_file, id=max_id)
 end
