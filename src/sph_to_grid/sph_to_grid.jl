@@ -168,7 +168,8 @@ end
 """
 
 function sphMapping(Pos, HSML, M, ρ, Bin_Quant;
-                    param::mappingParameters, kernel::SPHKernel,
+                    param::mappingParameters,
+					kernel::SPHKernel,
                     show_progress::Bool=true,
 					conserve_quantities::Bool=true,
 					dimensions::Int=2)
