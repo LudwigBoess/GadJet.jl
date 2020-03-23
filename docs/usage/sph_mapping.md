@@ -8,17 +8,16 @@ You can map SPH data to a grid using the function:
 
 ```julia
 function sphMapping(Pos, HSML, M, ρ, Bin_Quant;
-		            param::mappingParameters, kernel,
+		            param::mappingParameters,
+					kernel::SPHKernel,
 		            show_progress::Bool=true,
-				    # conserve_quantities::Bool=false,  # not used yet
+				    conserve_quantities::Bool=true,
 				    dimensions::Int=2)
 
 	[...]
 
 end
 ```
-
-At the current state this computes the grid pixels by evaluating the kernel at the center of the pixel, like the basic version of SPLASH by Daniel Price.
 
 ### Setup
 To map the data you need to define the mapping parameters via the `mappingParameters` object:
@@ -50,8 +49,11 @@ Please note: This function doesn't do any unit conversion for you, so you need t
 
 Image now contains a 2D array with the binned data and can easily be plotted with `imshow()` from any plotting package of your choosing.
 
-!!! I'm not very happy with the performance of this module! If you want to contribute to making this faster, your help would be very much appreciated! Please feel free to contact me via the email adress provided in "Contributing" !!!
+### Conserved quantities
 
+With the latest release you can map the particles to a grid while also conserving the particle volume, following the algorithm described in Dolag et. al. 2006 (https://ui.adsabs.harvard.edu/link_gateway/2005MNRAS.363...29D/doi:10.1111/j.1365-2966.2005.09452.x).
+
+This is switched on by default, but is slightly more expensive than simple mapping. If you don't want to use it simply call the mapping function with `conserve_quantities=false`.
 
 
 External Programs

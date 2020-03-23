@@ -21,7 +21,7 @@ As an example, this is how you would access the positions of the gas particles:
 If you only want to read a specific block for a single particle type, e.g. positions of gas particles you can use the function with a specified blockname and particle type like so:
 
 ```julia
-    pos = read_snap(filename, "POS", parttype=0)
+    pos = read_snap(filename, "POS", 0)
 ```
 
 This will return an array of the datatype of your simulation, usually Float32.
@@ -35,7 +35,7 @@ For a quick glimpse at your data you can use the glimpse function (yes, I though
     image = glimpse(filename)
 ```
 
-This will return a 200x200 pixel image of the whole box, centered on the center of mass.
+This will return a 500x500 pixel image of the whole box, centered on the center of mass.
 
 If you want to look at a specific range you can provide an array with the center coordinates as `center_pos = [x, y, z]` and the extent in x, y and z direction with `dx, dy, dz`.
 
