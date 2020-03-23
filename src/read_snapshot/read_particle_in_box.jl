@@ -755,9 +755,10 @@ end
 function read_particles_in_box(filename::String, blocks::String,
                                corner_lowerleft::Vector{AbstractFloat},
                                corner_upperright::Vector{AbstractFloat};
+                               parttype::Int=0,
                                verbose::Bool=true)
 
-    d = read_particles_in_box(filename, [blocks], x0, x1, verbose=verbose)
+    d = read_particles_in_box(filename, [blocks], x0, x1, parttype=parttype, verbose=verbose)
 
     return d[blocks]
 end
@@ -770,22 +771,24 @@ end
 function read_particles_in_volume(filename::String, blocks::Vector{String},
                                   center_pos::Vector{AbstractFloat},
                                   radius::AbstractFloat;
+                                  parttype::Int=0,
                                   verbose::Bool=true)
 
     # calculate lower left and upper right corner
     x0 = center_pos .- radius
     x1 = center_pos .+ radius
 
-    return read_particles_in_box(filename, blocks, x0, x1, verbose=verbose)
+    return read_particles_in_box(filename, blocks, x0, x1, parttype=parttype, verbose=verbose)
 end
 
 # multiple dispatch for single block read
 function read_particles_in_volume(filename::String, blocks::String,
                                   center_pos::Vector{AbstractFloat},
                                   radius::AbstractFloat;
+                                  parttype::Int=0,
                                   verbose::Bool=true)
 
-    d = read_particles_in_volume(filename, [blocks], x0, x1, verbose=verbose)
+    d = read_particles_in_volume(filename, [blocks], x0, x1, parttype=parttype, verbose=verbose)
 
     return d[blocks]
 end
