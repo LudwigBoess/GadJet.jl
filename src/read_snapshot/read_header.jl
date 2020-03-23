@@ -25,7 +25,7 @@ function head_to_obj(filename)
             swap = 1
             snap_format = 1
         else
-            println("incorrect file format encountered when reading header of", filename)
+            error("incorrect file format encountered when reading header of $filename")
         end
     end
 

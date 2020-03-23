@@ -1,12 +1,12 @@
+import Base.read
 
-
-function print_blocks(filename)
+function print_blocks(filename::String; verbose::Bool=true)
 
     f = open(filename)
     blocksize = read(f, Int32)
 
     if blocksize != 8
-        return "Not possible - use snap_format 2!"
+        error("Block search not possible - use snap_format 2!")
     end
 
     p = position(f)
@@ -33,13 +33,16 @@ function print_blocks(filename)
 
     end
 
-    println("Found blocks: ")
-    for block ∈ blocks
-        println(block)
+    if verbose
+        println("Found blocks: ")
+        for block ∈ blocks
+            println(block)
+        end
     end
 
-    return blocks
+    close(f)
 
+    return String.(blocks)
 end
 
 function read_info(filename; verbose::Bool=false)
@@ -86,7 +89,6 @@ function read_info(filename; verbose::Bool=false)
     println("No info block present!")
 
     return 1
-
 end
 
 function read_info_line(f)
@@ -126,4 +128,64 @@ function read_info_line(f)
     in_l = Info_Line(block_name, dt, n_dim, is_present)
 
     return in_l
+end
+
+function block_present(filename::String, blockname::String, blocks::Vector{String}=[""])
+
+    if blocks == [""]
+        blocks = print_blocks(filename, verbose=false)
+    end
+
+    for block ∈ blocks
+        if block == blockname
+            return true
+        end
+    end
+
+    return false
+end
+
+function get_block_positions(filename::String)
+
+    f = open(filename)
+    blocksize = read(f, Int32)
+
+    if blocksize != 8
+        error("Block search not possible - use snap_format 2!")
+    end
+
+    p = position(f)
+    seek(f,4)
+
+    blocks = Vector{String}(undef, 0)
+    pos    = Vector{Int64}(undef, 0)
+
+
+    while eof(f) != true
+
+        name = Char.(read!(f, Array{Int8,1}(undef,4)))
+        blockname = String(name)
+
+        blockname = strip(blockname)
+
+        push!(blocks, blockname)
+
+        read(f, Int32)
+        read(f, Int32)
+
+        skipsize = read(f, Int32)
+
+        p = position(f)
+
+        push!(pos, p)
+
+        seek(f,p+skipsize+8)
+
+    end
+
+    close(f)
+
+    d = Dict( blocks[i] => pos[i] for i = 1:length(blocks))
+
+    return d
 end

@@ -35,7 +35,7 @@ For a quick glimpse at your data you can use the glimpse function (yes, I though
     image = glimpse(filename)
 ```
 
-This will return a 200x200 pixel image of the whole box, centered on the center of mass.
+This will return a 500x500 pixel image of the whole box, centered on the center of mass.
 
 If you want to look at a specific range you can provide an array with the center coordinates as `center_pos = [x, y, z]` and the extent in x, y and z direction with `dx, dy, dz`.
 

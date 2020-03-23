@@ -1,10 +1,8 @@
-using CSV
+import CSV
 
 function get_detailled_crs_data(path::String, filebase::String, mpi_ranks::Int, selected_id::Int)
 
     read_first = false
-    fi = path * filebase * "_0.txt"
-    df = CSV.read(fi)
 
     @inbounds for mpi_rank = 0:(mpi_ranks-1)
 
