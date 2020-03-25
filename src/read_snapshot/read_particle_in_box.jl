@@ -6,6 +6,7 @@
 
 using Dates
 using Base.Threads
+using ThreadsX
 
 """
     Functionality to read the header of the key files
@@ -521,7 +522,7 @@ end
     index_list = Vector{Int64}(undef, 0)
 
     for i = 1:length(keylist)
-        index = findfirst( y -> y == keylist[i], keys_in_file)
+        index = ThreadsX.findfirst( y -> y == keylist[i], keys_in_file)
         if typeof(index) != Nothing
             push!(index_list, index[1])
         end
