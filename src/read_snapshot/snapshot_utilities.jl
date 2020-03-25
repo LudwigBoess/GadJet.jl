@@ -113,9 +113,9 @@ function read_info_line(f)
        data_type == "floatn"
             dt = Float32
     elseif data_type == "long"
-            dt = Int32
+            dt = UInt32
     elseif data_type == "llong"
-            dt = Int64
+            dt = UInt64
     elseif data_type == "double" ||
            data_type == "doublen"
             dt = Float64

@@ -189,7 +189,7 @@ const global subpix3 = [0  7  1  6  3  4  2  5 ;
 
 # ; This function computes a Peano-Hilbert key for an integer triplet (x,y,z),
 # ; with x,y,z in the range between 0 and 2^bits-1.
-function peano_hilbert_key(bits::Int32, x::Int64, y::Int64, z::Int64)
+function peano_hilbert_key(bits::Integer, x::Integer, y::Integer, z::Integer)
 
     rotation = 1
     key = 0
@@ -214,7 +214,6 @@ function peano_hilbert_key(bits::Int32, x::Int64, y::Int64, z::Int64)
     end
 
     return key
-
 end
 
 function read_key_index(file_key_index::String)
@@ -328,7 +327,7 @@ function get_index_bounds(ids::Vector{Int}, low_bounds::Vector{UInt}, high_bound
             else # if ids[icountids] < low_bounds[icountbounds]
                 icountbounds += 1
 
-                if icountbounds <= nbounds
+                if icountbounds < nbounds
                     lend2 = false
 
                     while !lend2
@@ -341,6 +340,7 @@ function get_index_bounds(ids::Vector{Int}, low_bounds::Vector{UInt}, high_bound
                             end # icountbounds >= nbounds
                         end # ids[icountids] <= high_bounds[icountbounds]
                     end # while !lend2
+
                 end # icountbounds < nbounds
 
             end # if ids[icountids] < low_bounds[icountbounds]
@@ -372,7 +372,7 @@ function get_index_bounds(ids::Vector{Int}, low_bounds::Vector{UInt}, high_bound
     end
 end
 
-function find_files_for_keys_old(filebase::String, nfiles::Int64, keylist::Vector{Int})
+function find_files_for_keys_old(filebase::String, nfiles::Integer, keylist::Vector{UInt})
 
     file_key_index = filebase * ".key.index"
 
@@ -396,7 +396,7 @@ function find_files_for_keys_old(filebase::String, nfiles::Int64, keylist::Vecto
     return Int64.(unique!(files))
 end
 
-function find_files_for_keys(filebase::String, nfiles::Int32, keylist::Vector{Int})
+function find_files_for_keys(filebase::String, nfiles::Integer, keylist::Vector{Int})
 
     file_key_index = filebase * ".key.index"
 
@@ -478,49 +478,36 @@ end
 
 function get_keylist(h_key::KeyHeader, x0, x1)
 
-    ix0 = zeros(Int64, 3)
-    ix1 = zeros(Int64, 3)
-    dix = zeros(Int64, 3)
+    ix0 = zeros(Int, 3)
+    ix1 = zeros(Int, 3)
+    dix = zeros(Int, 3)
 
     nkeys = 1
 
     @inbounds for i = 1:3
-        ix0[i] = get_int_pos( x0[i], h_key.domain_corners[i], h_key.domain_fac )
-        ix1[i] = get_int_pos( x1[i], h_key.domain_corners[i], h_key.domain_fac )
-        dix[i] = ix1[i] - ix0[i] + 1
-        nkeys *= dix[i]
+        @inbounds ix0[i] = get_int_pos( x0[i], h_key.domain_corners[i], h_key.domain_fac )
+        @inbounds ix1[i] = get_int_pos( x1[i], h_key.domain_corners[i], h_key.domain_fac )
+        @inbounds dix[i] = ix1[i] - ix0[i] + 1
+        @inbounds nkeys *= dix[i]
     end
-    keylist = zeros(Int64, nkeys)
 
+    keylist = zeros(Int, nkeys)
 
     i = 1
     for ix = ix0[1]:ix1[1], iy = ix0[2]:ix1[2], iz = ix0[3]:ix1[3]
-        keylist[i] = peano_hilbert_key(h_key.bits, ix, iy, iz)
+        @inbounds keylist[i] = peano_hilbert_key(h_key.bits, ix, iy, iz)
         i += 1
     end
 
     return keylist
 end
 
+@inline function get_index_list(keylist::Vector{Int}, keys_in_file)
 
-# @inline function get_index_list(keylist, keys_in_file)
-#
-#     index_list = Vector{Int64}(undef, 0)
-#
-#     for i = 1:length(keylist)
-#         index = findfirst(keys_in_file .== keylist[i])
-#         if typeof(index) != Nothing
-#             push!(index_list, index[1])
-#         end
-#     end
-#
-#     return index_list
-# end
-
-@inline function get_index_list(keylist, keys_in_file)
     dict = Dict((n, i) for (i, n) in enumerate(keys_in_file))
     result = Vector{Int}(undef, length(keylist))
     len = 0
+
     for k in keylist
         i = get(dict, k, nothing)
         if i !== nothing
@@ -531,6 +518,39 @@ end
     return resize!(result, len)
 end
 
+@inline function get_index_list_serial(keylist::Vector{Int}, keys_in_file)
+
+    dict = Dict((n, i) for (i, n) in enumerate(keys_in_file))
+    result = Vector{Int}(undef, length(keylist))
+    len = 0
+
+    for k in keylist
+        i = get(dict, k, nothing)
+        if i !== nothing
+            len += 1
+            @inbounds result[len] = i
+        end
+    end
+    return resize!(result, len)
+end
+
+@inline function get_index_list_parallel(keylist::Vector{Int}, keys_in_file)
+
+    dict = Dict((n, i) for (i, n) in enumerate(keys_in_file))
+    result = Vector{Int}(undef, length(keylist))
+    #len = 0
+    len = Threads.Atomic{Int}(0)
+
+    @threads for k = 1:length(keylist)
+        i = get(dict, keylist[k], nothing)
+        if i !== nothing
+            #len += 1
+            Threads.atomic_add!(len, 1)
+            @inbounds result[len[]] = i
+        end
+    end
+    return resize!(result, len[])
+end
 
 function join_blocks(offset_key, part_per_key)
 
@@ -559,7 +579,7 @@ end
 function read_particles_in_box(filename::String, blocks::Vector{String},
                                corner_lowerleft,
                                corner_upperright;
-                               parttype::Int=0,
+                               parttype::Integer=0,
                                verbose::Bool=true)
 
 
@@ -781,9 +801,9 @@ end
 
 # multiple dispatch for single block read
 function read_particles_in_box(filename::String, blocks::String,
-                               corner_lowerleft::Vector{AbstractFloat},
-                               corner_upperright::Vector{AbstractFloat};
-                               parttype::Int=0,
+                               corner_lowerleft,
+                               corner_upperright;
+                               parttype::Integer=0,
                                verbose::Bool=true)
 
     d = read_particles_in_box(filename, [blocks], x0, x1, parttype=parttype, verbose=verbose)
@@ -797,9 +817,9 @@ end
     Transforms volume to cubic box and reads it.
 """
 function read_particles_in_volume(filename::String, blocks::Vector{String},
-                                  center_pos::Vector{AbstractFloat},
-                                  radius::AbstractFloat;
-                                  parttype::Int=0,
+                                  center_pos,
+                                  radius;
+                                  parttype::Integer=0,
                                   verbose::Bool=true)
 
     # calculate lower left and upper right corner
@@ -811,12 +831,89 @@ end
 
 # multiple dispatch for single block read
 function read_particles_in_volume(filename::String, blocks::String,
-                                  center_pos::Vector{AbstractFloat},
-                                  radius::AbstractFloat;
-                                  parttype::Int=0,
+                                  center_pos,
+                                  radius;
+                                  parttype::Integer=0,
                                   verbose::Bool=true)
 
-    d = read_particles_in_volume(filename, [blocks], x0, x1, parttype=parttype, verbose=verbose)
+    d = read_particles_in_volume(filename, [blocks], center_pos, parttype, parttype=parttype, verbose=verbose)
 
     return d[blocks]
 end
+
+
+
+"""
+    Test stuff
+"""
+
+"""
+
+using GadJet
+using BenchmarkTools
+
+
+filebase = "/HydroSims/Magneticum/Box2/hr_bao/snapdir_140/snap_140"
+file_key = filebase * ".0.key"
+
+
+corner_lowerleft  = [-1000.0, -1000.0, -1000.0]
+corner_upperright = [ 1000.0,  1000.0,  1000.0]
+
+typeof(corner_lowerleft)
+
+# first read the header
+h_key = read_keyheader(file_key)
+
+# get a list of the required peano-hilbert keys
+@benchmark keylist = get_keylist(h_key, corner_lowerleft, corner_upperright)
+keylist = get_keylist(h_key, corner_lowerleft, corner_upperright)
+
+files_ref = find_files_for_keys(filebase, 512, keylist)
+println(files_ref)
+
+@benchmark files = find_files_for_keys_old(filebase, 512, keylist)
+files = find_files_for_keys_old(filebase, 512, keylist)
+println(files)
+
+filename = filebase * ".324"
+filename_keyfile = filename * ".key"
+
+# read key file data
+h_key = read_keyheader(filename_keyfile)
+key_info = read_info(filename_keyfile)
+keys_in_file = read_block_by_name(filename_keyfile, "KEY",
+                                  info = key_info[getfield.(key_info, :block_name) .== "KEY"][1],
+                                  parttype = 0)
+
+@benchmark get_index_list_serial(keylist, keys_in_file)
+@benchmark get_index_list_parallel(keylist, keys_in_file)
+
+idx_serial   = get_index_list_serial(keylist, keys_in_file)
+idx_parallel = get_index_list_parallel(keylist, keys_in_file)
+
+sort!(idx_serial)
+
+idx_serial == idx_parallel
+
+@benchmark get_index_list_old(keylist, keys_in_file)
+
+
+typeof(1) <: Integer
+
+typeof(Array{Float32,2}(undef, 10, 1)) <: AbstractArray
+
+typeof(Array{Integer,2})
+
+typeof(UInt32) <: Int
+
+subtypes(Integer)
+
+supertype(Signed)
+
+typeof(Vector{AbstractFloat}(undef,2)) <: Array{AbstractFloat,1}
+
+typeof(Vector{AbstractFloat}(undef,2))
+
+
+"""

@@ -367,8 +367,8 @@ function read_block(p::Int64, data::Dict{Any,Any}, dtype::DataType, blockname::S
 end
 
 
-function read_block_with_offset(filename::String, data_old, pos0::Int64, info::Info_Line,
-                                offset::Int, offset_key, n_to_read, part_per_key )
+function read_block_with_offset(filename::String, data_old, pos0::Integer, info::Info_Line,
+                                offset::Integer, offset_key, n_to_read::Integer, part_per_key )
 
     # open the file
     f = open(filename)
