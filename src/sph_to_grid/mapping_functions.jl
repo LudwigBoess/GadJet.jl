@@ -27,7 +27,8 @@ end
     sqrt( dx*dx + dy*dy + dz*dz ) * hsml_inv
 end
 
-@inline function check_in_image(pos::Float64, hsml::Float64, minCoords, maxCoords)
+@inline function check_in_image(pos::Float64, hsml::Float64,
+                                minCoords::Float64, maxCoords::Float64)
 
     if ( (minCoords - hsml) <= pos <= (maxCoords + hsml) )
         return true
@@ -37,7 +38,7 @@ end
 end
 
 @inline function find_min_pixel(pos::Float64, hsml::Float64,
-                                minCoords::AbstractFloat,
+                                minCoords::Float64,
                                 pixelSideLength::Float64)
 
     pix = floor(Int64, (pos - hsml - minCoords) / pixelSideLength )
@@ -60,6 +61,21 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
                        conserve_quantities::Bool=false,
                        show_progress::Bool=false)
 
+    # if this is not a float it has units, which need to be stripped
+    if !(typeof(Bin_Quant[1,1]) <: AbstractFloat)
+
+        if show_progress
+            @info "Stripping units..."
+        end
+
+        Pos       = @. Pos / unit(Pos[1,1])
+        HSML      = @. HSML / unit(HSML[1,1])
+        M         = @. M / unit(M[1,1])
+        ρ         = @. ρ / unit(ρ[1,1])
+        Bin_Quant = @. Bin_Quant / unit(Bin_Quant[1,1])
+
+    end
+
     N = length(M)  # number of particles
 
     image = zeros(length(param.x), length(param.y))
@@ -80,15 +96,15 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
     @inbounds for p = 1:N
 
         # save stuff from array to single variables
-        @inbounds pos  = Float64.(Pos[p,:])
-        @inbounds hsml = Float64(HSML[p])
+        pos  = Float64.(Pos[p,:])
+        hsml = Float64(HSML[p])
 
         in_image = false
 
         @inbounds for dim = 1:3
 
-            @inbounds in_image = check_in_image(pos[dim], hsml,
-                                                minCoords[dim], maxCoords[dim])
+            in_image = check_in_image(pos[dim], hsml,
+                                      minCoords[dim], maxCoords[dim])
 
             # exit the loop if the particle is not in the image frame
             if !in_image
@@ -102,10 +118,10 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
             particles_in_image += 1
 
             # save rest of variables
-            @inbounds hsml_inv    = Float64(1.0/hsml)
-            @inbounds bin_q       = Float64(Bin_Quant[p])
-            @inbounds m           = Float64(M[p])
-            @inbounds rho_inv     = Float64(1.0/ρ[p])
+            hsml_inv    = Float64(1.0/hsml)
+            bin_q       = Float64(Bin_Quant[p])
+            m           = Float64(M[p])
+            rho_inv     = Float64(1.0/ρ[p])
 
             pixmin = Vector{Int64}(undef,2)
             pixmax = Vector{Int64}(undef,2)

@@ -1,51 +1,58 @@
 using Unitful
 using UnitfulAstro
 
+Unitful.register(@__MODULE__)
 # set up proton number density unit
 @unit n_p "N_p/cm^3" ProtonNumberDensity 1u"mp/cm^3" true
 @unit n_e "N_e/cm^3" ElectronNumberDensity 1u"me/cm^3" true
+#Unitful.register(n_p)
+#Unitful.register(n_e)
 
 # needed by unitful
 const localunits = Unitful.basefactors
 function __init__()
     merge!(Unitful.basefactors, localunits)
-    Unitful.register(n_p)
-    Unitful.register(n_e)
+    # Unitful.register(n_p)
+    # Unitful.register(n_e)
 end
 
 struct GadgetPhysicalUnits
 
-    x_cgs::typeof(1u"cm")         # position in cm
-    v_cgs::typeof(1u"cm/s")       # velocity in cm/s
-    m_cgs::typeof(1u"g")          # mass in g
+    x_cgs::typeof(1.0u"cm")         # position in cm
+    v_cgs::typeof(1.0u"cm/s")       # velocity in cm/s
+    m_cgs::typeof(1.0u"g")          # mass in g
 
-    t_s::typeof(1u"s")            # time in sec
-    t_Myr::typeof(1u"Myr")        # time in Myr
+    t_s::typeof(1.0u"s")            # time in sec
+    t_Myr::typeof(1.0u"Myr")        # time in Myr
 
-    E_cgs::typeof(1u"erg")        # energy in erg
-    E_eV::typeof(1u"eV")          # energy in eV
+    E_cgs::typeof(1.0u"erg")        # energy in erg
+    E_eV::typeof(1.0u"eV")          # energy in eV
 
-    B_cgs::typeof(1u"Gs")         # magnetic field in Gauss
+    B_cgs::typeof(1.0u"Gs")         # magnetic field in Gauss
 
-    rho_cgs::typeof(1u"g/cm^3")        # density in g/cm^3
-    rho_ncm3::typeof(1u"n_e")     # density in N_p/cm^3
+    rho_cgs::typeof(1.0u"g/cm^3")        # density in g/cm^3
+    rho_ncm3::typeof(1.0u"n_e")     # density in N_p/cm^3
 
-    T_K::typeof(1u"K")                 # temperature in K
+    T_K::typeof(1.0u"K")                 # temperature in K
 
-    P_th_cgs::typeof(1u"Ba")           # pressure in
+    P_th_cgs::typeof(1.0u"Ba")           # pressure in
     #P_th_si::typeof(1u"Bar")
-    P_CR_cgs::typeof(1u"Ba")
+    P_CR_cgs::typeof(1.0u"Ba")
     #P_CR_si::typeof(1u"Bar")
 
-    function GadgetPhysicalUnits(l_unit=3.085678e21u"cm", m_unit=1.989e43u"g", v_unit=1.e5u"cm/s";
-                                 a_scale=1.0, hpar=1.0, γ_th=5.0/3.0, γ_CR=4.0/3.0, xH=0.76)
+    function GadgetPhysicalUnits(l_unit::Float64=3.085678e21, m_unit::Float64=1.989e43, v_unit::Float64=1.e5;
+                                 a_scale::Float64=1.0, hpar::Float64=1.0,
+                                 γ_th::Float64=5.0/3.0, γ_CR::Float64=4.0/3.0, xH::Float64=0.76)
 
-        x_cgs  = l_unit * a_scale/hpar
-        v_cgs  = v_unit * sqrt(a_scale)
-        m_cgs  = m_unit * hpar
-        t_unit = l_unit / v_unit
-        t_s    = t_unit * sqrt(a_scale) / hpar   # in sec
-        t_Myr  = t_s |> u"Myr"
+        l_unit *= 1.0u"cm"
+        m_unit *= 1.0u"g"
+        v_unit *= 1.0u"cm/s"
+        x_cgs   = l_unit * a_scale/hpar
+        v_cgs   = v_unit * sqrt(a_scale)
+        m_cgs   = m_unit * hpar
+        t_unit  = l_unit / v_unit
+        t_s     = t_unit * sqrt(a_scale) / hpar   # in sec
+        t_Myr   = t_s |> u"Myr"
 
 
 
@@ -64,8 +71,8 @@ struct GadgetPhysicalUnits
 
         T_cgs = (γ_th - 1.0) * v_unit^2 * 1u"mp" * mean_mol_weight / 1u"k" |> u"K"
 
-        P_th_cgs = (1 + z)^(3*γ_th) * E_unit / l_unit^3 * hpar^2  |> u"Ba"
-        P_CR_cgs = (1 + z)^(3*γ_CR) * E_unit / l_unit^3 * hpar^2  |> u"Ba"
+        P_th_cgs = a_scale^(-3γ_th) * E_cgs / l_unit^3 * hpar^2  |> u"Ba"
+        P_CR_cgs = a_scale^(-3γ_CR) * E_cgs / l_unit^3 * hpar^2  |> u"Ba"
 
         new(x_cgs, v_cgs, m_cgs,
             t_s, t_Myr,
