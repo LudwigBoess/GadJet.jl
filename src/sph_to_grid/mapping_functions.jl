@@ -18,18 +18,16 @@ using ProgressMeter
 using Base.Threads
 #using SharedArrays
 
-@inline function get_d_hsml_2D(dx::AbstractFloat, dy::AbstractFloat,
-                               hsml_inv::AbstractFloat)
+@inline function get_d_hsml_2D(dx::Float64, dy::Float64, hsml_inv::Float64)
     sqrt( dx*dx + dy*dy ) * hsml_inv
 end
 
-@inline function get_d_hsml_3D(dx::AbstractFloat, dy::AbstractFloat, dz::AbstractFloat,
-                               hsml_inv::AbstractFloat)
+@inline function get_d_hsml_3D(dx::Float64, dy::Float64, dz::Float64,
+                               hsml_inv::Float64)
     sqrt( dx*dx + dy*dy + dz*dz ) * hsml_inv
 end
 
-@inline function check_in_image(pos::AbstractFloat, hsml::AbstractFloat,
-                                minCoords::AbstractFloat, maxCoords::AbstractFloat)
+@inline function check_in_image(pos::Float64, hsml::Float64, minCoords, maxCoords)
 
     if ( (minCoords - hsml) <= pos <= (maxCoords + hsml) )
         return true
@@ -38,17 +36,18 @@ end
     end
 end
 
-@inline function find_min_pixel(pos::AbstractFloat, hsml::AbstractFloat,
-                        minCoords::AbstractFloat, pixelSideLength::AbstractFloat)
+@inline function find_min_pixel(pos::Float64, hsml::Float64,
+                                minCoords::AbstractFloat,
+                                pixelSideLength::Float64)
 
     pix = floor(Int64, (pos - hsml - minCoords) / pixelSideLength )
 
     return max(pix, 1)
 end
 
-@inline function find_max_pixel(pos::AbstractFloat, hsml::AbstractFloat,
-                        minCoords::AbstractFloat, pixelSideLength::Float64,
-                        max_pixel::Int)
+@inline function find_max_pixel(pos::Float64, hsml::Float64,
+                                minCoords::AbstractFloat, pixelSideLength::Float64,
+                                max_pixel::Integer)
 
     pix = floor(Int64, (pos + hsml - minCoords) / pixelSideLength )
 
@@ -57,9 +56,9 @@ end
 
 
 function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
-                             param::mappingParameters, kernel::SPHKernel,
-                             conserve_quantities::Bool=false,
-                             show_progress::Bool=false)
+                       param::mappingParameters, kernel::SPHKernel,
+                       conserve_quantities::Bool=false,
+                       show_progress::Bool=false)
 
     N = length(M)  # number of particles
 
@@ -81,15 +80,15 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
     @inbounds for p = 1:N
 
         # save stuff from array to single variables
-        pos      = Pos[p,:]
-        hsml     = HSML[p]
+        @inbounds pos  = Float64.(Pos[p,:])
+        @inbounds hsml = Float64(HSML[p])
 
         in_image = false
 
         @inbounds for dim = 1:3
 
-            in_image = check_in_image(pos[dim], hsml,
-                                      minCoords[dim], maxCoords[dim])
+            @inbounds in_image = check_in_image(pos[dim], hsml,
+                                                minCoords[dim], maxCoords[dim])
 
             # exit the loop if the particle is not in the image frame
             if !in_image
@@ -103,13 +102,13 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
             particles_in_image += 1
 
             # save rest of variables
-            hsml_inv    = 1.0/hsml
-            bin_q       = Bin_Quant[p]
-            m           = M[p]
-            rho_inv     = 1.0/ρ[p]
+            @inbounds hsml_inv    = Float64(1.0/hsml)
+            @inbounds bin_q       = Float64(Bin_Quant[p])
+            @inbounds m           = Float64(M[p])
+            @inbounds rho_inv     = Float64(1.0/ρ[p])
 
-            pixmin = Vector{Int}(undef,2)
-            pixmax = Vector{Int}(undef,2)
+            pixmin = Vector{Int64}(undef,2)
+            pixmax = Vector{Int64}(undef,2)
 
             @inbounds for dim = 1:2
 
@@ -246,8 +245,8 @@ function sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
     @inbounds for p = 1:N
 
         # save stuff from array to single variables
-        pos      = Pos[p,:]
-        hsml     = HSML[p]
+        pos      = Float64.(Pos[p,:])
+        hsml     = Float64(HSML[p])
 
         in_image = false
 
@@ -265,13 +264,13 @@ function sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
         if in_image
 
             # save rest of variables
-            hsml_inv = 1.0/hsml
-            bin_q    = Bin_Quant[p]
-            m        = M[p]
-            rho_inv  = 1.0/ρ[p]
+            hsml_inv = Float64(1.0/hsml)
+            bin_q    = Float64(Bin_Quant[p])
+            m        = Float64(M[p])
+            rho_inv  = Float64(1.0/ρ[p])
 
-            pixmin = Vector{Int}(undef,3)
-            pixmax = Vector{Int}(undef,3)
+            pixmin = Vector{Int64}(undef,3)
+            pixmax = Vector{Int64}(undef,3)
 
             @inbounds for dim = 1:3
 
@@ -326,7 +325,6 @@ function get_bounds(pos::Array{Float32,2}, min::Float64, max::Float64, axis::Int
     m = findall(pos[range_arr[k],axis] .<= max  )
 
     return range_arr[k[m]]
-
 end
 
 
