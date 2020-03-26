@@ -22,13 +22,13 @@ struct GadgetPhysicalUnits
     t_s::typeof(1u"s")            # time in sec
     t_Myr::typeof(1u"Myr")        # time in Myr
 
-    E_cgs::typeof(1u"cgs")        # energy in erg
+    E_cgs::typeof(1u"erg")        # energy in erg
     E_eV::typeof(1u"eV")          # energy in eV
 
     B_cgs::typeof(1u"Gs")         # magnetic field in Gauss
 
     rho_cgs::typeof(1u"g/cm^3")        # density in g/cm^3
-    rho_ncm3::typeof(1u"N_p/cm^3")     # density in N_p/cm^3
+    rho_ncm3::typeof(1u"n_e")     # density in N_p/cm^3
 
     T_K::typeof(1u"K")                 # temperature in K
 
