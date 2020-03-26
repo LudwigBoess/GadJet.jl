@@ -32,8 +32,8 @@ mutable struct mappingParameters
                                  pixelSideLength::Float64=0.0,
                                  Npixels::Int64=0)
 
-        xy_size = maximum( [ abs(x_lim[1]) + abs(x_lim[2]),
-                             abs(y_lim[1]) + abs(y_lim[2]) ] )
+        xy_size = maximum( [ abs(x_lim[1] - x_lim[2]),
+                             abs(y_lim[1] - y_lim[2]) ] )
 
         z_size = abs(z_lim[1]) + abs(z_lim[2])
 

@@ -22,7 +22,7 @@ struct Cubic <: SPHKernel
     end
 end
 
-@inline function kernel_value_2D(kernel::Cubic, u::AbstractFloat, h_inv::AbstractFloat)
+@inline function kernel_value_2D(kernel::Cubic, u::Float64, h_inv::Float64)
 
     n = kernel.norm_3D * h_inv^2
 
@@ -36,7 +36,7 @@ end
 
 end
 
-@inline function kernel_value_3D(kernel::Cubic, u::AbstractFloat, h_inv::AbstractFloat)
+@inline function kernel_value_3D(kernel::Cubic, u::Float64, h_inv::Float64)
 
     n = kernel.norm_3D * h_inv^3
 
@@ -63,7 +63,7 @@ struct Quintic <: SPHKernel
     end
 end
 
-@inline function kernel_value_2D(kernel::Quintic, u::AbstractFloat, h_inv::AbstractFloat)
+@inline function kernel_value_2D(kernel::Quintic, u::Float64, h_inv::Float64)
 
     n = kernel.norm_2D * h_inv^2
 
@@ -85,7 +85,7 @@ end
 
 end
 
-@inline function kernel_value_3D(kernel::Quintic, u::AbstractFloat, h_inv::AbstractFloat)
+@inline function kernel_value_3D(kernel::Quintic, u::Float64, h_inv::Float64)
 
     n = kernel.norm_3D * h_inv^3
 
@@ -120,7 +120,7 @@ struct WendlandC4 <: SPHKernel
     end
 end
 
-@inline function kernel_value_2D(kernel::WendlandC4, u::AbstractFloat, h_inv::AbstractFloat)
+@inline function kernel_value_2D(kernel::WendlandC4, u::Float64, h_inv::Float64)
 
     if u < 1.0
         n = kernel.norm_2D * h_inv^2
@@ -134,7 +134,7 @@ end
 
 end
 
-@inline function kernel_value_3D(kernel::WendlandC4, u::AbstractFloat, h_inv::AbstractFloat)
+@inline function kernel_value_3D(kernel::WendlandC4, u::Float64, h_inv::Float64)
 
     if u < 1.0
         n = kernel.norm_3D * h_inv^3
@@ -162,7 +162,7 @@ struct WendlandC6 <: SPHKernel
 end
 
 
-@inline function kernel_value_2D(kernel::WendlandC6, u::AbstractFloat, h_inv::AbstractFloat)
+@inline function kernel_value_2D(kernel::WendlandC6, u::Float64, h_inv::Float64)
 
     if u < 1.0
         n = kernel.norm_2D * h_inv^2
@@ -178,7 +178,7 @@ end
 
 end
 
-@inline function kernel_value_3D(kernel::WendlandC6, u::AbstractFloat, h_inv::AbstractFloat)
+@inline function kernel_value_3D(kernel::WendlandC6, u::Float64, h_inv::Float64)
 
     if u < 1.0
         n = kernel.norm_3D * h_inv^3
