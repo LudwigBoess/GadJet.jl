@@ -19,6 +19,10 @@ module GadJet
 
     # functions to write snapshots
     include(joinpath(dirname(@__FILE__), "write_snapshot", "write_snap.jl"))
+
+    # unit conversion
+    include(joinpath(dirname(@__FILE__), "unit_conversion", "unit_types.jl"))
+
     # sph to grid mapping internal module
     include(joinpath(dirname(@__FILE__), "sph_to_grid", "kernels.jl"))
     include(joinpath(dirname(@__FILE__), "sph_to_grid", "sph_types.jl"))
@@ -29,8 +33,6 @@ module GadJet
     include(joinpath(dirname(@__FILE__), "sph_to_grid", "smac1_utility.jl"))
     # sph to grid mapping with P-Smac2
     include(joinpath(dirname(@__FILE__), "sph_to_grid", "smac2_utility.jl"))
-    # unit conversion
-    include(joinpath(dirname(@__FILE__), "unit_conversion", "unit_types.jl"))
 
     # riemann solvers
     include(joinpath(dirname(@__FILE__), "ideal_solutions", "cr_dsa_models.jl"))
