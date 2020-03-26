@@ -5,15 +5,11 @@ Unitful.register(@__MODULE__)
 # set up proton number density unit
 @unit n_p "N_p/cm^3" ProtonNumberDensity 1u"mp/cm^3" true
 @unit n_e "N_e/cm^3" ElectronNumberDensity 1u"me/cm^3" true
-#Unitful.register(n_p)
-#Unitful.register(n_e)
 
 # needed by unitful
 const localunits = Unitful.basefactors
 function __init__()
     merge!(Unitful.basefactors, localunits)
-    # Unitful.register(n_p)
-    # Unitful.register(n_e)
 end
 
 struct GadgetPhysicalUnits
@@ -54,14 +50,10 @@ struct GadgetPhysicalUnits
         t_s     = t_unit * sqrt(a_scale) / hpar   # in sec
         t_Myr   = t_s |> u"Myr"
 
-
-
         E_cgs = m_cgs * v_cgs^2 |> u"erg"
         E_eV = E_cgs |> u"eV"
 
-        # B_unit = 1.0    # gadget outputs in cgs
         B_cgs = 1.0u"Gs"    # gadget outputs in cgs
-        # B_si = 1.e-4
 
         rho_cgs = m_unit/l_unit^3 * hpar^2 / a_scale^3
         rho_ncm3 = rho_cgs |> u"n_p"
@@ -85,4 +77,8 @@ struct GadgetPhysicalUnits
             )
 
     end
+end
+
+@inline function strip_unit(a)
+    return a / unit(a)
 end

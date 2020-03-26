@@ -99,6 +99,7 @@ module GadJet
            # unit conversion
            GadgetPhysicalUnits,
            @u_str,
+           strip_unit,
            # old riemann solver
            #RiemannParameters,   # datatype for riemann parameters
            #RiemannSolution,     # datatype for riemann solution
