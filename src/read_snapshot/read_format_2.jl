@@ -1,5 +1,19 @@
 
+"""
+    read_block_by_name(filename::String, blockname::String;
+                                info::Info_Line=Info_Line(),
+                                parttype::Int64=-1)
 
+Reads a block in a snapshot with given name. Names are case sensitive.
+
+# Examples
+```jldoctest
+julia> pos_info = Info_Line("POS", Float32, 1, [1, 1, 1, 1, 1, 1])
+[...]
+julia> gas_pos = read_block_by_name(filename, "POS", info=pos_info, parttype=0)
+[...]
+```
+"""
 function read_block_by_name(filename::String, blockname::String;
                             info::Info_Line=Info_Line(),
                             parttype::Int64=-1)

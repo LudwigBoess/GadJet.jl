@@ -1,5 +1,9 @@
 
+"""
+    write_smac2_par([...])
 
+Writes a P-Smac2 parameter file. Not all relevant parameters implemented yet!
+"""
 function write_smac2_par(x, y, z,
                          euler_angle_0, euler_angle_1, euler_angle_2,
                          xy_size, z_depth, xy_pix::Int64,

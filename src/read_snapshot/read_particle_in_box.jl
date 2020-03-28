@@ -11,6 +11,8 @@ using Base.Threads
 """
     Functionality to read the header of the key files
 """
+
+
 struct KeyHeader
     nkeys_file::Vector{Int32}
     domain_corners::Vector{Float64}
@@ -372,6 +374,9 @@ function get_index_bounds(ids::Vector{Int}, low_bounds::Vector{UInt}, high_bound
     end
 end
 
+"""
+This should be fixed! It's A LOT faster than the simpler version!
+"""
 function find_files_for_keys_old(filebase::String, nfiles::Integer, keylist::Vector{UInt})
 
     file_key_index = filebase * ".key.index"
@@ -576,11 +581,17 @@ end
     Read particles in box main
 """
 
+"""
+    read_particles_in_box(filename::String, blocks::Vector{String},
+                          corner_lowerleft, corner_upperright;
+                          parttype::Integer=0, verbose::Bool=true)
+
+Reads all particles within a box defined by a lower left and upper right corner
+for a given particle type. Returns a dictionary with all requested blocks.
+"""
 function read_particles_in_box(filename::String, blocks::Vector{String},
-                               corner_lowerleft,
-                               corner_upperright;
-                               parttype::Integer=0,
-                               verbose::Bool=true)
+                               corner_lowerleft, corner_upperright;
+                               parttype::Integer=0, verbose::Bool=true)
 
 
     if verbose
@@ -795,16 +806,21 @@ function read_particles_in_box(filename::String, blocks::Vector{String},
     end # for i = 1:length(files)
 
     return d
-
 end
 
 
-# multiple dispatch for single block read
+"""
+    read_particles_in_box(filename::String, blocks::String,
+                          corner_lowerleft, corner_upperright;
+                          parttype::Integer=0, verbose::Bool=true)
+
+Like `read_particles_in_box` but for a single block. Returns the block as an array.
+
+See also: [`read_particles_in_box`](@ref)
+"""
 function read_particles_in_box(filename::String, blocks::String,
-                               corner_lowerleft,
-                               corner_upperright;
-                               parttype::Integer=0,
-                               verbose::Bool=true)
+                               corner_lowerleft, corner_upperright;
+                               parttype::Integer=0, verbose::Bool=true)
 
     d = read_particles_in_box(filename, [blocks], x0, x1, parttype=parttype, verbose=verbose)
 
@@ -813,14 +829,18 @@ end
 
 
 """
-    Helper function to read particles in a given volume, instead of box.
-    Transforms volume to cubic box and reads it.
+    read_particles_in_box(filename::String, blocks::Vector{String},
+                          center_pos, radius;
+                          parttype::Integer=0, verbose::Bool=true)
+
+Reads all particles within a box encapsulating a volume defined by center position
+and radius for a given particle type. Returns a dictionary with all requested blocks.
+
+See also: [`read_particles_in_box`](@ref)
 """
 function read_particles_in_volume(filename::String, blocks::Vector{String},
-                                  center_pos,
-                                  radius;
-                                  parttype::Integer=0,
-                                  verbose::Bool=true)
+                                  center_pos, radius;
+                                  parttype::Integer=0, verbose::Bool=true)
 
     # calculate lower left and upper right corner
     x0 = center_pos .- radius
@@ -829,14 +849,21 @@ function read_particles_in_volume(filename::String, blocks::Vector{String},
     return read_particles_in_box(filename, blocks, x0, x1, parttype=parttype, verbose=verbose)
 end
 
-# multiple dispatch for single block read
-function read_particles_in_volume(filename::String, blocks::String,
-                                  center_pos,
-                                  radius;
-                                  parttype::Integer=0,
-                                  verbose::Bool=true)
+"""
+    read_particles_in_box(filename::String, blocks::String,
+                          center_pos, radius;
+                          parttype::Integer=0, verbose::Bool=true)
 
-    d = read_particles_in_volume(filename, [blocks], center_pos, parttype, parttype=parttype, verbose=verbose)
+Like `read_particles_in_volume` but for a single block. Returns the block as an array.
+
+See also: [`read_particles_in_volume`](@ref)
+"""
+function read_particles_in_volume(filename::String, blocks::String,
+                                  center_pos, radius;
+                                  parttype::Integer=0, verbose::Bool=true)
+
+    d = read_particles_in_volume(filename, [blocks], center_pos, parttype,
+                                 parttype=parttype, verbose=verbose)
 
     return d[blocks]
 end
@@ -844,7 +871,7 @@ end
 
 
 """
-    Test stuff
+    Test stuff -- Sandbox
 """
 
 """

@@ -1,7 +1,7 @@
 """
-calculate_center_of_mass(x, m)
+    calculate_center_of_mass(x, m)
 
-    Calculates the center of mass.
+Calculates the center of mass for given positions `x` and masses `m`.
 """
 function calculate_center_of_mass(x, m)
 

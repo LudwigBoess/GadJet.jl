@@ -2,7 +2,7 @@ using Unitful
 using UnitfulAstro
 
 Unitful.register(@__MODULE__)
-# set up proton number density unit
+# set up proton and electron number density unit
 @unit n_p "N_p/cm^3" ProtonNumberDensity 1u"mp/cm^3" true
 @unit n_e "N_e/cm^3" ElectronNumberDensity 1u"me/cm^3" true
 
@@ -12,6 +12,32 @@ function __init__()
     merge!(Unitful.basefactors, localunits)
 end
 
+
+"""
+    GadgetPhysicalUnits(l_unit::Float64=3.085678e21, m_unit::Float64=1.989e43, v_unit::Float64=1.e5;
+                        a_scale::Float64=1.0, hpar::Float64=1.0,
+                        γ_th::Float64=5.0/3.0, γ_CR::Float64=4.0/3.0, xH::Float64=0.76)
+
+Creates a datatype GadgetPhysicalUnits which holds the conversion factors between comoving code units and physical units.
+Stores the unit information which can be converted with Unitful or UnitfulAstro.
+
+# Examples
+```jldoctest
+julia> GU = GadgetPhysicalUnits()
+GadgetPhysicalUnits(3.085678e21 cm, 100000.0 cm s^-1, 1.989e43 g, 3.085678e16 s, 977.7923542981722 Myr, 1.989e53 erg, 1.2414361549102458e65 eV, 1.0 Gs, 6.769911178294544e-22 g cm^-3, 743179.9340255889 N_e/cm^3, 47.50882854026919 K, 6.769911178294544e-12 Ba, 6.769911178294544e-12 Ba)
+julia> GU.x_cgs
+3.085678e21 cm
+```
+
+Keyword arugments specify:
+# Arguments
+- `a_scale::Float64 = 1.0`: Cosmological scale factor of the simulation. Can be passed with the header `h` as `h.time`.
+- `hpar::Float64 = 1.0`: Hubble constant as 'little h'. Can be passed with header `h` as `h.h0`.
+- `γ_th::Float64 = 5.0/3.0`: Adiabatic index of gas.
+- `γ_CR::Float64 = 4.0/3.0`: Adiabatic index of cosmic ray component.
+- `xH::Float64 = 0.76`: Hydrogen fraction of the simulation, if run without chemical model.
+
+"""
 struct GadgetPhysicalUnits
 
     x_cgs::typeof(1.0u"cm")         # position in cm
@@ -40,9 +66,12 @@ struct GadgetPhysicalUnits
                                  a_scale::Float64=1.0, hpar::Float64=1.0,
                                  γ_th::Float64=5.0/3.0, γ_CR::Float64=4.0/3.0, xH::Float64=0.76)
 
+        # Gadget units are given in cgs
         l_unit *= 1.0u"cm"
         m_unit *= 1.0u"g"
         v_unit *= 1.0u"cm/s"
+
+        # convert comoving output to physical units
         x_cgs   = l_unit * a_scale/hpar
         v_cgs   = v_unit * sqrt(a_scale)
         m_cgs   = m_unit * hpar
@@ -61,10 +90,10 @@ struct GadgetPhysicalUnits
         yhelium = ( 1.0 - xH ) / ( 4.0 * xH )
         mean_mol_weight = (1.0 + 4.0 * yhelium) / (1.0 + 3.0 * yhelium + 1.0)
 
-        T_cgs = (γ_th - 1.0) * v_unit^2 * 1u"mp" * mean_mol_weight / 1u"k" |> u"K"
+        T_cgs = (γ_th - 1.0) * v_unit^2 * 1.0u"mp" * mean_mol_weight / 1.0u"k" |> u"K"
 
-        P_th_cgs = a_scale^(-3γ_th) * E_cgs / l_unit^3 * hpar^2  |> u"Ba"
-        P_CR_cgs = a_scale^(-3γ_CR) * E_cgs / l_unit^3 * hpar^2  |> u"Ba"
+        P_th_cgs = a_scale^(-3) * E_cgs / l_unit^3 * hpar^2  |> u"Ba"
+        P_CR_cgs = a_scale^(-4) * E_cgs / l_unit^3 * hpar^2  |> u"Ba"
 
         new(x_cgs, v_cgs, m_cgs,
             t_s, t_Myr,
@@ -73,12 +102,27 @@ struct GadgetPhysicalUnits
             rho_cgs, rho_ncm3,
             T_cgs,
             P_th_cgs,
-            P_CR_cgs,
+            P_CR_cgs
             )
 
     end
 end
 
+
+"""
+    strip_unit(a)
+
+Strips unit information from the input to convert back to simple `AbstractFloat` datatypes.
+
+# Examples
+```jldoctest
+julia> x = 3.085678e21u"cm"
+3.085678e21 cm
+julia> strip_unit(x)
+3.085678e21
+```
+
+"""
 @inline function strip_unit(a)
     return a / unit(a)
 end

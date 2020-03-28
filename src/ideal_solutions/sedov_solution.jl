@@ -57,7 +57,6 @@ struct SedovData
         new(t, m, r, vr, rho, U, P, Pth, Pcr, E, hsml, mach, r_shock_rho, r_shock_P,
             rho_out, rho_s, cs_out, γ, ndim)
     end
-
 end
 
 struct SedovFit

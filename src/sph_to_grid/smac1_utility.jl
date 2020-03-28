@@ -2,6 +2,11 @@
         Helper function for Smac reading of binary images
 """
 
+"""
+    struct Smac1ImageInfo
+
+Stores the information in a Smac binary image header.
+"""
 struct Smac1ImageInfo
 
     snap::Int32                 # number of input snapshot
@@ -39,8 +44,13 @@ struct Smac1ImageInfo
 
 end
 
-function read_smac1_binary_image(fi)
-    f = open(fi)
+"""
+    read_smac1_binary_image(filename::String)
+
+Reads a binary image file from Smac and returns a Matrix with the pixel values.
+"""
+function read_smac1_binary_image(filename::String)
+    f = open(filename)
     first = read(f, Int32)
     n_pixels = Int64(sqrt.(first/4.0))
     a = read!(f, Array{Float32,2}(undef,n_pixels,n_pixels))
@@ -53,9 +63,14 @@ function read_smac1_binary_image(fi)
     end
 end
 
-function read_smac1_binary_info(fi)
+"""
+    read_smac1_binary_info(filename::String)
 
-    f = open(fi)
+Returns the image info in a `Smac1ImageInfo` struct.
+"""
+function read_smac1_binary_info(filename::String)
+
+    f = open(filename)
 
     # skip image
     image = read(f, Int32)
@@ -90,16 +105,19 @@ function read_smac1_binary_info(fi)
     unit = String(Char.((read!(f, Array{Int8,1}(undef,unitstring_length)))))
     close(f)
 
-    img = Smac1ImageInfo(snap, z, m_vir, r_vir,
+    return Smac1ImageInfo(snap, z, m_vir, r_vir,
                     xcm, ycm, zcm,
                     z_slice_kpc,
                     boxsize_kpc, boxsize_pix, pixsize_kpc,
                     unit)
-
-    return img
 end
 
 
+"""
+    write_smac1_par([...])
+
+Writes a Smac parameter file. Not all relevant parameters implemented yet!
+"""
 function write_smac1_par(path, use_keys, out_dir, snap_base, snap_file, image_prefix,
                          halo_id, snap_start, snap_end, file_format, kernel,
                          xy_size, z_size, out_effect, out_subeffect,

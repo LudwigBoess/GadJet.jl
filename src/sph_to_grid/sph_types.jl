@@ -8,7 +8,15 @@
 
 """
 
+"""
+    mappingParameters(; x_lim::Vector{Float64},
+                        y_lim::Vector{Float64},
+                        z_lim::Vector{Float64},
+                        pixelSideLength::Float64=0.0,
+                        Npixels::Int64=0)
 
+Parameter object for sph to grid mapping. Define either `pixelSideLength` of `Npixels`.
+"""
 mutable struct mappingParameters
 
     x_lim::Vector{Float64}
@@ -65,8 +73,4 @@ mutable struct mappingParameters
             x, y, z)
 
     end
-
 end
-
-# par = mappingParameters2(x_lim=[-10.0 , 10.], y_lim=[-10.0 , 10.], z_lim=[-2.0 , 2.0],
-#                          pixelSideLength=0.01, normalize=false, broadening=false)
