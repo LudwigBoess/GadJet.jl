@@ -11,9 +11,10 @@ These functionalities are: reading and writing data in snapshot format 1+2, read
 Additionally I provide some exact riemann solvers for shocktube tests, unit conversion and other utility.
 This list will extend over time.
 
-Documentation can be found [here](https://gadjetjl.readthedocs.io/en/latest/index.html)
+Documentation can be found [here](https://gadjetjl.readthedocs.io/en/latest/index.html).
 
 Please note that I am not affiliated with Volker Springel. This project was started because I needed to work with Gadget for university and couldn't find any Julia implementations to work with the data.
+I'm now working with Klaus Dolag and others on a development version of Gadget3, so you will find some functionality in this project that won't be useful for you if you don't have access to that version. Sorry!
 
 Any help and contribution is greatly appreciated, as this is still a work in progress. Please see the section on contributing.
 
@@ -72,6 +73,6 @@ Please feel free to contact me: lboess@usm.lmu.de
 
 Stuff I want to improve in the near future:
 
-- Speedup of the sph mapping.
-- Peano-Hilbert key based reading of large snapshots (in progress).
-- Add unit conversion (in progress).
+- Speedup of the sph mapping (done!).
+- Peano-Hilbert key based reading of large snapshots (done!).
+- Add unit conversion (done!).
