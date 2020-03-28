@@ -3,6 +3,29 @@ include("sod_shock.jl")
 include("cr_sod_shock_noprepopulation.jl")
 include("cr_sod_shock_withprepopulation.jl")
 
+
+"""
+    RiemannParameters(;rhol::Float64=1.0, rhor::Float64=0.125,      # density left and right (L&R)
+                       Pl::Float64=0.0,   Pr::Float64=0.0,          # pressure L&R
+                       Ul::Float64=0.0,   Ur::Float64=0.0,          # internal energy L&R
+                       P_cr_l::Float64=0.0, P_cr_r::Float64=0.0,    # CR pressure L&R
+                       E_cr_l::Float64=0.0, E_cr_r::Float64=0.0,    # CR energy L&R
+                       Bl::Array{Float64,1} = zeros(3),             # B-field left
+                       Br::Array{Float64,1} = zeros(3),             # B-field right
+                       Mach::Float64=0.0,                           # target Mach number
+                       t::Float64,                                  # time of the solution
+                       x_contact::Float64=70.0,                     # position of the contact discontinuity along the tube
+                       γ_th::Float64=5.0/3.0,                       # adiabatic index of the gas
+                       γ_cr::Float64=4.0/3.0,                       # adiabatic index of CRs
+                       Pe_ratio::Float64=0.01,                      # ratio of proton to electron energy in acceleration
+                       thetaB::Float64=0.0,                         # angle between magnetic field and shock normal
+                       theta_crit::Float64=(π/4.0),                 # critical angle for B/Shock angle efficiency
+                       dsa_model::Int64=-1,                         # diffuse shock acceleration model
+                       xs_first_guess::Float64=4.7,                 # first guess of the resulting shock compression
+                       verbose::Bool=true)
+
+Wrapper function to set up parameter objects for different kinds of Riemann problems.
+"""
 function RiemannParameters(;rhol::Float64=1.0, rhor::Float64=0.125,      # density left and right (L&R)
                             Pl::Float64=0.0,   Pr::Float64=0.0,          # pressure L&R
                             Ul::Float64=0.0,   Ur::Float64=0.0,          # internal energy L&R
@@ -65,7 +88,10 @@ function RiemannParameters(;rhol::Float64=1.0, rhor::Float64=0.125,      # densi
                                          dsa_model=dsa_model,
                                          xs_first_guess=xs_first_guess)
         else
-            @info "With seed CRs."
+            if verbose
+                @info "With seed CRs."
+            end
+
             #error("Sod shock with seed CRs not implemented yet!")
             return SodCRParameters_withCRs(rhol=rhol, rhor=rhor,
                                            Pl=Pl, Pr=Pr, Ul=Ul, Ur=Ur,
@@ -82,7 +108,9 @@ function RiemannParameters(;rhol::Float64=1.0, rhor::Float64=0.125,      # densi
          (E_cr_l != 0.0 && E_cr_r != 0.0) ) &&
          dsa_model == -1
 
-         @info "Setting up parameters for multicomponent shock without CR acceleration."
+         if verbose
+             @info "Setting up parameters for multicomponent shock without CR acceleration."
+         end
 
          #error("Multicomponent fluid shock not implemented yet!")
          return SodCRParameters_withCRs(rhol=rhol, rhor=rhor, Pl=Pl, Pr=Pr,
@@ -98,7 +126,12 @@ end # RiemannParameters
 
 
 """
-    Helper functions
+    find_xs_first_guess(Ul::Float64, Mach::Float64, CR_seed::Float64=0.0;
+                        xs_start::Float64=3.8, delta_xs::Float64=1.e-4,
+                        eff_model::Int64=2, thetaB::Float64=0.0,
+                        verbose::Bool=false)
+
+Iterates to a first guess of the compression ratio `xs` that gives a solution.
 """
 function find_xs_first_guess(Ul::Float64, Mach::Float64, CR_seed::Float64=0.0;
                              xs_start::Float64=3.8, delta_xs::Float64=1.e-4,
@@ -141,12 +174,27 @@ end
     Multiple dispatch for solve function
 """
 # Pure hydro Sod-shock
+"""
+    solve(x::Array{Float,1}, par::SodParameters)
+
+Solves a standard Sod shock problem.
+"""
 solve(x::Array{Float64,1}, par::SodParameters) = solveSodShock(x, par=par)
 solve(x::Array{Float32,1}, par::SodParameters) = solveSodShock(Float64.(x), par=par)
 
 # CR Sod shock
+"""
+    solve(x::Array{Float,1}, par::SodCRParameters_noCRs)
+
+Solves a Sod shock with cosmic ray acceleration, but without a pre-existing CR component.
+"""
 solve(x::Array{Float64,1}, par::SodCRParameters_noCRs)   = solveSodShockCR_noPrepopulation(x, par=par)
 solve(x::Array{Float32,1}, par::SodCRParameters_noCRs)   = solveSodShockCR_noPrepopulation(Float64.(x), par=par)
 
+"""
+    solve(x::Array{Float,1}, par::SodCRParameters_withCRs)
+
+Solves a Sod shock with cosmic ray acceleration without a pre-existing CR component.
+"""
 solve(x::Array{Float64,1}, par::SodCRParameters_withCRs) = solveSodShockCR_withPrepopulation(x, par=par)
 solve(x::Array{Float32,1}, par::SodCRParameters_withCRs) = solveSodShockCR_withPrepopulation(Float64.(x), par=par)

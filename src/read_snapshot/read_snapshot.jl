@@ -1,4 +1,9 @@
+"""
+    snap_to_dict(filename::String, try_info::Bool=true)
 
+Reads whole snapshot into memory and returns a dictionary sorted by particle type
+and block names. Be cautious with large snapshots!
+"""
 function snap_to_dict(filename::String, try_info::Bool=true)
 
         data = Dict()
@@ -33,18 +38,24 @@ function snap_to_dict(filename::String, try_info::Bool=true)
         end
 
         return data
-
 end
 
 
 
 """
-read_snap(filename[, blockname, parttype])
+    read_snap(filename::String [, blockname::String="", parttype::Int64=-1] )
 
-    Wrapper function to read snapshot in various ways:
-    filename only: returns the entire snapshot as a dictionary.
-    blockname: Returns only that block. If parttype specified only for that
-    particle type.
+Wrapper function to read snapshot in various ways:
+filename only: returns the entire snapshot as a dictionary.
+blockname: Returns only that block. If parttype specified only for that
+particle type.
+
+# Examples
+```jldoctest
+julia> gas_pos = read_block_by_name(filename, "POS", 0)
+[...]
+```
+
 """
 function read_snap(filename::String, blockname::String="", parttype::Int64=-1)
 

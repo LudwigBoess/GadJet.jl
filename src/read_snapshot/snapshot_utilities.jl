@@ -1,5 +1,10 @@
-import Base.read
 
+"""
+    print_blocks(filename::String; verbose::Bool=true)
+
+Reads the block names of blocks in a snapshot and returns them in an array.
+Outputs them to console if `verbose=true`
+"""
 function print_blocks(filename::String; verbose::Bool=true)
 
     f = open(filename)
@@ -45,7 +50,13 @@ function print_blocks(filename::String; verbose::Bool=true)
     return String.(blocks)
 end
 
-function read_info(filename; verbose::Bool=false)
+"""
+    read_info(filename; verbose::Bool=false)
+
+Reads the info block of a snapshot and returns the information in an array of `Info_Line` types.
+If `verbose=true` the blocknames are also printed to console.
+"""
+function read_info(filename::String; verbose::Bool=false)
 
     f = open(filename)
     seek(f,4)
@@ -93,11 +104,13 @@ end
 
 function read_info_line(f)
 
+    # block name consists of 4 C Chars.
     name = Char.(read!(f, Array{Int8,1}(undef,4)))
     blockname = String(name)
 
     block_name = strip(blockname)
 
+    # the datatype is stored as a 8 char word.
     letters = read!(f, Array{Int8,1}(undef,8))
     letters = Char.(letters)
     letters = string.(letters)
@@ -107,35 +120,47 @@ function read_info_line(f)
         data_type *= letters[i]
     end
 
+    # erase whitespace and make lower case for comparison
     data_type = lowercase(strip(data_type))
 
+    # assign data types
     if data_type == "float" ||
        data_type == "floatn"
             dt = Float32
     elseif data_type == "long"
-            dt = Int32
+            dt = UInt32
     elseif data_type == "llong"
-            dt = Int64
+            dt = UInt64
     elseif data_type == "double" ||
            data_type == "doublen"
             dt = Float64
     end
 
+    # array dimensions are stored as Int32
     n_dim = read(f,Int32)
 
+    # read the information for which particles the block is relevant.
+    # e.g. for gas particles: [ 1, 0, 0, 0, 0, 0 ]
     is_present = read!(f, Array{Int32,1}(undef,6))
 
-    in_l = Info_Line(block_name, dt, n_dim, is_present)
-
-    return in_l
+    # construct the info line struct and return it.
+    return Info_Line(block_name, dt, n_dim, is_present)
 end
 
+
+"""
+    block_present(filename::String, blockname::String, blocks::Vector{String}=[""])
+
+Checks if a given block is present in the snapshot file, or in the supplied `blocks` Vector.
+"""
 function block_present(filename::String, blockname::String, blocks::Vector{String}=[""])
 
+    # if no blocks supplied, read in block information
     if blocks == [""]
         blocks = print_blocks(filename, verbose=false)
     end
 
+    # loop over all blocks
     for block ∈ blocks
         if block == blockname
             return true
@@ -145,11 +170,18 @@ function block_present(filename::String, blockname::String, blocks::Vector{Strin
     return false
 end
 
+
+"""
+    get_block_positions(filename::String)
+
+Returns a dictionary with the starting positions of all blocks in a snapshot in bits.
+"""
 function get_block_positions(filename::String)
 
     f = open(filename)
     blocksize = read(f, Int32)
 
+    # only works for snap format 2
     if blocksize != 8
         error("Block search not possible - use snap_format 2!")
     end
@@ -163,11 +195,13 @@ function get_block_positions(filename::String)
 
     while eof(f) != true
 
+        # read block name
         name = Char.(read!(f, Array{Int8,1}(undef,4)))
         blockname = String(name)
 
         blockname = strip(blockname)
 
+        # store block name in array
         push!(blocks, blockname)
 
         read(f, Int32)

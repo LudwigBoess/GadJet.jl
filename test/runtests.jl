@@ -1,4 +1,4 @@
-using GadJet, Test, DelimitedFiles
+using GadJet, Test, DelimitedFiles, Unitful, UnitfulAstro
 
 @testset "Read Snapshot" begin
 
@@ -24,10 +24,9 @@ end
 
     GU = GadgetPhysicalUnits()
 
-    @test GU.t_s ≈ 3.085678e16
-    @test GU.E_cgs ≈ 1.989e53
+    @test GU.t_s ≈ 3.085678e16u"s"
+    @test GU.E_cgs ≈ 1.989e53u"erg"
 end
-
 
 @testset "Riemann Sod-Shock" begin
 

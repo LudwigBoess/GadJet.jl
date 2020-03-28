@@ -1,7 +1,7 @@
 """
-head_to_obj(filename)
+    head_to_obj(filename::String)
 
-    Returns the header of a snapshot as a Header object.
+Returns the header of a snapshot as a `Header` object.
 """
 function head_to_obj(filename)
 
@@ -11,18 +11,18 @@ function head_to_obj(filename)
     blocksize = read(f, Int32)
 
     if blocksize == 8
-        swap = 0
+        swap = false
         snap_format = 2
     elseif blocksize == 256
-        swap = 0
+        swap = false
         snap_format = 1
     else
         blocksize = bswap(blocksize)
         if blocksize == 8
-            swap = 1
+            swap = true
             snap_format = 2
         elseif blocksize == 256
-            swap = 1
+            swap = true
             snap_format = 1
         else
             error("incorrect file format encountered when reading header of $filename")
@@ -60,13 +60,12 @@ function head_to_obj(filename)
     close(f)
 
     return h
-
 end
 
 """
-head_to_dict(filename)
+    head_to_dict(filename::String)
 
-    Returns the header of a snapshot as a dictionary.
+Returns the header of a snapshot as a dictionary.
 """
 function head_to_dict(filename::String)
 
@@ -131,9 +130,11 @@ end
 
 
 """
-read_header(filename)
+    read_header(filename::String)
 
-    Reads the header of a snapshot and returns a Header object.
+Reads the header of a snapshot and returns a Header object.
+
+See also: [`head_to_obj`](@ref)
 """
 function read_header(filename::String)
     return head_to_obj(filename)

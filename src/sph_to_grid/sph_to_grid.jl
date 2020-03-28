@@ -2,17 +2,32 @@ import GR
 using Base.Threads
 
 """
-glimpse(filename, blockname[, ... ])
+    glimpse(filename::String, blockname::String[, ... ])
 
-	Gives a glimpse at the simulation by mapping the sph data.
+Reads relevant data from snapshot file and maps the quantity in block `blockname`
+to a grid.
+
+# Arguments
+- `filename::String`: Name of snapshot file.
+- `blockname::String`: Name of block that should be mapped.
+- `center_pos::Array{Float64,1}=[123456.7, 123456.7, 123456.7]`: Image center. If not given center of mass is calculated.
+- `dx::Float64`= 0.0`: Extent in x-direction. If `dx = 0.0` whole box is mapped.
+- `dy::Float64`= 0.0`: Extent in y-direction. If `dy = 0.0` whole box is mapped.
+- `dz::Float64`= 0.0`: Extent in z-direction. If `dz = 0.0` whole box is mapped.
+- `kernel_name::String="WC6"`: Which kernel should be used. ["Cubic", "Quintic", "WC4", "WC6"]
+- `resolution::Int64=500`: Number of pixels in the longest dimension.
+- `run_dummy::Bool=true`: If a compilation run with 4 pixels should be performed.
+- `conserve_quantities::Bool=true`: If quantities should be conserved while mapping, like in Smac (Dolag et. al. 2005).
+- `verbose::Bool=true`: Output information to console and show progress bar.
+- `plot::Bool=false`: Plot the resulting map with GR.imshow()
 """
 function glimpse(filename::String, blockname::String,
                  center_pos::Array{Float64,1}=[123456.7, 123456.7, 123456.7],
                  dx::Float64=0.0, dy::Float64=0.0, dz::Float64=0.0;
 			     kernel_name::String="WC6",
                  resolution::Int64=500, run_dummy::Bool=true,
-				 conserve_quantities::Bool=false,
-			     verbose::Bool=true, plot::Bool=true)
+				 conserve_quantities::Bool=true,
+			     verbose::Bool=true, plot::Bool=false)
 
     if verbose
 		@info "Reading data..."
@@ -164,9 +179,27 @@ end
 
 
 """
+    sphMapping(Pos, HSML, M, ρ, Bin_Quant;
+	           param::mappingParameters,
+			   kernel::SPHKernel[,
+			   show_progress::Bool=true,
+			   conserve_quantities::Bool=true,
+			   dimensions::Int=2])
 
+Maps the data in `Bin_Quant` to a grid. Parameters of mapping are supplied in
+`param` and the kernel to be used in `kernel`.
+
+# Arguments
+- `Pos`: Array with particle positions.
+- `HSML`: Array with particle hsml.
+- `M`: Array with particle masses.
+- `ρ`: Array with particle densities.
+- `Bin_Quant`: Array with particle quantity to be mapped.
+- `kernel::SPHKernel`: Kernel object to be used.
+- `show_progress::Bool=true`: Show progress bar.
+- `conserve_quantities::Bool=true`: If quantities should be conserved while mapping, like in Smac (Dolag et. al. 2005).
+- `dimensions::Int=2`: Number of mapping dimensions (2 = to grid, 3 = to cube).
 """
-
 function sphMapping(Pos, HSML, M, ρ, Bin_Quant;
                     param::mappingParameters,
 					kernel::SPHKernel,

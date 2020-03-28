@@ -32,9 +32,16 @@ function write_format2_block_header(f::IOStream, blockname::String)
     write(f, write_name)
 
     return f
-
 end
 
+
+"""
+    write_block(f::IOStream, data,
+                blockname::String="";
+                snap_format::Int64=2)
+
+Write `data` to a block to an opened file `f`.
+"""
 function write_block(f::IOStream, data,
                      blockname::String="";
                      snap_format::Int64=2)
@@ -78,10 +85,14 @@ function write_block(f::IOStream, data,
     println("Writing block done.")
 
     write(f, blocksize)
-
-
 end
 
+
+"""
+    write_header(f::IOStream, h::Header; snap_format::Int64=2)
+
+Writes the header block to an opened file `f`.
+"""
 function write_header(f::IOStream, h::Header; snap_format::Int64=2)
 
     if snap_format == 2
@@ -102,7 +113,6 @@ function write_header(f::IOStream, h::Header; snap_format::Int64=2)
 
     # write blocksize
     write(f, Int32(256))
-
 end
 
 
