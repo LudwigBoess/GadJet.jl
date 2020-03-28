@@ -72,6 +72,6 @@ Please feel free to contact me: lboess@usm.lmu.de
 
 Stuff I want to improve in the near future:
 
-- Speedup of the sph mapping.
-- Peano-Hilbert key based reading of large snapshots (in progress).
-- Add unit conversion (in progress).
+- Speedup of the sph mapping (done!).
+- Peano-Hilbert key based reading of large snapshots (done!).
+- Add unit conversion (done!).
