@@ -31,11 +31,11 @@ julia> GU.x_cgs
 
 Keyword arugments specify:
 # Arguments
-- `a_scale::Float64 = 1.0`: Cosmological scale factor of the simulation. Can be passed with the header `h` as `h.time`.
-- `hpar::Float64 = 1.0`: Hubble constant as 'little h'. Can be passed with header `h` as `h.h0`.
+- `a_scale::Float64 = 1.0`:  Cosmological scale factor of the simulation. Can be passed with the header `h` as `h.time`.
+- `hpar::Float64 = 1.0`:     Hubble constant as 'little h'. Can be passed with header `h` as `h.h0`.
 - `γ_th::Float64 = 5.0/3.0`: Adiabatic index of gas.
 - `γ_CR::Float64 = 4.0/3.0`: Adiabatic index of cosmic ray component.
-- `xH::Float64 = 0.76`: Hydrogen fraction of the simulation, if run without chemical model.
+- `xH::Float64 = 0.76`:      Hydrogen fraction of the simulation, if run without chemical model.
 
 """
 struct GadgetPhysicalUnits
@@ -52,15 +52,13 @@ struct GadgetPhysicalUnits
 
     B_cgs::typeof(1.0u"Gs")         # magnetic field in Gauss
 
-    rho_cgs::typeof(1.0u"g/cm^3")        # density in g/cm^3
+    rho_cgs::typeof(1.0u"g/cm^3")   # density in g/cm^3
     rho_ncm3::typeof(1.0u"n_e")     # density in N_p/cm^3
 
-    T_K::typeof(1.0u"K")                 # temperature in K
+    T_K::typeof(1.0u"K")            # temperature in K
 
-    P_th_cgs::typeof(1.0u"Ba")           # pressure in
-    #P_th_si::typeof(1u"Bar")
-    P_CR_cgs::typeof(1.0u"Ba")
-    #P_CR_si::typeof(1u"Bar")
+    P_th_cgs::typeof(1.0u"Ba")      # thermal pressure in Ba
+    P_CR_cgs::typeof(1.0u"Ba")      # cosmic ray pressure in Ba
 
     function GadgetPhysicalUnits(l_unit::Float64=3.085678e21, m_unit::Float64=1.989e43, v_unit::Float64=1.e5;
                                  a_scale::Float64=1.0, hpar::Float64=1.0,
