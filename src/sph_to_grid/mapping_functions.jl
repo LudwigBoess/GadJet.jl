@@ -146,7 +146,7 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
                 yp1 = (pos[2] - hsml) * pixsize_inv
                 yp2 = (pos[2] + hsml) * pixsize_inv
 
-                pix_area = (xp2 - xp1) * (yp2 - yp1) * param.pixelSideLength^2
+                pix_area = (xp2 - xp1) * (yp2 - yp1) * param.pixelArea
 
                 d3 = (m * rho_inv) / ( pix_area * param.pixelSideLength)
 
@@ -193,9 +193,13 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
             end # conserve_quantities
 
 
-            # second loop to calculate value
-            bin_prefac = bin_q * m * rho_inv
+            # to reduce number of calculations. Only needed if quantity conservation
+            # is switched off. Otherwise it is incapsulated in d3
+            if !conserve_quantities
+                bin_prefac = bin_q * m * rho_inv
+            end
 
+            # second loop to calculate value
             @inbounds for i = pixmin[2]:pixmax[2]
 
                 @inbounds for j = pixmin[1]:pixmax[1]
@@ -213,7 +217,7 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
                     else
 
                         # update pixel value with weights
-                        image[j, i] += bin_prefac * d1_tab[N_count] * d2_tab[N_count] * d3 * kernel_tab[N_count]
+                        image[j, i] += bin_q * d1_tab[N_count] * d2_tab[N_count] * d3 * kernel_tab[N_count]
                         N_count += 1
                     end
 
