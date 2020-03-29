@@ -68,11 +68,11 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
             @info "Stripping units..."
         end
 
-        Pos       = @. Pos / unit(Pos[1,1])
-        HSML      = @. HSML / unit(HSML[1,1])
-        M         = @. M / unit(M[1,1])
-        ρ         = @. ρ / unit(ρ[1,1])
-        Bin_Quant = @. Bin_Quant / unit(Bin_Quant[1,1])
+        Pos       = ustrip(Pos)
+        HSML      = ustrip(HSML)
+        M         = ustrip(M)
+        ρ         = ustrip(ρ)
+        Bin_Quant = ustrip(Bin_Quant)
 
     end
 
