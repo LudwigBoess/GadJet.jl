@@ -70,11 +70,11 @@ struct GadgetPhysicalUnits
         v_unit *= 1.0u"cm/s"
 
         # convert comoving output to physical units
-        x_cgs   = l_unit * a_scale/hpar
+        x_cgs   = l_unit * a_scale / hpar
         v_cgs   = v_unit * sqrt(a_scale)
-        m_cgs   = m_unit * hpar
+        m_cgs   = m_unit / hpar
         t_unit  = l_unit / v_unit
-        t_s     = t_unit * sqrt(a_scale) / hpar   # in sec
+        t_s     = t_unit * sqrt(a_scale) / hpar  # in sec
         t_Myr   = t_s |> u"Myr"
 
         E_cgs = m_cgs * v_cgs^2 |> u"erg"
@@ -88,7 +88,7 @@ struct GadgetPhysicalUnits
         yhelium = ( 1.0 - xH ) / ( 4.0 * xH )
         mean_mol_weight = (1.0 + 4.0 * yhelium) / (1.0 + 3.0 * yhelium + 1.0)
 
-        T_cgs = (γ_th - 1.0) * v_unit^2 * 1.0u"mp" * mean_mol_weight / 1.0u"k" |> u"K"
+        T_cgs = (γ_th - 1.0) * v_cgs^2 * 1.0u"mp" * mean_mol_weight / 1.0u"k" |> u"K"
 
         P_th_cgs = a_scale^(-3) * E_cgs / l_unit^3 * hpar^2  |> u"Ba"
         P_CR_cgs = a_scale^(-4) * E_cgs / l_unit^3 * hpar^2  |> u"Ba"
