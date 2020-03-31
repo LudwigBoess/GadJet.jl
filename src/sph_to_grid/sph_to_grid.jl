@@ -26,7 +26,7 @@ function glimpse(filename::String, blockname::String,
                  dx::Float64=0.0, dy::Float64=0.0, dz::Float64=0.0;
 			     kernel_name::String="WC6",
                  resolution::Int64=500, run_dummy::Bool=true,
-				 conserve_quantities::Bool=true,
+				 conserve_quantities::Bool=false,
 			     verbose::Bool=true, plot::Bool=false)
 
     if verbose
