@@ -13,9 +13,8 @@ function get_detailled_crs_data(path::String, filebase::String, mpi_ranks::Int, 
         df2 = d[d.ID .== selected_id,:]
 
         if length(df2[!, 1]) > 0
-
             if (read_first == false)
-                df = df2
+                global df = df2
                 read_first = true
             else
                 append!(df, df2)
