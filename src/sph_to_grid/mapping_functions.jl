@@ -286,17 +286,35 @@ end
 
 
 function sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
-                          param::mappingParameters, kernel::SPHKernel,
-                          show_progress::Bool=true)
+                       param::mappingParameters, kernel::SPHKernel,
+                       conserve_quantities::Bool=false,
+                       show_progress::Bool=false)
+
+    # if this is not a float it has units, which need to be stripped
+    if !(typeof(Bin_Quant[1,1]) <: AbstractFloat)
+
+        if show_progress
+            @info "Stripping units..."
+        end
+
+        Pos       = ustrip(Pos)
+        HSML      = ustrip(HSML)
+        M         = ustrip(M)
+        ρ         = ustrip(ρ)
+        Bin_Quant = ustrip(Bin_Quant)
+
+    end
 
     N = length(M)  # number of particles
 
-    image = zeros( length(param.x), length(param.y), length(param.z))
+    image = zeros(length(param.x), length(param.y), length(param.z))
 
     minCoords = [param.x[1], param.y[1], param.z[1]]
     maxCoords = [param.x[end], param.y[end], param.z[end]]
 
     max_pixel = [length(param.x), length(param.y), length(param.z)]
+
+    particles_in_image = 0
 
     if show_progress
         P = Progress(N)
@@ -307,8 +325,8 @@ function sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
     @inbounds for p = 1:N
 
         # save stuff from array to single variables
-        pos      = Float64.(Pos[p,:])
-        hsml     = Float64(HSML[p])
+        pos  = Float64.(Pos[p,:])
+        hsml = Float64(HSML[p])
 
         in_image = false
 
@@ -323,13 +341,19 @@ function sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
             end
         end
 
+        # only calculate the properties if the particle is in the image
         if in_image
 
+            # store this here for performance increase
+            pixsize_inv = 1.0/param.pixelSideLength
+
+            particles_in_image += 1
+
             # save rest of variables
-            hsml_inv = Float64(1.0/hsml)
-            bin_q    = Float64(Bin_Quant[p])
-            m        = Float64(M[p])
-            rho_inv  = Float64(1.0/ρ[p])
+            hsml_inv    = Float64(1.0/hsml)
+            bin_q       = Float64(Bin_Quant[p])
+            m           = Float64(M[p])
+            rho_inv     = Float64(1.0/ρ[p])
 
             pixmin = Vector{Int64}(undef,3)
             pixmax = Vector{Int64}(undef,3)
@@ -337,29 +361,31 @@ function sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
             @inbounds for dim = 1:3
 
                 pixmin[dim] = find_min_pixel(pos[dim], hsml, minCoords[dim],
-                                             param.pixelSideLength)
+                                             pixsize_inv)
 
                 pixmax[dim] = find_max_pixel(pos[dim], hsml, minCoords[dim],
-                                             param.pixelSideLength, max_pixel[dim])
+                                             pixsize_inv, max_pixel[dim])
 
             end
 
+
             bin_prefac = bin_q * m * rho_inv
 
-            @inbounds for k = pixmin[3]:pixmax[3]
-                dz = param.z[k] - pos[3]
+            # second loop to calculate value
+            @inbounds for i = pixmin[3]:pixmax[3]
+                dz = param.z[i] - pos[3]
 
                 @inbounds for j = pixmin[2]:pixmax[2]
                     dy = param.y[j] - pos[2]
 
-                    @inbounds for i = pixmin[1]:pixmax[1]
-                        dx = param.x[i] - pos[1]
+                    @inbounds for k = pixmin[1]:pixmax[1]
+                        dx = param.x[k] - pos[1]
 
-                        # compute distance to pixel center in units of hsml
+                        # calculate simple distance to pixel center
                         distance_hsml = get_d_hsml_3D(dx, dy, dz, hsml_inv)
 
                         # update pixel value
-                        image[i, j, k] += bin_prefac * kernel_value_3D(kernel, distance_hsml, hsml_inv)
+                        image[k, j, i] += bin_prefac * kernel_value_3D(kernel, distance_hsml, hsml_inv)
 
                     end # end x-loop
                 end # end y-loop
@@ -374,6 +400,10 @@ function sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
             ProgressMeter.update!(P, idx)
             #unlock(P_lock)
         end
+    end
+
+    if show_progress
+        @info "Mapped $particles_in_image particles."
     end
 
    return image
