@@ -32,8 +32,8 @@ function readSingleCRShockDataFromOutputFile(file::String)
 end
 
 function getCRMomentumDistributionFromPartID(snap_file::String, ID::Int;
-                                             pmin::AbstractFloat=10.0, pmax::AbstractFloat=1.0e7,
-                                             Nbins::Int=0)
+                                             pmin::AbstractFloat=1.0, pmax::AbstractFloat=1.0e6,
+                                             Nbins::Int=0, new::Bool=true)
 
 
     ymin = 1.e-20
@@ -42,8 +42,7 @@ function getCRMomentumDistributionFromPartID(snap_file::String, ID::Int;
 
     if info == 1
         if Nbins == 0
-            println("Can't read spectrum! No info block present!\nSupply number of momentum bins to proceed!")
-            return 1
+            error("Can't read spectrum! No info block present!\nSupply number of momentum bins to proceed!")
         else
             info = Array{Info_Line,1}(undef,7)
             info[1] = Info_Line("ID", UInt32, Int32(1), [1, 0, 0, 0, 0, 0])
@@ -86,13 +85,18 @@ function getCRMomentumDistributionFromPartID(snap_file::String, ID::Int;
 
     Nbins = length(CRpS)
 
-    par = CRMomentumDistributionConfig(pmin, pmax, Nbins)
+    par = CRMomentumDistributionConfig(pmin, pmax, Nbins, new)
 
     cr = CRMomentumDistribution(par.Nbins)
 
     # compensate for io - needs to be converted to Float64!
-    CRpN = 1.e20 .* Float64.(CRpN)
-    CReN = 1.e20 .* Float64.(CReN)
+    if new
+        CRpN = 1.e-20 .* Float64.(CRpN)
+        CReN = 1.e-20 .* Float64.(CReN)
+    else
+        CRpN = 1.e20 .* Float64.(CRpN)
+        CReN = 1.e20 .* Float64.(CReN)
+    end
 
     # get zeroth bin
     cr.CRp_bound[1] = pmin

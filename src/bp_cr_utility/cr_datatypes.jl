@@ -35,26 +35,34 @@ end
 struct CRMomentumDistributionConfig
    """   Config object to obtain distribution spectrum in momentum space.
    """
-   pmin::Float64
-   pmax::Float64
-   Nbins::Int64
-   bin_width::Float64
-   mp::Float64
-   me::Float64
-   c::Float64
-   mc_e::Float64
-   mc_p::Float64
+    pmin::Float64
+    pmax::Float64
+    Nbins::Int64
+    bin_width::Float64
+    mp::Float64
+    me::Float64
+    c::Float64
+    mc_e::Float64
+    mc_p::Float64
 
-   function CRMomentumDistributionConfig(pmin::Float64=0.0, pmax::Float64=0.0, Nbins::Int64=24)
+    function CRMomentumDistributionConfig(pmin::Float64=0.0, pmax::Float64=0.0,
+                                         Nbins::Int64=24, new::Bool=true)
 
-       CNST_ME = 9.1095e-28
-       CNST_MP = 1.6726e-24
-       CNST_C = 2.9979e10
-       MCe = CNST_ME * CNST_C
-       MCp = CNST_MP * CNST_C
-       bin_width = log10(pmax/pmin)/Nbins
+        if new
+            CNST_ME = 1.0
+            CNST_MP = 1.0
+            CNST_C  = 1.0
+        else
+            CNST_ME = 9.1095e-28
+            CNST_MP = 1.6726e-24
+            CNST_C = 2.9979e10
+        end
 
-       new(pmin, pmax, Nbins, bin_width, CNST_MP, CNST_ME, CNST_C, MCe, MCp)
+        MCe = CNST_ME * CNST_C
+        MCp = CNST_MP * CNST_C
+        bin_width = log10(pmax/pmin)/Nbins
+
+        new(pmin, pmax, Nbins, bin_width, CNST_MP, CNST_ME, CNST_C, MCe, MCp)
 
    end
 end
