@@ -97,6 +97,7 @@ module GadJet
            write_smac2_par,
 
            # unit conversion
+           GadgetPhysical,
            GadgetPhysicalUnits,
            @u_str,
            strip_unit,
