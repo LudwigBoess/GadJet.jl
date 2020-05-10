@@ -75,7 +75,7 @@ struct mappingParameters
         if (pixelSideLength == -1.0) & (Npixels != 0)
             pixelSideLength = max_size/Npixels
         elseif (pixelSideLength != 0.0) & (Npixels == 0)
-            Npixels = floor(Int64, xy_size/pixelSideLength)
+            Npixels = floor(Int64, max_size/pixelSideLength)
         else
             error("Please specify pixelSideLenght or number of pixels!")
         end

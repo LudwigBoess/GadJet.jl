@@ -29,6 +29,7 @@ function glimpse(filename::String, blockname::String,
 				 conserve_quantities::Bool=false,
 			     verbose::Bool=true, plot::Bool=false)
 
+
     if verbose
 		@info "Reading data..."
     end
@@ -112,6 +113,8 @@ function glimpse(filename::String, blockname::String,
 		hsml = d["HSML"]
 		m 	 = d["MASS"]
 
+		# "deallocate" d
+		d = nothing
 	end
 
     if kernel_name == "WC6"
@@ -141,10 +144,9 @@ function glimpse(filename::String, blockname::String,
     max_size = maximum([dx, dy, dz])
 
     if run_dummy
-	    par = mappingParameters(x_lim=[center_pos[1] - dx/2.0, center_pos[1] + dx/2.0],
-	    				    y_lim=[center_pos[2] - dx/2.0, center_pos[2] + dx/2.0],
-	    				    z_lim=[center_pos[3] - dx/2.0, center_pos[3] + dx/2.0],
-	    				    pixelSideLength=(max_size/2.0))
+	    par = mappingParameters(center = center_pos,
+								x_size = dx, y_size = dy, z_size = dz,
+	    				    	Npixels = 2)
 
 	    if verbose
 	    	@info "Initial compilation run..."
@@ -155,10 +157,9 @@ function glimpse(filename::String, blockname::String,
 						  show_progress=false)
 	end
 
-    par = mappingParameters(x_lim=[center_pos[1] - dx/2.0, center_pos[1] + dx/2.0],
-    				    y_lim=[center_pos[2] - dx/2.0, center_pos[2] + dx/2.0],
-    				    z_lim=[center_pos[3] - dx/2.0, center_pos[3] + dx/2.0],
-    				    pixelSideLength=(max_size/resolution))
+    par = mappingParameters(center = center_pos,
+							x_size = dx, y_size = dy, z_size = dz,
+							Npixels = resolution)
 
     if verbose
 		@info "Mapping..."
