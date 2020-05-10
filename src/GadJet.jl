@@ -66,6 +66,7 @@ module GadJet
            read_subfind_header,
            read_subfind,
            find_most_massive_halo,
+           filter_subfind,
 
            # write snapshot functions
            write_header,
