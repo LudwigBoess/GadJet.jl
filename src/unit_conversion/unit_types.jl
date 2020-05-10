@@ -5,6 +5,7 @@ Unitful.register(@__MODULE__)
 # set up proton and electron number density unit
 @unit n_p "N_p/cm^3" ProtonNumberDensity 1u"mp/cm^3" true
 @unit n_e "N_e/cm^3" ElectronNumberDensity 1u"me/cm^3" true
+@unit Fr "Fr" Statcoulomb 1.0u"cm^(3/2)*g^(1/2)/s" true
 
 # needed by unitful
 const localunits = Unitful.basefactors
@@ -172,9 +173,9 @@ struct GadgetPhysical
     P_th_cgs::Float64      # thermal pressure in Ba
     P_CR_cgs::Float64      # cosmic ray pressure in Ba
 
-    function GadgetPhysicalUnits(l_unit::Float64=3.085678e21, m_unit::Float64=1.989e43, v_unit::Float64=1.e5;
-                                 a_scale::Float64=1.0, hpar::Float64=1.0,
-                                 γ_th::Float64=5.0/3.0, γ_CR::Float64=4.0/3.0, xH::Float64=0.76)
+    function GadgetPhysical(l_unit::Float64=3.085678e21, m_unit::Float64=1.989e43, v_unit::Float64=1.e5;
+                            a_scale::Float64=1.0, hpar::Float64=1.0,
+                            γ_th::Float64=5.0/3.0, γ_CR::Float64=4.0/3.0, xH::Float64=0.76)
 
 
         # convert comoving output to physical units
