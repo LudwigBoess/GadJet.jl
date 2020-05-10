@@ -26,6 +26,11 @@ end
 
     @test GU.t_s ≈ 3.085678e16u"s"
     @test GU.E_cgs ≈ 1.989e53u"erg"
+
+    GU = GadgetPhysical()
+
+    @test GU.t_s ≈ 3.085678e16
+    @test GU.E_cgs ≈ 1.989e53
 end
 
 @testset "Riemann Sod-Shock" begin
@@ -55,6 +60,17 @@ end
     @test sol.rho4    ≈ 0.5925766595991485
     @test sol.P34_tot ≈ 12.089335761741005
     @test sol.P4_cr   ≈ 3.583255961157783
+
+end
+
+@testset "Synchrotron Kernel" begin
+
+    @test synchrotron_kernel(  1.0) ≈ 0.6514228153553652
+    @test synchrotron_kernel(  3.5) ≈ 0.08268719536694746
+    @test synchrotron_kernel(  4.5) ≈ 0.03357441971502366
+    @test synchrotron_kernel( 10.0) ≈ 0.00019223826430086885
+    @test synchrotron_kernel( 50.0) ≈ 1.734785203976593e-21
+    @test synchrotron_kernel(100.0) ≈ 4.697593665922202e-43
 
 end
 

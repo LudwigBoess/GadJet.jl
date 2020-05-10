@@ -43,9 +43,10 @@ module GadJet
     # sedov solution
     include(joinpath(dirname(@__FILE__), "ideal_solutions", "sedov_solution.jl"))
 
-    include(joinpath(dirname(@__FILE__), "bp_cr_utility", "cr_datatypes.jl"))
-    include(joinpath(dirname(@__FILE__), "bp_cr_utility", "analysis_functions.jl"))
-    include(joinpath(dirname(@__FILE__), "bp_cr_utility", "get_detailled_data.jl"))
+    include(joinpath(dirname(@__FILE__), "spectral_cr_utility", "cr_datatypes.jl"))
+    include(joinpath(dirname(@__FILE__), "spectral_cr_utility", "analysis_functions.jl"))
+    include(joinpath(dirname(@__FILE__), "spectral_cr_utility", "get_detailled_data.jl"))
+    include(joinpath(dirname(@__FILE__), "spectral_cr_utility", "synchrotron_kernel.jl"))
 
 
     export Header, Info_Line,       # types
@@ -124,6 +125,8 @@ module GadJet
            get_detailled_shock_data,
            get_detailled_Dpp_data,
            get_detailled_radiative_data,
-           get_detailled_adiabatic_data
+           get_detailled_adiabatic_data,
+           synchrotron_kernel,
+           calculate_synch_intensity
 
 end
