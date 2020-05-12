@@ -160,14 +160,14 @@ function getCRMomentumDistributionFromPartID(snap_file::String, ID::Integer;
 end
 
 
-function energy_integral(bound_low::AbstractFloat, bound_up::AbstractFloat,
-                         norm::AbstractFloat, slope::AbstractFloat, ρ::AbstractFloat)
+function energy_integral(bound_low::Real, bound_up::Real,
+                         norm::Real, slope::Real, ρ::Real)
     # energy integral (eq.21 M01)
 
     cnst_c = 2.9979e10
     slope_soft = 1.e-6
 
-    en = 4.0 * π * cnst_c * norm * bound_low^4 /  ρ
+    en = 4π * cnst_c * norm * bound_low^4 /  ρ
     energy = en * ( (bound_up/bound_low)^(4.0 - slope ) - 1.0 ) / ( 4.0 - slope )
 
     if ( 4.0 - slope_soft ) < slope < ( 4.0 + slope_soft )
@@ -184,9 +184,9 @@ function energy_integral(bound_low::AbstractFloat, bound_up::AbstractFloat,
 end
 
 function calculateCREnergyInCGS(CR_N, CR_S, CR_Cut, ρ;
-                                pmin::AbstractFloat=10.0, pmax::AbstractFloat=1.e7,
-                                mc::AbstractFloat=0.0, SelectBin::Int=-1,
-                                units::GadgetPhysicalUnits=GadgetPhysicalUnits(),
+                                pmin::Real=10.0, pmax::Real=1.e7,
+                                mc::Real=0.0, SelectBin::Int=-1,
+                                units::GadgetPhysical=GadgetPhysical(),
                                 verbose=true)
     # calculates engergy per bin in cgs units.
 
@@ -226,13 +226,13 @@ function calculateCREnergyInCGS(CR_N, CR_S, CR_Cut, ρ;
 end
 
 
-function density_integral(bound_low::AbstractFloat, bound_up::AbstractFloat,
-                         norm::AbstractFloat, slope::AbstractFloat, ρ::AbstractFloat)
+function density_integral(bound_low::Real, bound_up::Real,
+                         norm::Real, slope::Real, ρ::Real)
     # density integral (eq. 9 M01)
 
     slope_soft = 1.e-6
 
-    nb = 4.0 * π * norm * bound_low^3 / ρ
+    nb = 4π * norm * bound_low^3 / ρ
     density = nb * ( (bound_up/bound_low)^(3.0 - slope ) - 1.0 ) / ( 3.0 - slope )
 
     if ( 3.0 - slope_soft ) < slope < ( 3.0 + slope_soft )
@@ -249,9 +249,9 @@ function density_integral(bound_low::AbstractFloat, bound_up::AbstractFloat,
 end
 
 
-function calculateCRNumber(CR_N, CR_S, CR_Cut, ρ;pmin::AbstractFloat=10.0, pmax::AbstractFloat=1.e7,
-                           mc::AbstractFloat=0.0, SelectBin::Int=-1,
-                           units::GadgetPhysicalUnits=GadgetPhysicalUnits(), verbose=true)
+function calculateCRNumber(CR_N, CR_S, CR_Cut, ρ;pmin::Real=10.0, pmax::Real=1.e7,
+                           mc::Real=0.0, SelectBin::Int=-1,
+                           units::GadgetPhysical=GadgetPhysical(), verbose=true)
     # calculates engergy per bin in cgs units.
 
     CR_Num = 0.0
