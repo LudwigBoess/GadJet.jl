@@ -31,9 +31,9 @@ function readSingleCRShockDataFromOutputFile(file::String)
         return cr
 end
 
-function getCRMomentumDistributionFromPartID(snap_file::String, ID::Int;
-                                             pmin::AbstractFloat=1.0, pmax::AbstractFloat=1.0e6,
-                                             Nbins::Int=0, new::Bool=true)
+function getCRMomentumDistributionFromPartID(snap_file::String, ID::Integer;
+                                             pmin::Real=1.0, pmax::Real=1.0e6,
+                                             Nbins::Integer=0, new::Bool=true)
 
 
     ymin = 1.e-20
@@ -91,11 +91,11 @@ function getCRMomentumDistributionFromPartID(snap_file::String, ID::Int;
 
     # compensate for io - needs to be converted to Float64!
     if new
-        CRpN = 1.e-20 .* Float64.(CRpN)
-        CReN = 1.e-20 .* Float64.(CReN)
-    else
         CRpN = 1.e20 .* Float64.(CRpN)
         CReN = 1.e20 .* Float64.(CReN)
+    else
+        CRpN = 1.e-20 .* Float64.(CRpN)
+        CReN = 1.e-20 .* Float64.(CReN)
     end
 
     # get zeroth bin
