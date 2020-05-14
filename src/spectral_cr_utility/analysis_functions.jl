@@ -35,7 +35,6 @@ function getCRMomentumDistributionFromPartID(snap_file::String, ID::Integer;
                                              pmin::Real=1.0, pmax::Real=1.0e6,
                                              Nbins::Integer=0, new::Bool=true)
 
-
     ymin = 1.e-20
     h = head_to_obj(snap_file)
     info = read_info(snap_file)
@@ -91,11 +90,11 @@ function getCRMomentumDistributionFromPartID(snap_file::String, ID::Integer;
 
     # compensate for io - needs to be converted to Float64!
     if new
-        CRpN = 1.e20 .* Float64.(CRpN)
-        CReN = 1.e20 .* Float64.(CReN)
-    else
         CRpN = 1.e-20 .* Float64.(CRpN)
         CReN = 1.e-20 .* Float64.(CReN)
+    else
+        CRpN = 1.e20 .* Float64.(CRpN)
+        CReN = 1.e20 .* Float64.(CReN)
     end
 
     # get zeroth bin
