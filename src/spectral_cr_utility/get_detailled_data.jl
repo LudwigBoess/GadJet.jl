@@ -1,6 +1,6 @@
 import CSV
 
-function get_detailled_crs_data(path::String, filebase::String, selected_id::Integer)
+function get_detailled_crs_data(path::String, filebase::String)
 
     # select all relevant files
     files = path .* filter!(s->occursin(r"^" * "$filebase", s), readdir(path))
@@ -11,24 +11,41 @@ function get_detailled_crs_data(path::String, filebase::String, selected_id::Int
     # delete all empty rows
     CSV.dropmissing!(df)
 
-    # filter dataframe by relevant id
-    df = df[df.ID .== selected_id,:]
-
-    return sort!(df[df[:, :ID] .== selected_id,:])
+    return sort!(df)
 end
 
-function get_detailled_shock_data(path::String, selected_id::Integer)
-    return get_detailled_crs_data(path, "CRs_details_shock_injection", mpi_ranks, selected_id)
+function get_detailled_shock_data(path::String, selected_id::Integer=-1)
+    if (selected_id == -1)
+        return get_detailled_crs_data(path, "CRs_details_shock_injection")
+    else
+        df = get_detailled_crs_data(path, "CRs_details_shock_injection")
+        return sort!(df[df[:, :ID] .== selected_id,:])
+    end
 end
 
-function get_detailled_Dpp_data(path::String, selected_id::Integer)
-    return get_detailled_crs_data(path, "CRs_details_Dpp", mpi_ranks, selected_id)
+function get_detailled_Dpp_data(path::String, selected_id::Integer=-1)
+    if (selected_id == -1)
+        return get_detailled_crs_data(path, "CRs_details_Dpp")
+    else
+        df = get_detailled_crs_data(path, "CRs_details_Dpp")
+        return sort!(df[df[:, :ID] .== selected_id,:])
+    end
 end
 
-function get_detailled_radiative_data(path::String, selected_id::Integer)
-    return get_detailled_crs_data(path, "CRs_details_radiative", mpi_ranks, selected_id)
+function get_detailled_radiative_data(path::String, selected_id::Integer=-1)
+    if (selected_id == -1)
+        return get_detailled_crs_data(path, "CRs_details_radiative")
+    else
+        df = get_detailled_crs_data(path, "CRs_details_radiative")
+        return sort!(df[df[:, :ID] .== selected_id,:])
+    end
 end
 
-function get_detailled_adiabatic_data(path::String, selected_id::Integer)
-    return get_detailled_crs_data(path, "CRs_details_adiabatic", mpi_ranks, selected_id)
+function get_detailled_adiabatic_data(path::String, selected_id::Integer=-1)
+    if (selected_id == -1)
+        return get_detailled_crs_data(path, "CRs_details_adiabatic")
+    else
+        df = get_detailled_crs_data(path, "CRs_details_adiabatic")
+        return sort!(df[df[:, :ID] .== selected_id,:])
+    end
 end
