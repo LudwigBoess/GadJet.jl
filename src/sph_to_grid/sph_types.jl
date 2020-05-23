@@ -8,6 +8,10 @@
 
 """
 
+using Distributed
+
+
+
 """
     mappingParameters(; x_lim::Vector{Float64},
                         y_lim::Vector{Float64},

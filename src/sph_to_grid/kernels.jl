@@ -8,6 +8,8 @@
 
 """
 
+using Distributed
+
 abstract type SPHKernel end
 
 """
