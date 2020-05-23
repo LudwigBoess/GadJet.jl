@@ -20,7 +20,7 @@
 using Statistics
 using ProgressMeter
 using Base.Threads
-#using SharedArrays
+
 
 @inline function find_position_periodic(pos::Vector{Float64}, k::Int64, bosize::Float64)
 
@@ -36,7 +36,7 @@ end
     sqrt( dx*dx + dy*dy ) * hsml_inv
 end
 
-@inline function get_d_hsml_3D(dx::Float64, dy::Float64, dz::Float64,
+@everywhere @inline function get_d_hsml_3D(dx::Float64, dy::Float64, dz::Float64,
                                hsml_inv::Float64)
     sqrt( dx*dx + dy*dy + dz*dz ) * hsml_inv
 end

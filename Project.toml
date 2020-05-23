@@ -1,12 +1,13 @@
 name = "GadJet"
 uuid = "1cc33cce-174c-413c-94d0-34de58e4bd4a"
 authors = ["LudwigBoess <lboess@usm.lmu.de>"]
-version = "0.4.9"
+version = "0.5.0"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
