@@ -1,9 +1,8 @@
 __precompile__()
 
-using Distributed
-
 module GadJet
 
+    using Distributed
 
     # general utility stuff
     include(joinpath(dirname(@__FILE__), "utility", "gravity_utility.jl"))
