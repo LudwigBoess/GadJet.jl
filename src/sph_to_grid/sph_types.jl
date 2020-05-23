@@ -8,7 +8,7 @@
 
 """
 
-using Distributed
+# using Distributed
 
 
 
@@ -21,8 +21,7 @@ using Distributed
 
 Parameter object for sph to grid mapping. Define either `pixelSideLength` of `Npixels`.
 """
-# dummy comment to avoid error with @everywhere 
-@everywhere struct mappingParameters
+struct mappingParameters
 
     x_lim::Vector{Float64}
     y_lim::Vector{Float64}

@@ -17,12 +17,17 @@
 
 """
 
-@everywhere using Statistics
-@everywhere using ProgressMeter
-@everywhere using Base.Threads
+using Distributed
+
+include("kernels.jl")
+include("sph_types.jl")
+
+using Statistics
+using ProgressMeter
+using Base.Threads
 
 
-@everywhere @inline function find_position_periodic(pos::Vector{Float64}, k::Int64, bosize::Float64)
+@inline function find_position_periodic(pos::Vector{Float64}, k::Int64, bosize::Float64)
 
     x = !(k & 0x1) ? pos[1] : ( pos[1] > 0.0 ? pos[1] - boxsize : pos[1] + boxsize)
     y = !(k & 0x2) ? pos[2] : ( pos[2] > 0.0 ? pos[2] - boxsize : pos[2] + boxsize)
@@ -32,16 +37,16 @@
 end
 
 
-@everywhere @inline function get_d_hsml_2D(dx::Float64, dy::Float64, hsml_inv::Float64)
+@inline function get_d_hsml_2D(dx::Float64, dy::Float64, hsml_inv::Float64)
     sqrt( dx*dx + dy*dy ) * hsml_inv
 end
 
-@everywhere @inline function get_d_hsml_3D(dx::Float64, dy::Float64, dz::Float64,
+@inline function get_d_hsml_3D(dx::Float64, dy::Float64, dz::Float64,
                                hsml_inv::Float64)
     sqrt( dx*dx + dy*dy + dz*dz ) * hsml_inv
 end
 
-@everywhere @inline function check_in_image(pos::Float64, hsml::Float64,
+@inline function check_in_image(pos::Float64, hsml::Float64,
                                 minCoords::Float64, maxCoords::Float64)
 
     if ( (minCoords - hsml) <= pos <= (maxCoords + hsml) )
@@ -51,7 +56,7 @@ end
     end
 end
 
-@everywhere @inline function find_min_pixel(pos::Float64, hsml::Float64,
+@inline function find_min_pixel(pos::Float64, hsml::Float64,
                                 minCoords::Float64,
                                 pixsize_inv::Float64)
 
@@ -60,7 +65,7 @@ end
     return max(pix, 1)
 end
 
-@everywhere @inline function find_max_pixel(pos::Float64, hsml::Float64,
+@inline function find_max_pixel(pos::Float64, hsml::Float64,
                                 minCoords::AbstractFloat, pixsize_inv::Float64,
                                 max_pixel::Integer)
 
@@ -70,7 +75,7 @@ end
 end
 
 
-@everywhere function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
+function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
                        param::mappingParameters, kernel,
                        conserve_quantities::Bool=false,
                        show_progress::Bool=false)
@@ -296,7 +301,7 @@ end
 end
 
 
-@everywhere function sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
+function sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
                        param::mappingParameters, kernel::SPHKernel,
                        conserve_quantities::Bool=false,
                        show_progress::Bool=false)
