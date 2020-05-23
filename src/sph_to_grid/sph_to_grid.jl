@@ -2,7 +2,7 @@ import GR
 using Base.Threads
 using Distributed
 
-@everywhere include("mapping_functions.jl")
+include("mapping_functions.jl")
 
 """
     glimpse(filename::String, blockname::String[, ... ])
