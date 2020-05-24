@@ -17,10 +17,10 @@
 
 """
 
-using Distributed
+#using Distributed
 
-include("kernels.jl")
-include("sph_types.jl")
+include(joinpath(dirname(@__FILE__), "kernels.jl"))
+include(joinpath(dirname(@__FILE__), "sph_types.jl"))
 
 using Statistics
 using ProgressMeter

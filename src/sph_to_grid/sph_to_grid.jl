@@ -2,7 +2,7 @@ import GR
 using Base.Threads
 using Distributed
 
-include("mapping_functions.jl")
+@everywhere include(joinpath(dirname(@__FILE__), "mapping_functions.jl"))
 
 """
     glimpse(filename::String, blockname::String[, ... ])
@@ -217,37 +217,37 @@ function sphMapping(Pos, HSML, M, ρ, Bin_Quant;
 
 	if (dimensions == 2)
 
-		# if !parrallel
+		if !parallel
 		 	return sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
 		 	                     param=param, kernel=kernel,
 								 conserve_quantities=conserve_quantities,
 		 	                     show_progress=show_progress)
-		# else
-		#
-		# 	N = length(M)
-		# 	futures = Array{Future}(undef, nworkers())
-		#
-		# 	batches = Array{typeof(1:2)}(undef, nworkers())
-		#
-		# 	size = Int(floor(N/nworkers()))
-		#
-		# 	@inbounds for i = 1:nworkers()-1
-		# 	    batches[i] = 1+(i-1)*size:i*size
-		# 	end
-		# 	batches[nworkers()] = 1+(nworkers()-1)*size:N
-		#
-		# 	# start remote processes
-		# 	for (i, id) in enumerate(workers())
-		# 		futures[i] = @spawnat id sphMapping_2D(Pos[batch[i],:], HSML[batch[i]],
-		# 											   M[batch[i]], ρ[batch[i]],
-		# 											   Bin_Quant[batch[i]];
-		# 								   			   param=param, kernel=kernel,
-		# 								   			   conserve_quantities=conserve_quantities,
-		# 								   			   show_progress=false)
-		# 	end
-		#
-		# 	return sum(fetch.(futures))
-		# end
+		else
+
+			N = length(M)
+			futures = Array{Future}(undef, nworkers())
+
+			batch = Array{typeof(1:2)}(undef, nworkers())
+
+			size = Int(floor(N/nworkers()))
+
+			@inbounds for i = 1:nworkers()-1
+			    batch[i] = 1+(i-1)*size:i*size
+			end
+			batch[nworkers()] = 1+(nworkers()-1)*size:N
+
+			# start remote processes
+			for (i, id) in enumerate(workers())
+				futures[i] = @spawnat id sphMapping_2D(Pos[batch[i],:], HSML[batch[i]],
+													   M[batch[i]], ρ[batch[i]],
+													   Bin_Quant[batch[i]];
+										   			   param=param, kernel=kernel,
+										   			   conserve_quantities=conserve_quantities,
+										   			   show_progress=false)
+			end
+
+			return sum(fetch.(futures))
+		end
 
 	elseif (dimensions == 3 )
 		return sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;

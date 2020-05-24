@@ -24,9 +24,9 @@ module GadJet
     include(joinpath(dirname(@__FILE__), "unit_conversion", "unit_types.jl"))
 
     # sph to grid mapping internal module
-    include(joinpath(dirname(@__FILE__), "sph_to_grid", "kernels.jl"))
-    include(joinpath(dirname(@__FILE__), "sph_to_grid", "sph_types.jl"))
-    include(joinpath(dirname(@__FILE__), "sph_to_grid", "mapping_functions.jl"))
+    # include(joinpath(dirname(@__FILE__), "sph_to_grid", "kernels.jl"))
+    # include(joinpath(dirname(@__FILE__), "sph_to_grid", "sph_types.jl"))
+    # include(joinpath(dirname(@__FILE__), "sph_to_grid", "mapping_functions.jl"))
     include(joinpath(dirname(@__FILE__), "sph_to_grid", "sph_to_grid.jl"))
 
     # sph to grid mapping with Smac
@@ -128,6 +128,12 @@ module GadJet
            get_detailled_radiative_data,
            get_detailled_adiabatic_data,
            synchrotron_kernel,
-           calculate_synch_intensity
+           calculate_synch_intensity,
+           revise_test
+
+
+    function revise_test()
+        println("bla")
+    end
 
 end

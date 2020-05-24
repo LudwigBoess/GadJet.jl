@@ -8,7 +8,7 @@
 
 """
 
-using Distributed
+#using Distributed
 
 abstract type SPHKernel end
 
@@ -16,7 +16,7 @@ abstract type SPHKernel end
             Cubic
 """
 # struct
-struct Cubic <: SPHKernel
+@everywhere struct Cubic <: SPHKernel
     n_neighbours::Int64
     norm_2D::Float64
     norm_3D::Float64
