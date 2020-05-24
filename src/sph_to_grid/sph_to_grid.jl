@@ -161,6 +161,7 @@ function glimpse(filename::String, blockname::String,
 	    d = sphMapping(x, hsml, m, rho, bin_quantity,
 						  param=par, kernel=kernel,
 						  conserve_quantities=conserve_quantities,
+						  parallel = parallel,
 						  show_progress=false)
 	end
 
@@ -174,7 +175,8 @@ function glimpse(filename::String, blockname::String,
     d = sphMapping(x, hsml, m, rho, bin_quantity,
 					  param=par, kernel=kernel,
 					  conserve_quantities=conserve_quantities,
-					  show_progress=true)
+					  parallel = parallel,
+					  show_progress=verbose)
 
     if plot
 		GR.imshow(d)
