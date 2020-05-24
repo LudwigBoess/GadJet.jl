@@ -115,7 +115,7 @@ module GadJet
 
            get_sedov_solution,   # wrapper function to get sedov data and ideal solution from snapshot
 
-           # datatypes and helper functions for BP_REAL_CRs
+           # datatypes and helper functions for LMB_SPECTRAL_CRs
            CRShockData,          # datatype to analyse single shocked particle
            readSingleCRShockDataFromOutputFile, # as the name says
            CRMomentumDistributionConfig, # config parameters for momentum distribution function
