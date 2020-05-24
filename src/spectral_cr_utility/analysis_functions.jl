@@ -1,4 +1,7 @@
 
+global const cnst_c = 2.9979e10
+global const slope_soft = 1.e-6
+
 function readSingleCRShockDataFromOutputFile(file::String)
 
         # read file into memory
@@ -159,12 +162,11 @@ function getCRMomentumDistributionFromPartID(snap_file::String, ID::Integer;
 end
 
 
-function energy_integral(bound_low::Real, bound_up::Real,
+@inline function energy_integral(bound_low::Real, bound_up::Real,
                          norm::Real, slope::Real, ρ::Real)
     # energy integral (eq.21 M01)
 
-    cnst_c = 2.9979e10
-    slope_soft = 1.e-6
+
 
     en = 4π * cnst_c * norm * bound_low^4 /  ρ
     energy = en * ( (bound_up/bound_low)^(4.0 - slope ) - 1.0 ) / ( 4.0 - slope )
@@ -225,11 +227,9 @@ function calculateCREnergyInCGS(CR_N, CR_S, CR_Cut, ρ;
 end
 
 
-function density_integral(bound_low::Real, bound_up::Real,
+@inline function density_integral(bound_low::Real, bound_up::Real,
                          norm::Real, slope::Real, ρ::Real)
     # density integral (eq. 9 M01)
-
-    slope_soft = 1.e-6
 
     nb = 4π * norm * bound_low^3 / ρ
     density = nb * ( (bound_up/bound_low)^(3.0 - slope ) - 1.0 ) / ( 3.0 - slope )
