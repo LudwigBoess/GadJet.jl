@@ -1,5 +1,10 @@
 import GR
 using Base.Threads
+using Distributed
+
+# include(joinpath(dirname(@__FILE__), "kernels.jl"))
+# include(joinpath(dirname(@__FILE__), "sph_types.jl"))
+# include(joinpath(dirname(@__FILE__), "mapping_functions.jl"))
 
 """
     glimpse(filename::String, blockname::String[, ... ])
@@ -17,6 +22,7 @@ to a grid.
 - `kernel_name::String="WC6"`: Which kernel should be used. ["Cubic", "Quintic", "WC4", "WC6"]
 - `resolution::Int64=500`: Number of pixels in the longest dimension.
 - `run_dummy::Bool=true`: If a compilation run with 4 pixels should be performed.
+- `parallel::Bool=true`: Run on multiple processors.
 - `conserve_quantities::Bool=true`: If quantities should be conserved while mapping, like in Smac (Dolag et. al. 2005).
 - `verbose::Bool=true`: Output information to console and show progress bar.
 - `plot::Bool=false`: Plot the resulting map with GR.imshow()
@@ -26,8 +32,10 @@ function glimpse(filename::String, blockname::String,
                  dx::Float64=0.0, dy::Float64=0.0, dz::Float64=0.0;
 			     kernel_name::String="WC6",
                  resolution::Int64=500, run_dummy::Bool=true,
-				 conserve_quantities::Bool=true,
+				 parallel::Bool=true,
+				 conserve_quantities::Bool=false,
 			     verbose::Bool=true, plot::Bool=false)
+
 
     if verbose
 		@info "Reading data..."
@@ -112,6 +120,8 @@ function glimpse(filename::String, blockname::String,
 		hsml = d["HSML"]
 		m 	 = d["MASS"]
 
+		# "deallocate" d
+		d = nothing
 	end
 
     if kernel_name == "WC6"
@@ -141,32 +151,32 @@ function glimpse(filename::String, blockname::String,
     max_size = maximum([dx, dy, dz])
 
     if run_dummy
-	    par = mappingParameters(x_lim=[center_pos[1] - dx/2.0, center_pos[1] + dx/2.0],
-	    				    y_lim=[center_pos[2] - dx/2.0, center_pos[2] + dx/2.0],
-	    				    z_lim=[center_pos[3] - dx/2.0, center_pos[3] + dx/2.0],
-	    				    pixelSideLength=(max_size/2.0))
+	    par = mappingParameters(center = center_pos,
+								x_size = dx, y_size = dy, z_size = dz,
+	    				    	Npixels = 2)
 
 	    if verbose
 	    	@info "Initial compilation run..."
 	    end
-	    d = sphMapping_2D(x, hsml, m, rho, bin_quantity,
+	    d = sphMapping(x, hsml, m, rho, bin_quantity,
 						  param=par, kernel=kernel,
 						  conserve_quantities=conserve_quantities,
+						  parallel = parallel,
 						  show_progress=false)
 	end
 
-    par = mappingParameters(x_lim=[center_pos[1] - dx/2.0, center_pos[1] + dx/2.0],
-    				    y_lim=[center_pos[2] - dx/2.0, center_pos[2] + dx/2.0],
-    				    z_lim=[center_pos[3] - dx/2.0, center_pos[3] + dx/2.0],
-    				    pixelSideLength=(max_size/resolution))
+    par = mappingParameters(center = center_pos,
+							x_size = dx, y_size = dy, z_size = dz,
+							Npixels = resolution)
 
     if verbose
 		@info "Mapping..."
     end
-    d = sphMapping_2D(x, hsml, m, rho, bin_quantity,
+    d = sphMapping(x, hsml, m, rho, bin_quantity,
 					  param=par, kernel=kernel,
 					  conserve_quantities=conserve_quantities,
-					  show_progress=true)
+					  parallel = parallel,
+					  show_progress=verbose)
 
     if plot
 		GR.imshow(d)
@@ -177,13 +187,13 @@ function glimpse(filename::String, blockname::String,
 end
 
 
-
 """
     sphMapping(Pos, HSML, M, ρ, Bin_Quant;
 	           param::mappingParameters,
 			   kernel::SPHKernel[,
 			   show_progress::Bool=true,
 			   conserve_quantities::Bool=true,
+			   parallel::Bool=true,
 			   dimensions::Int=2])
 
 Maps the data in `Bin_Quant` to a grid. Parameters of mapping are supplied in
@@ -197,6 +207,7 @@ Maps the data in `Bin_Quant` to a grid. Parameters of mapping are supplied in
 - `Bin_Quant`: Array with particle quantity to be mapped.
 - `kernel::SPHKernel`: Kernel object to be used.
 - `show_progress::Bool=true`: Show progress bar.
+- `parallel::Bool=true`: Run on multiple processors.
 - `conserve_quantities::Bool=true`: If quantities should be conserved while mapping, like in Smac (Dolag et. al. 2005).
 - `dimensions::Int=2`: Number of mapping dimensions (2 = to grid, 3 = to cube).
 """
@@ -205,13 +216,45 @@ function sphMapping(Pos, HSML, M, ρ, Bin_Quant;
 					kernel::SPHKernel,
                     show_progress::Bool=true,
 					conserve_quantities::Bool=true,
+					parallel::Bool=true,
 					dimensions::Int=2)
 
 	if (dimensions == 2)
-		return sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
-		                     param=param, kernel=kernel,
-							 conserve_quantities=conserve_quantities,
-		                     show_progress=show_progress)
+
+		if !parallel
+		 	return sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
+		 	                     param=param, kernel=kernel,
+								 conserve_quantities=conserve_quantities,
+		 	                     show_progress=show_progress)
+		else
+			@info "Running on $(nworkers()) cores."
+
+			N = length(M)
+			futures = Array{Future}(undef, nworkers())
+
+			# 'Domain decomposition':
+			# calculate array slices for each worker
+			batch = Array{typeof(1:2)}(undef, nworkers())
+			size = Int(floor(N/nworkers()))
+			@inbounds for i = 1:nworkers()-1
+			    batch[i] = 1+(i-1)*size:i*size
+			end
+			batch[nworkers()] = 1+(nworkers()-1)*size:N
+
+			# start remote processes
+			for (i, id) in enumerate(workers())
+				futures[i] = @spawnat id sphMapping_2D(Pos[batch[i],:], HSML[batch[i]],
+													   M[batch[i]], ρ[batch[i]],
+													   Bin_Quant[batch[i]];
+										   			   param=param, kernel=kernel,
+										   			   conserve_quantities=conserve_quantities,
+										   			   show_progress=false)
+			end
+
+			# get and reduce results
+			return sum(fetch.(futures))
+		end
+
 	elseif (dimensions == 3 )
 		return sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
 		                     param=param, kernel=kernel,

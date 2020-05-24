@@ -131,7 +131,7 @@ This will return an Array of `Info_Line` objects. The optional keyword `verbose`
 Large Simulations
 -----------------
 
-For large simulations Gadget distributes snapshots over multiple files. These files contain particles associated with specific peano-hilber keys.
+For large simulations Gadget distributes snapshots over multiple files. These files contain particles associated with specific Peano-Hilbert keys.
 
 To get all particles within a subvolume of the simulation you can use the functions `read_particles_in_box(...)` or `read_particles_in_volume(...)`.
 

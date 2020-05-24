@@ -1,7 +1,11 @@
 """
             Functions for sph mapping to grid.
 
-            sphCenterMapping works like SPLASH.
+            sphMapping_2D without property conservation works like SPLASH by
+            Daniel Price: http://users.monash.edu.au/~dprice/splash/.
+
+            The property conservation is based on Smac by Dolag et. al. 2005:
+            https://ui.adsabs.harvard.edu/abs/2005MNRAS.363...29D/abstract
 
             sphAdaptiveMapping is adapted from SPHMapper by Dr. Alexander Arth
             (private conversations). A similar implementation is used in Pygad.
@@ -13,10 +17,21 @@
 
 """
 
+using Distributed
 using Statistics
 using ProgressMeter
 using Base.Threads
-#using SharedArrays
+
+
+@inline function find_position_periodic(pos::Vector{Float64}, k::Int64, bosize::Float64)
+
+    x = !(k & 0x1) ? pos[1] : ( pos[1] > 0.0 ? pos[1] - boxsize : pos[1] + boxsize)
+    y = !(k & 0x2) ? pos[2] : ( pos[2] > 0.0 ? pos[2] - boxsize : pos[2] + boxsize)
+    z = !(k & 0x4) ? pos[3] : ( pos[3] > 0.0 ? pos[3] - boxsize : pos[3] + boxsize)
+
+    return [x, y, z]
+end
+
 
 @inline function get_d_hsml_2D(dx::Float64, dy::Float64, hsml_inv::Float64)
     sqrt( dx*dx + dy*dy ) * hsml_inv
@@ -39,25 +54,25 @@ end
 
 @inline function find_min_pixel(pos::Float64, hsml::Float64,
                                 minCoords::Float64,
-                                pixelSideLength::Float64)
+                                pixsize_inv::Float64)
 
-    pix = floor(Int64, (pos - hsml - minCoords) / pixelSideLength )
+    pix = floor(Int64, (pos - hsml - minCoords) * pixsize_inv )
 
     return max(pix, 1)
 end
 
 @inline function find_max_pixel(pos::Float64, hsml::Float64,
-                                minCoords::AbstractFloat, pixelSideLength::Float64,
+                                minCoords::AbstractFloat, pixsize_inv::Float64,
                                 max_pixel::Integer)
 
-    pix = floor(Int64, (pos + hsml - minCoords) / pixelSideLength )
+    pix = floor(Int64, (pos + hsml - minCoords) * pixsize_inv )
 
     return min(pix, max_pixel)
 end
 
 
 function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
-                       param::mappingParameters, kernel::SPHKernel,
+                       param::mappingParameters, kernel,
                        conserve_quantities::Bool=false,
                        show_progress::Bool=false)
 
@@ -68,11 +83,11 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
             @info "Stripping units..."
         end
 
-        Pos       = @. Pos / unit(Pos[1,1])
-        HSML      = @. HSML / unit(HSML[1,1])
-        M         = @. M / unit(M[1,1])
-        ρ         = @. ρ / unit(ρ[1,1])
-        Bin_Quant = @. Bin_Quant / unit(Bin_Quant[1,1])
+        Pos       = ustrip(Pos)
+        HSML      = ustrip(HSML)
+        M         = ustrip(M)
+        ρ         = ustrip(ρ)
+        Bin_Quant = ustrip(Bin_Quant)
 
     end
 
@@ -115,11 +130,14 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
         # only calculate the properties if the particle is in the image
         if in_image
 
+            # store this here for performance increase
+            pixsize_inv = 1.0/param.pixelSideLength
+
             particles_in_image += 1
 
             # save rest of variables
-            hsml_inv    = Float64(1.0/hsml)
             bin_q       = Float64(Bin_Quant[p])
+            hsml_inv    = Float64(1.0/hsml)
             m           = Float64(M[p])
             rho_inv     = Float64(1.0/ρ[p])
 
@@ -129,24 +147,22 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
             @inbounds for dim = 1:2
 
                 pixmin[dim] = find_min_pixel(pos[dim], hsml, minCoords[dim],
-                                             param.pixelSideLength)
+                                             pixsize_inv)
 
                 pixmax[dim] = find_max_pixel(pos[dim], hsml, minCoords[dim],
-                                             param.pixelSideLength, max_pixel[dim])
+                                             pixsize_inv, max_pixel[dim])
 
             end
 
             if conserve_quantities
 
                 # calculate pixel area
-                pixsize_inv = 1.0/param.pixelSideLength
-
                 xp1 = (pos[1] - hsml) * pixsize_inv
                 xp2 = (pos[1] + hsml) * pixsize_inv
                 yp1 = (pos[2] - hsml) * pixsize_inv
                 yp2 = (pos[2] + hsml) * pixsize_inv
 
-                pix_area = (xp2 - xp1) * (yp2 - yp1) * param.pixelSideLength^2
+                pix_area = (xp2 - xp1) * (yp2 - yp1) * param.pixelArea
 
                 d3 = (m * rho_inv) / ( pix_area * param.pixelSideLength)
 
@@ -158,6 +174,12 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
                 d1_tab     = zeros(N_distr)
                 d2_tab     = zeros(N_distr)
                 dx_tab     = zeros(N_distr)
+
+                # weights table
+                wit1    = 0.
+                witd    = 0.
+                wit2    = 0
+                wit2tot = 0
 
                 # pixel count for attributing weights to pixels
                 N_count = 1
@@ -174,18 +196,42 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
                         dimin = max(xp1, j - 1.0)
                         dimax = min(xp2, j)
 
-                        d1_tab[N_count] = dimax - dimin
-                        d2_tab[N_count] = djmax - djmin
+                        d1 = dimax - dimin
+                        d2 = djmax - djmin
 
                         # compute distance to pixel center in units of hsml
                         dx_tab[N_count] = get_d_hsml_2D(dx, dy, hsml_inv)
                         # update pixel value
-                        kernel_tab[N_count] = kernel_value_2D(kernel, dx_tab[N_count], hsml_inv)
+                        wi = kernel_value_2D(kernel, dx_tab[N_count], hsml_inv)
+
+                        wit1 += wi * d1 * d2
+                        witd += d1 * d2
+
+                        if wi > 0
+                            wit2 += 1
+                        end
+
+                        # store data in arrays
+                        d1_tab[N_count]     = d1
+                        d2_tab[N_count]     = d2
+                        kernel_tab[N_count] = wi
+
+                        wit2tot += 1
 
                         N_count += 1
 
                     end # end x-loop
                 end # end y-loop
+
+                #fak = 1.0/( (pixmax[2] - pixmin[2]) * (pixmax[1] - pixmin[1]) )
+                if wit1 > 0
+                    fak = wit2/wit1
+                else
+                    wit2 = wit2tot
+                    fak = wit2tot / witd
+                end
+
+                fak_hsml = pix_area/(wit2 * param.pixelArea)
 
                 # reset the counter
                 N_count = 1
@@ -193,9 +239,13 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
             end # conserve_quantities
 
 
-            # second loop to calculate value
-            bin_prefac = bin_q * m * rho_inv
+            # to reduce number of calculations. Only needed if quantity conservation
+            # is switched off. Otherwise it is incapsulated in d3
+            if !conserve_quantities
+                bin_prefac = bin_q * m * rho_inv
+            end
 
+            # second loop to calculate value
             @inbounds for i = pixmin[2]:pixmax[2]
 
                 @inbounds for j = pixmin[1]:pixmax[1]
@@ -212,8 +262,14 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
                         image[j, i] += bin_prefac * kernel_value_2D(kernel, distance_hsml, hsml_inv)
                     else
 
+                        if wit1 <= 1
+                            wi = fak * fak_hsml
+                        else
+                            wi = kernel_tab[N_count] * fak * fak_hsml
+                        end
                         # update pixel value with weights
-                        image[j, i] += bin_prefac * d1_tab[N_count] * d2_tab[N_count] * d3 * kernel_tab[N_count]
+                        image[j, i] += bin_q * wi *
+                                       d1_tab[N_count] * d2_tab[N_count] * d3
                         N_count += 1
                     end
 
@@ -221,6 +277,7 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
             end # end y-loop
 
         end # end check if in image
+
 
         # update for ProgressMeter
         if show_progress
@@ -232,25 +289,44 @@ function sphMapping_2D(Pos, HSML, M, ρ, Bin_Quant;
     end
 
     if show_progress
-        @info "Mapped $particles_in_image particles."
+        @info "Mapped $particles_in_image / $N particles."
     end
 
-   return image
+    # tilt image
+   return copy(transpose(image))
 end
 
 
 function sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
-                          param::mappingParameters, kernel::SPHKernel,
-                          show_progress::Bool=true)
+                       param::mappingParameters, kernel::SPHKernel,
+                       conserve_quantities::Bool=false,
+                       show_progress::Bool=false)
+
+    # if this is not a float it has units, which need to be stripped
+    if !(typeof(Bin_Quant[1,1]) <: AbstractFloat)
+
+        if show_progress
+            @info "Stripping units..."
+        end
+
+        Pos       = ustrip(Pos)
+        HSML      = ustrip(HSML)
+        M         = ustrip(M)
+        ρ         = ustrip(ρ)
+        Bin_Quant = ustrip(Bin_Quant)
+
+    end
 
     N = length(M)  # number of particles
 
-    image = zeros( length(param.x), length(param.y), length(param.z))
+    image = zeros(length(param.x), length(param.y), length(param.z))
 
     minCoords = [param.x[1], param.y[1], param.z[1]]
     maxCoords = [param.x[end], param.y[end], param.z[end]]
 
     max_pixel = [length(param.x), length(param.y), length(param.z)]
+
+    particles_in_image = 0
 
     if show_progress
         P = Progress(N)
@@ -260,9 +336,11 @@ function sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
 
     @inbounds for p = 1:N
 
+
         # save stuff from array to single variables
-        pos      = Float64.(Pos[p,:])
-        hsml     = Float64(HSML[p])
+        bin_q = Float64(Bin_Quant[p])
+        pos   = Float64.(Pos[p,:])
+        hsml  = Float64(HSML[p])
 
         in_image = false
 
@@ -277,13 +355,18 @@ function sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
             end
         end
 
+        # only calculate the properties if the particle is in the image
         if in_image
 
+            # store this here for performance increase
+            pixsize_inv = 1.0/param.pixelSideLength
+
+            particles_in_image += 1
+
             # save rest of variables
-            hsml_inv = Float64(1.0/hsml)
-            bin_q    = Float64(Bin_Quant[p])
-            m        = Float64(M[p])
-            rho_inv  = Float64(1.0/ρ[p])
+            hsml_inv    = Float64(1.0/hsml)
+            m           = Float64(M[p])
+            rho_inv     = Float64(1.0/ρ[p])
 
             pixmin = Vector{Int64}(undef,3)
             pixmax = Vector{Int64}(undef,3)
@@ -291,29 +374,31 @@ function sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
             @inbounds for dim = 1:3
 
                 pixmin[dim] = find_min_pixel(pos[dim], hsml, minCoords[dim],
-                                             param.pixelSideLength)
+                                             pixsize_inv)
 
                 pixmax[dim] = find_max_pixel(pos[dim], hsml, minCoords[dim],
-                                             param.pixelSideLength, max_pixel[dim])
+                                             pixsize_inv, max_pixel[dim])
 
             end
 
+
             bin_prefac = bin_q * m * rho_inv
 
-            @inbounds for k = pixmin[3]:pixmax[3]
-                dz = param.z[k] - pos[3]
+            # second loop to calculate value
+            @inbounds for i = pixmin[3]:pixmax[3]
+                dz = param.z[i] - pos[3]
 
                 @inbounds for j = pixmin[2]:pixmax[2]
                     dy = param.y[j] - pos[2]
 
-                    @inbounds for i = pixmin[1]:pixmax[1]
-                        dx = param.x[i] - pos[1]
+                    @inbounds for k = pixmin[1]:pixmax[1]
+                        dx = param.x[k] - pos[1]
 
-                        # compute distance to pixel center in units of hsml
+                        # calculate simple distance to pixel center
                         distance_hsml = get_d_hsml_3D(dx, dy, dz, hsml_inv)
 
                         # update pixel value
-                        image[i, j, k] += bin_prefac * kernel_value_3D(kernel, distance_hsml, hsml_inv)
+                        image[k, j, i] += bin_prefac * kernel_value_3D(kernel, distance_hsml, hsml_inv)
 
                     end # end x-loop
                 end # end y-loop
@@ -330,7 +415,11 @@ function sphMapping_3D(Pos, HSML, M, ρ, Bin_Quant;
         end
     end
 
-   return image
+    if show_progress
+        @info "Mapped $particles_in_image / $N particles."
+    end
+
+   return copy(transpose(image))
 end
 
 

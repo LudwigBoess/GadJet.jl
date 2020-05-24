@@ -9,10 +9,11 @@ You can map SPH data to a grid using the function:
 ```julia
 function sphMapping(Pos, HSML, M, ρ, Bin_Quant;
                     param::mappingParameters,
-					          kernel::SPHKernel,
-		                show_progress::Bool=true,
-				            conserve_quantities::Bool=true,
-				            dimensions::Int=2)
+                    kernel::SPHKernel,
+                    show_progress::Bool=true,
+                    conserve_quantities::Bool=false,
+					parallel::Bool=true,
+                    dimensions::Int=2)
 
 	[...]
 
@@ -49,11 +50,15 @@ Please note: This function doesn't do any unit conversion for you, so you need t
 
 Image now contains a 2D array with the binned data and can easily be plotted with `imshow()` from any plotting package of your choosing.
 
+Per default the keyword `parallel = true` causes the run to use multiple processors. For this you need to start julia with `julia -p <N>` where `<N>` is the number of processors in your machine.
+
 ### Conserved quantities
 
 With the latest release you can map the particles to a grid while also conserving the particle volume, following the algorithm described in Dolag et. al. 2006 (https://ui.adsabs.harvard.edu/link_gateway/2005MNRAS.363...29D/doi:10.1111/j.1365-2966.2005.09452.x).
 
-This is switched on by default, but is slightly more expensive than simple mapping. If you don't want to use it simply call the mapping function with `conserve_quantities=false`.
+This is switched off by default, but is slightly more expensive than simple mapping. If you don't want to use it simply call the mapping function with `conserve_quantities=false`.
+
+CAUTION: This is currently broken and under development!
 
 
 External Programs
@@ -111,7 +116,7 @@ struct Smac1ImageInfo
     ylim::Array{Float64,1}      # y limits of image
     zlim::Array{Float64,1}      # z limits of image
     units::String               # unitstring of image
-    
+
 end
 
 ```
@@ -124,5 +129,4 @@ The image itself can be read with
 image = read_smac1_binary_image(filename)
 ```
 
-This will return an `Array{Float32,2}` with the pixel values. You can pass this to any imshow function of your favorite plotting package. 
-
+This will return an `Array{Float32,2}` with the pixel values. You can pass this to any imshow function of your favorite plotting package.

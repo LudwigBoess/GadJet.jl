@@ -147,6 +147,15 @@ end
     return sub_input
 end
 
+
+"""
+    find_most_massive_halo(filebase::String [, nfiles::Int=1])
+
+Reads the selected file and its subfiles and returns position, virial radius
+and a SubfindID object that contains the subfile which contains the most massive
+halo and the position in the block.
+
+"""
 function find_most_massive_halo(filebase::String, nfiles::Int=1)
 
     Mmax     = 0.0
@@ -186,6 +195,21 @@ struct SubfindFilter
 end
 
 
+"""
+    filter_subfind(filebase::String, blockname::String, filter_function [, nfiles::Integer=1])
+
+Selects entries in subfind block that fulfill the 'filter_funcion' requirements and
+returns a 'SubfindFilter' object.
+
+# Examples
+```jldoctest
+julia> find_mass_gt_1e15(M) = ( (M > 1.e15) ? true : false )
+find_mass_gt_1e15 (generic function with 1 method)
+julia> filtered_subfind = filter_subfind(filebase, "MVIR", find_mass_gt_1e15)
+[...]
+```
+
+"""
 function filter_subfind(filebase::String, blockname::String, filter_function, nfiles::Integer=1)
 
     # allocate empty array for SubfindFilter objects
@@ -220,6 +244,9 @@ function read_particles_in_halo(sub_file::String, snap_filebase::String,
                                 halo_id::Int64, blocks::Vector{String};
                                 parttype::Integer=0, Rhalf_factor::AbstractFloat=5.0)
 
+
+    error("Not finished!")
+
     # read subfind data
 
     pos      = read_subfind(sub_input, "SPOS")[halo_id,:]
@@ -227,12 +254,9 @@ function read_particles_in_halo(sub_file::String, snap_filebase::String,
 
     sub_info = read_info(sub_file)
     pos = get_block_positions(sub_file)
-    ids = Array{sub_info[getfield.(sub_info, :block_name) .== "PID"][1]}
     ids = read_block_with_offset(sub_info, "KEY",
                                       info = sub_info[getfield.(sub_info, :block_name) .== "PID"][1],
                                       parttype = 0)
-
-
 end
 
 """

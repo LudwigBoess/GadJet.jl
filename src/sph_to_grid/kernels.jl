@@ -8,11 +8,14 @@
 
 """
 
+#using Distributed
+
 abstract type SPHKernel end
 
 """
             Cubic
 """
+# struct
 struct Cubic <: SPHKernel
     n_neighbours::Int64
     norm_2D::Float64
@@ -22,6 +25,7 @@ struct Cubic <: SPHKernel
     end
 end
 
+# kernel values
 @inline function kernel_value_2D(kernel::Cubic, u::Float64, h_inv::Float64)
 
     n = kernel.norm_3D * h_inv^2
@@ -54,6 +58,7 @@ end
 """
             Quintic
 """
+# struct
 struct Quintic <: SPHKernel
     n_neighbours::Int64
     norm_2D::Float64
@@ -63,6 +68,7 @@ struct Quintic <: SPHKernel
     end
 end
 
+# kernel values
 @inline function kernel_value_2D(kernel::Quintic, u::Float64, h_inv::Float64)
 
     n = kernel.norm_2D * h_inv^2
@@ -111,6 +117,7 @@ end
 """
             Wendland C4
 """
+# struct
 struct WendlandC4 <: SPHKernel
     n_neighbours::Int64
     norm_2D::Float64
@@ -120,6 +127,7 @@ struct WendlandC4 <: SPHKernel
     end
 end
 
+# kernel values
 @inline function kernel_value_2D(kernel::WendlandC4, u::Float64, h_inv::Float64)
 
     if u < 1.0
@@ -152,6 +160,7 @@ end
 """
             Wendland C6
 """
+# struct
 struct WendlandC6 <: SPHKernel
     n_neighbours::Int64
     norm_2D::Float64
@@ -161,7 +170,7 @@ struct WendlandC6 <: SPHKernel
     end
 end
 
-
+# kernel values
 @inline function kernel_value_2D(kernel::WendlandC6, u::Float64, h_inv::Float64)
 
     if u < 1.0

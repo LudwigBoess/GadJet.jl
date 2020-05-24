@@ -43,9 +43,10 @@ module GadJet
     # sedov solution
     include(joinpath(dirname(@__FILE__), "ideal_solutions", "sedov_solution.jl"))
 
-    include(joinpath(dirname(@__FILE__), "bp_cr_utility", "cr_datatypes.jl"))
-    include(joinpath(dirname(@__FILE__), "bp_cr_utility", "analysis_functions.jl"))
-    include(joinpath(dirname(@__FILE__), "bp_cr_utility", "get_detailled_data.jl"))
+    include(joinpath(dirname(@__FILE__), "spectral_cr_utility", "cr_datatypes.jl"))
+    include(joinpath(dirname(@__FILE__), "spectral_cr_utility", "analysis_functions.jl"))
+    include(joinpath(dirname(@__FILE__), "spectral_cr_utility", "get_detailled_data.jl"))
+    include(joinpath(dirname(@__FILE__), "spectral_cr_utility", "synchrotron_kernel.jl"))
 
 
     export Header, Info_Line,       # types
@@ -65,6 +66,7 @@ module GadJet
            read_subfind_header,
            read_subfind,
            find_most_massive_halo,
+           filter_subfind,
 
            # write snapshot functions
            write_header,
@@ -97,6 +99,7 @@ module GadJet
            write_smac2_par,
 
            # unit conversion
+           GadgetPhysical,
            GadgetPhysicalUnits,
            @u_str,
            strip_unit,
@@ -112,7 +115,7 @@ module GadJet
 
            get_sedov_solution,   # wrapper function to get sedov data and ideal solution from snapshot
 
-           # datatypes and helper functions for BP_REAL_CRs
+           # datatypes and helper functions for LMB_SPECTRAL_CRs
            CRShockData,          # datatype to analyse single shocked particle
            readSingleCRShockDataFromOutputFile, # as the name says
            CRMomentumDistributionConfig, # config parameters for momentum distribution function
@@ -123,6 +126,14 @@ module GadJet
            get_detailled_shock_data,
            get_detailled_Dpp_data,
            get_detailled_radiative_data,
-           get_detailled_adiabatic_data
+           get_detailled_adiabatic_data,
+           synchrotron_kernel,
+           calculate_synch_intensity,
+           revise_test
+
+
+    function revise_test()
+        println("bla")
+    end
 
 end
