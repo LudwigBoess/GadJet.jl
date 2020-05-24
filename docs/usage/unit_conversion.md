@@ -82,3 +82,16 @@ you can use the funtion `ustrip`:
 ```julia
 pos = ustrip(pos)
 ```
+
+
+## Primitive unit type
+
+If you want to have the same functionality, but without using `Unitful.jl` you can construct a similar object:
+
+```julia
+GU = GadgetPhysical(l_unit::Float64=3.085678e21, m_unit::Float64=1.989e43, v_unit::Float64=1.e5;
+                    a_scale::Float64=1.0, hpar::Float64=1.0,
+                    γ_th::Float64=5.0/3.0, γ_CR::Float64=4.0/3.0, xH::Float64=0.76)
+```
+
+This uses the same conversions, but leaves out the actual unit strings.
