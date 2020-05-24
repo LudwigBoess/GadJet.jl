@@ -17,11 +17,7 @@
 
 """
 
-#using Distributed
-
-include(joinpath(dirname(@__FILE__), "kernels.jl"))
-include(joinpath(dirname(@__FILE__), "sph_types.jl"))
-
+using Distributed
 using Statistics
 using ProgressMeter
 using Base.Threads

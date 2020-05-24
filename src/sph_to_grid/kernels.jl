@@ -16,7 +16,7 @@ abstract type SPHKernel end
             Cubic
 """
 # struct
-@everywhere struct Cubic <: SPHKernel
+struct Cubic <: SPHKernel
     n_neighbours::Int64
     norm_2D::Float64
     norm_3D::Float64

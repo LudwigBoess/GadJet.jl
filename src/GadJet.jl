@@ -24,9 +24,9 @@ module GadJet
     include(joinpath(dirname(@__FILE__), "unit_conversion", "unit_types.jl"))
 
     # sph to grid mapping internal module
-    # include(joinpath(dirname(@__FILE__), "sph_to_grid", "kernels.jl"))
-    # include(joinpath(dirname(@__FILE__), "sph_to_grid", "sph_types.jl"))
-    # include(joinpath(dirname(@__FILE__), "sph_to_grid", "mapping_functions.jl"))
+    include(joinpath(dirname(@__FILE__), "sph_to_grid", "kernels.jl"))
+    include(joinpath(dirname(@__FILE__), "sph_to_grid", "sph_types.jl"))
+    include(joinpath(dirname(@__FILE__), "sph_to_grid", "mapping_functions.jl"))
     include(joinpath(dirname(@__FILE__), "sph_to_grid", "sph_to_grid.jl"))
 
     # sph to grid mapping with Smac

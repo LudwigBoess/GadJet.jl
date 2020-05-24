@@ -2,7 +2,9 @@ import GR
 using Base.Threads
 using Distributed
 
-@everywhere include(joinpath(dirname(@__FILE__), "mapping_functions.jl"))
+# include(joinpath(dirname(@__FILE__), "kernels.jl"))
+# include(joinpath(dirname(@__FILE__), "sph_types.jl"))
+# include(joinpath(dirname(@__FILE__), "mapping_functions.jl"))
 
 """
     glimpse(filename::String, blockname::String[, ... ])
@@ -223,14 +225,15 @@ function sphMapping(Pos, HSML, M, ρ, Bin_Quant;
 								 conserve_quantities=conserve_quantities,
 		 	                     show_progress=show_progress)
 		else
+			@info "Running on $(nworkers()) cores."
 
 			N = length(M)
 			futures = Array{Future}(undef, nworkers())
 
+			# 'Domain decomposition':
+			# calculate array slices for each worker
 			batch = Array{typeof(1:2)}(undef, nworkers())
-
 			size = Int(floor(N/nworkers()))
-
 			@inbounds for i = 1:nworkers()-1
 			    batch[i] = 1+(i-1)*size:i*size
 			end
@@ -246,6 +249,7 @@ function sphMapping(Pos, HSML, M, ρ, Bin_Quant;
 										   			   show_progress=false)
 			end
 
+			# get and reduce results
 			return sum(fetch.(futures))
 		end
 
