@@ -23,7 +23,7 @@ function write_format2_block_header(f::IOStream, blockname::String)
     # a different approach and use Int8s.
     write_name =  Int8.(collect(blockname))
 
-    println("Writing block: " * blockname)
+    @info "Writing block: $blockname"
 
     # write blocksite (8 bytes)
     write(f, Int32(8))
@@ -82,7 +82,7 @@ function write_block(f::IOStream, data,
     # they have to be transposed before the can be written.
     write(f, copy(transpose(data)))
 
-    println("Writing block done.")
+    @info "Writing block done."
 
     write(f, blocksize)
 end
