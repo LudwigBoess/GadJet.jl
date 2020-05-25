@@ -128,12 +128,6 @@ module GadJet
            get_detailled_radiative_data,
            get_detailled_adiabatic_data,
            synchrotron_kernel,
-           calculate_synch_intensity,
-           revise_test
-
-
-    function revise_test()
-        println("bla")
-    end
+           calculate_synch_intensity
 
 end
