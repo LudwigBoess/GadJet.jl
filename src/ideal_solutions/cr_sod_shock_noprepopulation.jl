@@ -61,9 +61,7 @@ mutable struct SodCRParameters_noCRs
         elseif dsa_model == 4
             acc_function = P16_acc
         else
-            error("Invalid DSA model selection!\n
-                   Pick one of the available models, or solve a pure Hydro shock with:\n
-                   SodCRParameters_noCRs")
+            error("Invalid DSA model selection!")
 
         end
 
