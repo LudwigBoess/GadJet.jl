@@ -122,7 +122,7 @@ function write_smac1_par(path, use_keys, out_dir, snap_base, snap_file, image_pr
                          halo_id, snap_start, snap_end, file_format, kernel,
                          xy_size, z_size, out_effect, out_subeffect,
                          cr_bins, cr_pmin, cr_pmax, cr_subsamples,
-                         projection, x0, y0, z0)
+                         projection, x0, y0, z0, Npixels=1024)
 
     open(path * "smac1.par", "w") do f
         write(f,
@@ -167,7 +167,7 @@ function write_smac1_par(path, use_keys, out_dir, snap_base, snap_file, image_pr
         IMG_Z_SIZE  = $z_size
         FILL_CARROT = 0.
 
-        IMG_SIZE = 1024
+        IMG_SIZE = $Npixels
 
         SMOOTH_UNITS = 0
         SMOOTH_FWHM  = 5.
