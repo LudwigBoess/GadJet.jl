@@ -48,6 +48,11 @@ module GadJet
     include(joinpath(dirname(@__FILE__), "spectral_cr_utility", "get_detailled_data.jl"))
     include(joinpath(dirname(@__FILE__), "spectral_cr_utility", "synchrotron_kernel.jl"))
 
+    # initial condition setup 
+    include(joinpath(dirname(@__FILE__), "ic_setup", "shocktube.jl"))
+    include(joinpath(dirname(@__FILE__), "ic_setup", "sedov.jl"))
+    include(joinpath(dirname(@__FILE__), "ic_setup", "halos.jl"))
+
 
     export Header, Info_Line,       # types
            head_to_dict,
@@ -128,6 +133,20 @@ module GadJet
            get_detailled_radiative_data,
            get_detailled_adiabatic_data,
            synchrotron_kernel,
-           calculate_synch_intensity
+           calculate_synch_intensity,
+
+           # IC setup 
+           ShockParameters,
+           P_to_U,
+           get_bfield_from_angle,
+           setup_shocktube,
+           make_sedov,
+
+           # DM halos 
+           Hernquist,
+           density_profile,
+           culm_mass_profile,
+           sample_particle_pos_vel,
+           calculate_particle_masses
 
 end
