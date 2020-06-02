@@ -1,5 +1,4 @@
 using ProgressMeter
-using Interpolations
 using Roots
 
 struct Hernquist
@@ -15,7 +14,7 @@ struct Hernquist
         mass_analytic(r, ρ0, r0) = 2π * ρ0 * r0^3 * (r/r0)^2 / ( 1.0 + r/r0 )^2
         root_helper(ρ0) = mass_analytic(rmax, ρ0, r0) - Mtot
 
-        ρ0_ideal = find_zero(root_helper, 1.0)
+        rho0 = find_zero(root_helper, 1.0)
 
         new(Npart, Mtot, r0, rmax, rho0)
 
@@ -107,7 +106,7 @@ function sample_particle_pos_vel(halo::Hernquist)
     idx = 0
 
     Np = 1
-    while Np < halo.Npart
+    while Np <= halo.Npart
 
         xr, xv, e = sample_xr_xv(halo)
 
@@ -115,7 +114,7 @@ function sample_particle_pos_vel(halo::Hernquist)
             error("e = $e")
         end
 
-        pn = get_pn(xr, xv, e, halo)
+        pn = get_pn(halo, xr, xv, e)
 
         if (rand() <= pn)
             x[Np], y[Np], z[Np], vx[Np], vy[Np], vz[Np] = sample_particle(xr, xv)
