@@ -1,10 +1,9 @@
-using HDF5
 using Printf
-using LinearAlgebra
+using LinearAlgebra: norm
 using FFTW
 using ProgressMeter
 
-mutable struct ShockParameters
+struct ShockParameters
 
     glass_file::String
     output_file::String
@@ -16,7 +15,7 @@ mutable struct ShockParameters
     turb::Bool
 
     function ShockParameters(glass_file::String="", output_file::String="",
-                             n_blocks::Int64=70, 
+                             n_blocks::Int64=70,
                              v::Array{Float64,2}=zeros(2,3),
                              B::Array{Float64,2}=zeros(2,3),
                              U::Vector{Float64}=zeros(2),
@@ -24,7 +23,7 @@ mutable struct ShockParameters
 
         new(glass_file, output_file, n_blocks,
             v, B, U, B0, turb)
-        
+
     end
 end
 
@@ -146,8 +145,11 @@ function setup_turb_B(pos, npart, B0)
     k = 1.0./r
 
     # set grid
-    NFFT  = 117
-    NFFT2 = 58
+    # NFFT  = 117
+    # NFFT2 = 58
+
+    NFFT  = 233
+    NFFT2 = 116
 
     minn = maximum(abs.(k)) / minimum(abs.(k))
     mink = minimum(abs.(k))
@@ -163,7 +165,7 @@ function setup_turb_B(pos, npart, B0)
     nnn = (NFFT2+1)^3 * 4
 
     val = randn(nnn)
-    ϕ2  = randn(nnn) .* 2.0π
+    ϕ2  = rand(nnn) .* 2.0π
 
     kx = zeros(Int64, NFFT)
     ky = zeros(Int64, NFFT)
@@ -209,7 +211,7 @@ function setup_turb_B(pos, npart, B0)
                 else
                     ϕ1 = atan( - (kx[ix+1]*cos(ϕ2[ii])
                                +  ky[iy+1]*sin(ϕ2[ii]))
-                                / kz[iz+1] )
+                               /  kz[iz+1] )
                 end
 
                 Bhx[ix+1, iy+1, iz+1]    = Bh*cos(ϕ1)*cos(ϕ2[ii])
@@ -229,7 +231,7 @@ function setup_turb_B(pos, npart, B0)
                 else
                     ϕ1 = atan( - (kx[ix+1]*cos(ϕ2[ii])
                                +  ky[iy+1]*sin(ϕ2[ii]))
-                                / kz[iz+1] )
+                               /  kz[iz+1] )
                 end
 
                 Bhx[nix+1, iy+1, iz+1]   = Bh*cos(ϕ1)*cos(ϕ2[ii])
@@ -248,7 +250,7 @@ function setup_turb_B(pos, npart, B0)
                 else
                     ϕ1 = atan( - (kx[ix+1]*cos(ϕ2[ii])
                                +  ky[iy+1]*sin(ϕ2[ii]))
-                                / kz[iz+1] )
+                               /  kz[iz+1] )
                 end
 
                 Bhx[ix+1, niy+1, iz+1]   = Bh*cos(ϕ1)*cos(ϕ2[ii])
@@ -267,7 +269,7 @@ function setup_turb_B(pos, npart, B0)
                 else
                     ϕ1 = atan( - (kx[ix+1]*cos(ϕ2[ii])
                                +  ky[iy+1]*sin(ϕ2[ii]))
-                                / kz[iz+1] )
+                               /  kz[iz+1] )
                 end
 
                 Bhx[nix+1, niy+1, iz+1]  = Bh*cos(ϕ1)*cos(ϕ2[ii])
@@ -286,7 +288,7 @@ function setup_turb_B(pos, npart, B0)
 
     end
 
-    Bhx
+    #Bhx
     Bhx_dummy = Bhx
     Bhx = Bhx_dummy
 
@@ -296,17 +298,17 @@ function setup_turb_B(pos, npart, B0)
         zp[iz] = 1.0/(kz[iz] * mink)
     end
 
-    Bhx = fft(Bhx, 1)
+    Bhx = fft(Bhx)
     Bfehler1 = sum(abs.(imag.(Bhx)))
     Bhx = real.(Bhx)
     Bfehler2 = sum(abs.(Bhx))
 
-    Bhy = fft(Bhy, 1)
+    Bhy = fft(Bhy)
     #Bfehler1 = sum(abs.(imag.(Bhx)))
     Bhy = real.(Bhy)
     #Bfehler2 = sum(abs.(Bhx))
 
-    Bhz = fft(Bhz, 1)
+    Bhz = fft(Bhz)
     #Bfehler1 = sum(abs.(imag.(Bhx)))
     Bhz = real.(Bhz)
     #Bfehler2 = sum(abs.(Bhx))
@@ -340,9 +342,9 @@ function setup_turb_B(pos, npart, B0)
         x1vec[2], x2vec[2]= xp[iymin], xp[iymax]
         x1vec[3], x2vec[3]= xp[izmin], xp[izmax]
 
-        dx=(x[i]-xp[ixmin])/(xp[ixmax]-xp[ixmin])
-        dy=(y[i]-yp[ixmin])/(yp[ixmax]-yp[ixmin])
-        dz=(z[i]-zp[ixmin])/(zp[ixmax]-zp[ixmin])
+        dx = ( x[i] - xp[ixmin] ) / ( xp[ixmax] - xp[ixmin] )
+        dy = ( y[i] - yp[ixmin] ) / ( yp[ixmax] - yp[ixmin] )
+        dz = ( z[i] - zp[ixmin] ) / ( zp[ixmax] - zp[ixmin] )
 
         fx1y1z1 = Bhx[ixmin, iymin, izmin]
         fx1y1z2 = Bhx[ixmin, iymin, izmax]
@@ -353,14 +355,14 @@ function setup_turb_B(pos, npart, B0)
         fx2y2z1 = Bhx[ixmax, iymax, izmin]
         fx2y2z2 = Bhx[ixmax, iymax, izmax]
 
-        bx[i]=(1.0-dx)*(1.0-dy)*(1.0-dz)*fx1y1z1+
-              (1.0-dx)*(1.0-dy)*      dz*fx1y1z2+
-              (1.0-dx)*      dy*(1.0-dz)*fx1y2z1+
-              (1.0-dx)*      dy*      dz*fx1y2z2+
-                    dx*(1.0-dy)*(1.0-dz)*fx2y1z1+
-                    dx*(1.0-dy)*      dz*fx2y1z2+
-                    dx*      dy*(1.0-dz)*fx2y2z1+
-                    dx*      dy*      dz*fx2y2z2
+        bx[i]= ( 1.0 - dx ) * ( 1.0 - dy )* ( 1.0 - dz ) * fx1y1z1 +
+               ( 1.0 - dx ) * ( 1.0 - dy )*         dz   * fx1y1z2 +
+               ( 1.0 - dx ) *         dy  * ( 1.0 - dz ) * fx1y2z1 +
+               ( 1.0 - dx ) *         dy  *         dz   * fx1y2z2 +
+                       dx   * ( 1.0 - dy) * ( 1.0 - dz)  * fx2y1z1 +
+                       dx   * ( 1.0 - dy) *         dz   * fx2y1z2 +
+                       dx   *         dy  * ( 1.0 - dz)  * fx2y2z1 +
+                       dx   *         dy  *         dz   * fx2y2z2
 
         # y component
         fx1y1z1 = Bhy[ixmin, iymin, izmin]
@@ -372,14 +374,14 @@ function setup_turb_B(pos, npart, B0)
         fx2y2z1 = Bhy[ixmax, iymax, izmin]
         fx2y2z2 = Bhy[ixmax, iymax, izmax]
 
-        by[i]=(1.0-dx)*(1.0-dy)*(1.0-dz)*fx1y1z1+
-              (1.0-dx)*(1.0-dy)*      dz*fx1y1z2+
-              (1.0-dx)*      dy*(1.0-dz)*fx1y2z1+
-              (1.0-dx)*      dy*      dz*fx1y2z2+
-                    dx*(1.0-dy)*(1.0-dz)*fx2y1z1+
-                    dx*(1.0-dy)*      dz*fx2y1z2+
-                    dx*      dy*(1.0-dz)*fx2y2z1+
-                    dx*      dy*      dz*fx2y2z2
+        by[i]= ( 1.0 - dx ) * ( 1.0 - dy )* ( 1.0 - dz ) * fx1y1z1 +
+               ( 1.0 - dx ) * ( 1.0 - dy )*         dz   * fx1y1z2 +
+               ( 1.0 - dx ) *         dy  * ( 1.0 - dz ) * fx1y2z1 +
+               ( 1.0 - dx ) *         dy  *         dz   * fx1y2z2 +
+                       dx   * ( 1.0 - dy) * ( 1.0 - dz)  * fx2y1z1 +
+                       dx   * ( 1.0 - dy) *         dz   * fx2y1z2 +
+                       dx   *         dy  * ( 1.0 - dz)  * fx2y2z1 +
+                       dx   *         dy  *         dz   * fx2y2z2
 
         # z component
         fx1y1z1 = Bhz[ixmin, iymin, izmin]
@@ -391,20 +393,19 @@ function setup_turb_B(pos, npart, B0)
         fx2y2z1 = Bhz[ixmax, iymax, izmin]
         fx2y2z2 = Bhz[ixmax, iymax, izmax]
 
-        bz[i]=(1.0-dx)*(1.0-dy)*(1.0-dz)*fx1y1z1+
-              (1.0-dx)*(1.0-dy)*      dz*fx1y1z2+
-              (1.0-dx)*      dy*(1.0-dz)*fx1y2z1+
-              (1.0-dx)*      dy*      dz*fx1y2z2+
-                    dx*(1.0-dy)*(1.0-dz)*fx2y1z1+
-                    dx*(1.0-dy)*      dz*fx2y1z2+
-                    dx*      dy*(1.0-dz)*fx2y2z1+
-                    dx*      dy*      dz*fx2y2z2
+        bz[i]= ( 1.0 - dx ) * ( 1.0 - dy )* ( 1.0 - dz ) * fx1y1z1 +
+               ( 1.0 - dx ) * ( 1.0 - dy )*         dz   * fx1y1z2 +
+               ( 1.0 - dx ) *         dy  * ( 1.0 - dz ) * fx1y2z1 +
+               ( 1.0 - dx ) *         dy  *         dz   * fx1y2z2 +
+                       dx   * ( 1.0 - dy) * ( 1.0 - dz)  * fx2y1z1 +
+                       dx   * ( 1.0 - dy) *         dz   * fx2y1z2 +
+                       dx   *         dy  * ( 1.0 - dz)  * fx2y2z1 +
+                       dx   *         dy  *         dz   * fx2y2z2
     end
 
-    B = hcat(bx, by, bz)
-
-    return B
+    return [bx by bz]
 end
+
 
 function setup_shocktube(par::ShockParameters)
 
@@ -442,7 +443,7 @@ function setup_shocktube(par::ShockParameters)
 
     # set up random magnetic field
     if par.turb
-        
+
         n_large = length(x_large[:,1])
         B_large = setup_turb_B(x_large, n_large, par.B0)
 
@@ -462,9 +463,9 @@ function setup_shocktube(par::ShockParameters)
     else
          B = [ Float32.(zeros(N)) Float32.(zeros(N)) Float32.(zeros(N))]
 
-        # Bx = 0.75  0.75
+        # Bx =  0.75  0.75
         # By = +1    -1
-        # Bz = 0     0
+        # Bz =  0     0
 
         B[left_part,1]  .= Float32(par.B[1,1])
         B[right_part,1] .= Float32(par.B[2,1])
