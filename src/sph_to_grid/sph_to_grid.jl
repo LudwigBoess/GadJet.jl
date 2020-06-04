@@ -1,4 +1,3 @@
-import GR
 using Base.Threads
 using Distributed
 
@@ -34,7 +33,7 @@ function glimpse(filename::String, blockname::String,
                  resolution::Int64=500, run_dummy::Bool=true,
 				 parallel::Bool=true,
 				 conserve_quantities::Bool=false,
-			     verbose::Bool=true, plot::Bool=false)
+			     verbose::Bool=true)
 
 
     if verbose
@@ -177,10 +176,6 @@ function glimpse(filename::String, blockname::String,
 					  conserve_quantities=conserve_quantities,
 					  parallel = parallel,
 					  show_progress=verbose)
-
-    if plot
-		GR.imshow(d)
-    end
 
     return d
 
