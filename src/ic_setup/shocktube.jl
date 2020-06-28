@@ -15,10 +15,10 @@ struct ShockParameters
     turb::Bool
 
     function ShockParameters(glass_file::String="", output_file::String="",
+                             U::Vector{Float64}=zeros(2),
                              n_blocks::Int64=70,
                              v::Array{Float64,2}=zeros(2,3),
                              B::Array{Float64,2}=zeros(2,3),
-                             U::Vector{Float64}=zeros(2),
                              B0::Float64=0.0, turb::Bool=false)
 
         new(glass_file, output_file, n_blocks,
