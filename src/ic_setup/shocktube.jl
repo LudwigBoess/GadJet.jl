@@ -16,10 +16,10 @@ struct ShockParameters
 
     function ShockParameters(glass_file::String="", output_file::String="",
                              U::Vector{Float64}=zeros(2),
-                             n_blocks::Int64=70,
-                             v::Array{Float64,2}=zeros(2,3),
                              B::Array{Float64,2}=zeros(2,3),
-                             B0::Float64=0.0, turb::Bool=false)
+                             v::Array{Float64,2}=zeros(2,3),
+                             B0::Float64=0.0, turb::Bool=false,
+                             n_blocks::Int64=70)
 
         new(glass_file, output_file, n_blocks,
             v, B, U, B0, turb)
