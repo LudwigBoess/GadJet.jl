@@ -6,7 +6,7 @@
 
 
 # !!!!! DEPRECATED !!!!!
-This package is no longer under development. Instread all functionality is broken into smaller packages to make them more user friendly and lightweight.
+This package is no longer under development. Instead all functionality is broken into smaller packages to make them more user friendly and lightweight.
 
 The individual packages are:
 
