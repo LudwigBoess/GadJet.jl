@@ -3,6 +3,24 @@
 [![Build Status](https://travis-ci.org/LudwigBoess/GadJet.jl.svg?branch=master)](https://travis-ci.org/LudwigBoess/GadJet.jl)
 [![codecov.io](https://codecov.io/gh/LudwigBoess/GadJet.jl/coverage.svg?branch=master)](https://codecov.io/gh/LudwigBoess/GadJet.jl?branch=master)
 
+
+
+# !!!!! DEPRECATED !!!!!
+This package is no longer under development. Instread all functionality is broken into smaller packages to make them more user friendly and lightweight.
+
+The individual packages are:
+
+| Usecase                  | Package                        |
+|: ----------------------- |:-----------------------------  |
+| Reading/Writing snapshots | [GadgetIO.jl](https://github.com/LudwigBoess/GadgetIO.jl)      |
+| Unit conversion           | [GadgetUnits.jl](https://github.com/LudwigBoess/GadgetUnits.jl)  |
+| Mapping SPH data to a grid | [SPHtoGrid.jl](https://github.com/LudwigBoess/SPHtoGrid.jl) |
+| LMB_SPECTRAL_CRS utility | [SpectralCRsUtility.jl](https://github.com/LudwigBoess/SpectralCRsUtility.jl) |
+| Analytic solutions for test problems | [AnalyticMHDTestSolutions.jl](https://github.com/LudwigBoess/AnalyticMHDTestSolutions.jl) |
+| Make ICs for shocktubes | [BuildShocktubes.jl](https://github.com/LudwigBoess/BuildShocktubes.jl) |
+| Construct a Hernquist DM halo | [HernquistHalo.jl](https://github.com/LudwigBoess/HernquistHalo.jl) |
+
+
 # GadJet.jl
 
 This package provides some basic functionality to work with the SPH code "Gadget" by Volker Springel (doi:10.1111/j.1365-2966.2005.09655.x).
@@ -12,9 +30,6 @@ Additionally I provide some exact riemann solvers for shocktube tests, unit conv
 This list will extend over time.
 
 Documentation can be found [here](https://gadjetjl.readthedocs.io/en/latest/index.html).
-
-Please note that I am not affiliated with Volker Springel. This project was started because I needed to work with Gadget for university and couldn't find any Julia implementations to work with the data.
-I'm now working with Klaus Dolag and others on a development version of Gadget3, so you will find some functionality in this project that won't be useful for you if you don't have access to that version. Sorry!
 
 Any help and contribution is greatly appreciated, as this is still a work in progress. Please see the section on contributing.
 
