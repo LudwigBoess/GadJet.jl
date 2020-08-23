@@ -10,15 +10,15 @@ This package is no longer under development. Instread all functionality is broke
 
 The individual packages are:
 
- Usecase                              | Package                                                                                   
-: ----------------------------------- |:----------------------------------------------------------------------------------------- 
- Reading/Writing snapshots            | [GadgetIO.jl](https://github.com/LudwigBoess/GadgetIO.jl)                                 
- Unit conversion                      | [GadgetUnits.jl](https://github.com/LudwigBoess/GadgetUnits.jl)                           
- Mapping SPH data to a grid           | [SPHtoGrid.jl](https://github.com/LudwigBoess/SPHtoGrid.jl)                               
- LMB_SPECTRAL_CRS utility             | [SpectralCRsUtility.jl](https://github.com/LudwigBoess/SpectralCRsUtility.jl)             
- Analytic solutions for test problems | [AnalyticMHDTestSolutions.jl](https://github.com/LudwigBoess/AnalyticMHDTestSolutions.jl) 
- Make ICs for shocktubes              | [BuildShocktubes.jl](https://github.com/LudwigBoess/BuildShocktubes.jl)                   
- Construct a Hernquist DM halo        | [HernquistHalo.jl](https://github.com/LudwigBoess/HernquistHalo.jl)                       
+| Usecase                              | Package                                                                                   |
+| :----------------------------------- | :---------------------------------------------------------------------------------------- |
+| Reading/Writing snapshots            | [GadgetIO.jl](https://github.com/LudwigBoess/GadgetIO.jl)                                 |
+| Unit conversion                      | [GadgetUnits.jl](https://github.com/LudwigBoess/GadgetUnits.jl)                           |
+| Mapping SPH data to a grid           | [SPHtoGrid.jl](https://github.com/LudwigBoess/SPHtoGrid.jl)                               |
+| LMB_SPECTRAL_CRS utility             | [SpectralCRsUtility.jl](https://github.com/LudwigBoess/SpectralCRsUtility.jl)             |
+| Analytic solutions for test problems | [AnalyticMHDTestSolutions.jl](https://github.com/LudwigBoess/AnalyticMHDTestSolutions.jl) |
+| Make ICs for shocktubes              | [BuildShocktubes.jl](https://github.com/LudwigBoess/BuildShocktubes.jl)                   |
+| Construct a Hernquist DM halo        | [HernquistHalo.jl](https://github.com/LudwigBoess/HernquistHalo.jl)                       |
 
 
 # GadJet.jl
