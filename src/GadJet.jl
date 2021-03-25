@@ -1,133 +1,196 @@
-__precompile__()
-
 module GadJet
 
-    # general utility stuff
-    include(joinpath(dirname(@__FILE__), "utility", "gravity_utility.jl"))
+    using Reexport
+    @reexport using GadgetIO
+    @reexport using GadgetUnits
+    @reexport using SPHKernels 
+    @reexport using SPHtoGrid
+    @reexport using AnalyticMHDTestSolutions
+    @reexport using BuildShocktubes
+    @reexport using SpectralCRsUtility
+    @reexport using SynchrotronKernel
 
-    # functions to read snapshots
-    include(joinpath(dirname(@__FILE__), "read_snapshot", "gadget_types.jl"))
-    #include(joinpath(dirname(@__FILE__), "read_snapshot", "dict_functions.jl"))
-    #include(joinpath(dirname(@__FILE__), "read_snapshot", "obj_functions.jl"))
-    include(joinpath(dirname(@__FILE__), "read_snapshot", "read_header.jl"))
-    include(joinpath(dirname(@__FILE__), "read_snapshot", "snapshot_utilities.jl"))
-    include(joinpath(dirname(@__FILE__), "read_snapshot", "read_format_1.jl"))
-    include(joinpath(dirname(@__FILE__), "read_snapshot", "read_format_2.jl"))
-    include(joinpath(dirname(@__FILE__), "read_snapshot", "read_snapshot.jl"))
-    include(joinpath(dirname(@__FILE__), "read_snapshot", "read_subfind.jl"))
-    include(joinpath(dirname(@__FILE__), "read_snapshot", "read_particle_in_box.jl"))
-
-    # functions to write snapshots
-    include(joinpath(dirname(@__FILE__), "write_snapshot", "write_snap.jl"))
-
-    # unit conversion
-    include(joinpath(dirname(@__FILE__), "unit_conversion", "unit_types.jl"))
-
-    # sph to grid mapping internal module
-    include(joinpath(dirname(@__FILE__), "sph_to_grid", "kernels.jl"))
-    include(joinpath(dirname(@__FILE__), "sph_to_grid", "sph_types.jl"))
-    include(joinpath(dirname(@__FILE__), "sph_to_grid", "mapping_functions.jl"))
-    include(joinpath(dirname(@__FILE__), "sph_to_grid", "sph_to_grid.jl"))
-
-    # sph to grid mapping with Smac
-    include(joinpath(dirname(@__FILE__), "sph_to_grid", "smac1_utility.jl"))
-    # sph to grid mapping with P-Smac2
-    include(joinpath(dirname(@__FILE__), "sph_to_grid", "smac2_utility.jl"))
-
-    # riemann solvers
-    include(joinpath(dirname(@__FILE__), "ideal_solutions", "cr_dsa_models.jl"))
-    include(joinpath(dirname(@__FILE__), "ideal_solutions", "cr_sod_shock_main.jl"))
-    include(joinpath(dirname(@__FILE__), "ideal_solutions", "setup_riemann_parameters.jl"))
-    #include(joinpath(dirname(@__FILE__), "ideal_solutions", "cr_sod_shock.jl"))
-
-    # sedov solution
-    include(joinpath(dirname(@__FILE__), "ideal_solutions", "sedov_solution.jl"))
-
-    include(joinpath(dirname(@__FILE__), "spectral_cr_utility", "cr_datatypes.jl"))
-    include(joinpath(dirname(@__FILE__), "spectral_cr_utility", "analysis_functions.jl"))
-    include(joinpath(dirname(@__FILE__), "spectral_cr_utility", "get_detailled_data.jl"))
-    include(joinpath(dirname(@__FILE__), "spectral_cr_utility", "synchrotron_kernel.jl"))
+    export glimpse
 
 
-    export Header, Info_Line,       # types
-           head_to_dict,
-           snap_to_dict,
-           head_to_obj,
-           print_blocks,
-           read_info,
-           block_present,
-           read_snap,
-           read_block_by_name,      # similar to readnew.pro by Klaus Dolag
-           read_header,
-           read_particles_in_box,
-           read_particles_in_volume,
+    """
+        glimpse(filename::String, blockname::String[, ... ])
 
-           # subfind read
-           read_subfind_header,
-           read_subfind,
-           find_most_massive_halo,
-           filter_subfind,
+    Reads relevant data from snapshot file and maps the quantity in block `blockname`
+    to a grid.
 
-           # write snapshot functions
-           write_header,
-           write_block,
+    # Arguments
+    - `filename::String`: Name of snapshot file.
+    - `blockname::String`: Name of block that should be mapped.
+    - `center_pos::Array{Float64,1}=[123456.7, 123456.7, 123456.7]`: Image center. If not given center of mass is calculated.
+    - `dx::Float64`= 0.0`: Extent in x-direction. If `dx = 0.0` whole box is mapped.
+    - `dy::Float64`= 0.0`: Extent in y-direction. If `dy = 0.0` whole box is mapped.
+    - `dz::Float64`= 0.0`: Extent in z-direction. If `dz = 0.0` whole box is mapped.
+    - `kernel_name::String="WC6"`: Which kernel should be used. ["Cubic", "Quintic", "WC4", "WC6"]
+    - `resolution::Int64=500`: Number of pixels in the longest dimension.
+    - `run_dummy::Bool=true`: If a compilation run with 4 pixels should be performed.
+    - `parallel::Bool=true`: Run on multiple processors.
+    - `conserve_quantities::Bool=true`: If quantities should be conserved while mapping, like in Smac (Dolag et. al. 2005).
+    - `verbose::Bool=true`: Output information to console and show progress bar.
+    - `plot::Bool=false`: Plot the resulting map with GR.imshow()
+    """
+    function glimpse(filename::String, blockname::String,
+                    center_pos::Array{Float64,1}=[123456.7, 123456.7, 123456.7],
+                    dx::Float64=0.0, dy::Float64=0.0, dz::Float64=0.0;
+                    kernel_name::String="WC6",
+                    resolution::Int64=500, run_dummy::Bool=true,
+                    parallel::Bool=true,
+                    conserve_quantities::Bool=false,
+                    verbose::Bool=true, plot::Bool=false)
 
-           # utility stuff
-           calculate_center_of_mass,
 
-           # Kernels
-           Cubic,
-           Quintic,
-           WendlandC4,
-           WendlandC6,
-           kernel_value_2D,
-           kernel_value_3D,
+        if verbose
+            @info "Reading data..."
+        end
 
-           # internal sph mapping
-           mappingParameters,
-           sphMapping,
-           sphMapping_2D,
-           sphMapping_3D,
-           glimpse,
+        filebase = filename
 
-           # helper functions and datatypes for Smac
-           Smac1ImageInfo,
-           read_smac1_binary_image,
-           read_smac1_binary_info,
-           write_smac1_par,
-           # helper function for P-Smac2
-           write_smac2_par,
+        # if the snapshot does not exist it may be split into multiple files
+        if !isfile(filebase)
 
-           # unit conversion
-           GadgetPhysical,
-           GadgetPhysicalUnits,
-           @u_str,
-           strip_unit,
-           # old riemann solver
-           #RiemannParameters,   # datatype for riemann parameters
-           #RiemannSolution,     # datatype for riemann solution
-           #solveHydroShock,      # function that solves a standard sod shock
+            if verbose
+                @info "File: $filebase not found, looking for sub-files."
+            end
 
-           # Test for different riemann solvers
-           RiemannParameters,    # helper function to set up solution
-           solve,                # overloaded function to solve riemann problems
-           find_xs_first_guess,  # helper function to find initial guess for shock compression
+            # try reading the first of the distributed snapshots
+            filename = filebase * ".0"
 
-           get_sedov_solution,   # wrapper function to get sedov data and ideal solution from snapshot
+            # throw error if file does not exist
+            if !isfile(filename)
+                error("File: $filename not found!")
+            end
 
-           # datatypes and helper functions for LMB_SPECTRAL_CRs
-           CRShockData,          # datatype to analyse single shocked particle
-           readSingleCRShockDataFromOutputFile, # as the name says
-           CRMomentumDistributionConfig, # config parameters for momentum distribution function
-           CRMomentumDistribution,
-           getCRMomentumDistributionFromPartID, # function to get distribution function
-           calculateCREnergyInCGS,
-           calculateCRNumber,
-           get_detailled_shock_data,
-           get_detailled_Dpp_data,
-           get_detailled_radiative_data,
-           get_detailled_adiabatic_data,
-           synchrotron_kernel,
-           calculate_synch_intensity
+            h = head_to_obj(filename)
+
+            if verbose
+                @info "$(h.num_files) sub-files found."
+            end
+
+            nfiles = h.num_files
+        else
+            nfiles = 1
+        end
+
+        # read header of snapshot
+        h = head_to_obj(filename)
+        info = read_info(filename, verbose=false)
+
+        if info == 1
+            error("Glimpse only works for snapshots with info block, sorry!")
+        end
+
+        if nfiles == 1
+            # read blocks of particle data
+            bin_quantity = read_block_by_name(filename, blockname,
+                                            info=info[getfield.(info, :block_name) .== blockname][1],
+                                            parttype=0)
+
+            x = read_block_by_name(filename, "POS",
+                                info=info[getfield.(info, :block_name) .== "POS"][1],
+                                parttype=0)
+
+            rho = read_block_by_name(filename, "RHO",
+                            info=info[getfield.(info, :block_name) .== "RHO"][1],
+                            parttype=0)
+
+            hsml = read_block_by_name(filename, "HSML",
+                                info=info[getfield.(info, :block_name) .== "HSML"][1],
+                                parttype=0)
+
+            m = read_block_by_name(filename, "MASS", parttype=0)
+        else
+
+            if center_pos == [123456.7, 123456.7, 123456.7]
+                error("glimpse for multiple files works only with a given central position!")
+            end
+
+            if dx == 0.0 || dy == 0.0 || dz == 0.0
+                error("glimpse for multiple files works only with a given extent!")
+            end
+
+            blocks = [blockname, "POS", "RHO", "HSML", "MASS"]
+            unique!(blocks)
+
+            x0 = center_pos - 0.5 .* [dx, dy, dz]
+            x1 = center_pos + 0.5 .* [dx, dy, dz]
+
+            d = read_particles_in_box(filebase, blocks, x0, x1, verbose=verbose)
+
+            bin_quantity = d[blockname]
+            x 	 = d["POS"]
+            rho  = d["RHO"]
+            hsml = d["HSML"]
+            m 	 = d["MASS"]
+
+            # "deallocate" d
+            d = nothing
+        end
+
+        if kernel_name == "WC6"
+            kernel = WendlandC6()
+        elseif kernel_name == "WC4"
+        kernel = WendlandC4()
+        elseif kernel_name == "Quntic"
+        kernel = Quintic()
+        elseif kernel_name == "Cubic"
+        kernel = Cubic()
+        end
+
+        if center_pos == [123456.7, 123456.7, 123456.7]
+            if verbose
+                @info "Calculating COM..."
+            end
+            center_pos = calculate_center_of_mass(x, m)
+            println("COM: $center_pos")
+        end
+
+        if [dx, dy, dz] == [0.0, 0.0, 0.0]
+            dx = h.boxsize
+            dy = h.boxsize
+            dz = h.boxsize
+        end
+
+        max_size = maximum([dx, dy, dz])
+
+        if run_dummy
+            par = mappingParameters(center = center_pos,
+                                    x_size = dx, y_size = dy, z_size = dz,
+                                    Npixels = 2)
+
+            if verbose
+                @info "Initial compilation run..."
+            end
+            d = sphMapping(x, hsml, m, rho, bin_quantity,
+                            param=par, kernel=kernel,
+                            conserve_quantities=conserve_quantities,
+                            parallel = parallel,
+                            show_progress=false)
+        end
+
+        par = mappingParameters(center = center_pos,
+                                x_size = dx, y_size = dy, z_size = dz,
+                                Npixels = resolution)
+
+        if verbose
+            @info "Mapping..."
+        end
+        d = sphMapping(x, hsml, m, rho, bin_quantity,
+                        param=par, kernel=kernel,
+                        conserve_quantities=conserve_quantities,
+                        parallel = parallel,
+                        show_progress=verbose)
+
+        if plot
+            GR.imshow(d)
+        end
+
+        return d
+
+    end
 
 end
